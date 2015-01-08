@@ -12,3 +12,10 @@ To run it, press the green play button with the box on it.
 This repo takes the place of the "teams" directory, so delete the original one and clone this repo into its location with something like:
 
 git clone https://github.com/jefesaurus/bc15.git teams
+
+Style
+====
+Somewhat aribtrarily, indentations should be 2 spaces.
+Set this manually, or import the eclipse format file I've included in teams/style.xml
+Right click the project and go to properties->java code style->formatter->import->styles.xml
+And then select ayylmao
