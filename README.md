@@ -15,7 +15,7 @@ git clone https://github.com/jefesaurus/bc15.git teams
 
 Style
 ====
-Somewhat aribtrarily, indentations should be 2 spaces.
+Somewhat arbitrarily, indentations should be 2 spaces.
 Set this manually, or import the eclipse format file I've included in teams/style.xml
 Right click the project and go to properties->java code style->formatter->import->styles.xml
 And then select ayylmao
