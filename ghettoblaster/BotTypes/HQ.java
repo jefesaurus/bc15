@@ -25,10 +25,10 @@ public class HQ extends BaseBot {
     }
     MapLocation rallyPoint;
     if (Clock.getRoundNum() < 600) {
-      rallyPoint = new MapLocation((this.myHQ.x + this.theirHQ.x) / 2,
-          (this.myHQ.y + this.theirHQ.y) / 2);
+      rallyPoint = new MapLocation((this.myHQ.x + this.enemyHQ.x) / 2,
+          (this.myHQ.y + this.enemyHQ.y) / 2);
     } else {
-      rallyPoint = this.theirHQ;
+      rallyPoint = this.enemyHQ;
     }
     rc.broadcast(0, rallyPoint.x);
     rc.broadcast(1, rallyPoint.y);

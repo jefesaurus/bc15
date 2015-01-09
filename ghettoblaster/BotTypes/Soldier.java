@@ -1,4 +1,6 @@
 package ghettoblaster.BotTypes;
+
+import ghettoblaster.Nav;
 import ghettoblaster.RobotPlayer.BaseBot;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -11,6 +13,8 @@ public class Soldier extends BaseBot {
     super(rc);
   }
 
+  protected MapLocation rallyPoint = null;
+
   public void execute() throws GameActionException {
     RobotInfo[] enemies = getEnemiesInAttackingRange();
 
@@ -20,15 +24,13 @@ public class Soldier extends BaseBot {
         attackLeastHealthEnemy(enemies);
       }
     } else if (rc.isCoreReady()) {
-      int rallyX = rc.readBroadcast(0);
-      int rallyY = rc.readBroadcast(1);
-      MapLocation rallyPoint = new MapLocation(rallyX, rallyY);
-
-      Direction newDir = getMoveDir(rallyPoint);
-
-      if (newDir != null) {
-        rc.move(newDir);
+      if (rallyPoint == null) {
+        int rallyX = rc.readBroadcast(0);
+        int rallyY = rc.readBroadcast(1);
+        rallyPoint = new MapLocation(rallyX, rallyY);
       }
+
+      Nav.goTo(rallyPoint);
     }
     rc.yield();
   }

@@ -6,6 +6,7 @@ import ghettoblaster.BotTypes.Beaver;
 import ghettoblaster.BotTypes.HQ;
 import ghettoblaster.BotTypes.Soldier;
 import ghettoblaster.BotTypes.Tower;
+import ghettoblaster.Nav;
 
 import java.util.*;
 
@@ -37,20 +38,22 @@ public class RobotPlayer {
   }
 
   public static class BaseBot {
-    protected RobotController rc;
-    protected MapLocation myHQ, theirHQ;
+    public RobotController rc;
+    protected MapLocation myHQ;
+    public MapLocation enemyHQ;
     protected Team myTeam, theirTeam;
-    
+
     // Updated per turn
-    protected MapLocation curLoc;
-    protected int curRound;
+    public MapLocation curLoc;
+    public int curRound;
 
     public BaseBot(RobotController rc) {
       this.rc = rc;
       this.myHQ = rc.senseHQLocation();
-      this.theirHQ = rc.senseEnemyHQLocation();
+      this.enemyHQ = rc.senseEnemyHQLocation();
       this.myTeam = rc.getTeam();
       this.theirTeam = this.myTeam.opponent();
+      Nav.init(this);
     }
 
     public Direction[] getDirectionsToward(MapLocation dest) {
@@ -72,7 +75,7 @@ public class RobotPlayer {
     }
 
     public Direction getSpawnDirection(RobotType type) {
-      Direction[] dirs = getDirectionsToward(this.theirHQ);
+      Direction[] dirs = getDirectionsToward(this.enemyHQ);
       for (Direction d : dirs) {
         if (rc.canSpawn(d, type)) {
           return d;
@@ -82,7 +85,7 @@ public class RobotPlayer {
     }
 
     public Direction getBuildDirection(RobotType type) {
-      Direction[] dirs = getDirectionsToward(this.theirHQ);
+      Direction[] dirs = getDirectionsToward(this.enemyHQ);
       for (Direction d : dirs) {
         if (rc.canBuild(d, type)) {
           return d;
@@ -121,8 +124,7 @@ public class RobotPlayer {
     }
 
     public void beginningOfTurn() {
-        updateRoundVariables();
-
+      updateRoundVariables();
     }
 
     public void endOfTurn() {
@@ -137,10 +139,10 @@ public class RobotPlayer {
     public void execute() throws GameActionException {
       rc.yield();
     }
-    
+
     public void updateRoundVariables() {
-    	curRound = Clock.getRoundNum();
-        curLoc = rc.getLocation();
+      curRound = Clock.getRoundNum();
+      curLoc = rc.getLocation();
     }
   }
 }
