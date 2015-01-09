@@ -1,5 +1,6 @@
 package ghettoblaster.BotTypes;
 
+import ghettoblaster.Messaging;
 import ghettoblaster.RobotPlayer.BaseBot;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -11,12 +12,24 @@ import battlecode.common.RobotType;
 public class Beaver extends BaseBot {
   public static final int MINING_HORIZON = 5;
   public static int MINING_TURNS = 0;
-  
-  public Beaver(RobotController rc) {
+  public static int beaverId;
+  public static boolean minerFactoryBuilt = false;
+  public static final Direction[] directions = Direction.values();
+
+  public Beaver(RobotController rc) throws GameActionException {
     super(rc);
+    beaverId = Messaging.announceBeaver(rc);
   }
 
   public void execute() throws GameActionException {
+    if (beaverId == 0 && minerFactoryBuilt == false) {
+      for (int i=0; i<8; i++) {
+        if (rc.canMove(directions[i]) && rc.hasBuildRequirements(RobotType.MINERFACTORY)) {
+          rc.build(directions[i], RobotType.MINERFACTORY);
+          minerFactoryBuilt = true;
+        }
+      }
+    }
     if (rc.isCoreReady()) {
       if (rc.getTeamOre() < 500) {
         // mine
@@ -26,14 +39,13 @@ public class Beaver extends BaseBot {
             rc.mine();
           }
         } else {
-          double curAmount = getOreAmount(rc.curLoc, MINING_HORIZON);
+          double curAmount = getOreAmount(this.curLoc, MINING_HORIZON);
           double maxAmount = curAmount;
-          MapLocation bestLoc = rc.curLoc;
+          MapLocation bestLoc = this.curLoc;
           int numMaxes = 1;
-          Direction[] directions = Direction.values();
           for (int i=0; i<8; i++) {
             if (rc.canMove(directions[i])) {
-              MapLocation trialLoc = rc.curLoc.add(directions[i]);
+              MapLocation trialLoc = this.curLoc.add(directions[i]);
               double adjAmount = getOreAmount(trialLoc, MINING_HORIZON - 1);
               if (maxAmount < adjAmount) {
                 maxAmount = adjAmount;
@@ -49,15 +61,15 @@ public class Beaver extends BaseBot {
           }
           
           if (maxAmount == curAmount) {
-            bestLoc = rc.curLoc;
+            bestLoc = this.curLoc;
           }
           
-          if (bestLoc == rc.curLoc && rc.isCoreReady()) {
+          if (bestLoc == this.curLoc && rc.isCoreReady()) {
             this.MINING_TURNS = MINING_HORIZON;
             rc.mine();
           }
           
-          if (bestLoc != rc.curLoc && rc.isCoreReady()) {
+          if (bestLoc != this.curLoc && rc.isCoreReady()) {
             this.MINING_TURNS = MINING_HORIZON;
             rc.move(getMoveDir(bestLoc));
           }
