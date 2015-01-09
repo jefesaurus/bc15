@@ -1,5 +1,6 @@
 package ghettoblaster.BotTypes;
 
+import ghettoblaster.Messaging;
 import ghettoblaster.RobotPlayer.BaseBot;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
@@ -11,6 +12,13 @@ import battlecode.common.RobotType;
 public class HQ extends BaseBot {
   public HQ(RobotController rc) {
     super(rc);
+    int numMiners = 5;
+    try {
+      rc.broadcast(Messaging.NUM_MINERS, numMiners);
+    } catch (GameActionException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
   }
 
   public void execute() throws GameActionException {

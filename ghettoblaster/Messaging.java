@@ -8,5 +8,6 @@ public class Messaging {
   public final static int[] ENEMY_TOWERS = {7,8,9,10,11,12};
   public final static int OUR_HQ = 13;
   public final static int ENEMY_HQ = 14;
+  public final static int NUM_MINERS = 15;
   
 }
