@@ -121,6 +121,8 @@ public class RobotPlayer {
     }
 
     public void beginningOfTurn() {
+        updateRoundVariables();
+
     }
 
     public void endOfTurn() {
