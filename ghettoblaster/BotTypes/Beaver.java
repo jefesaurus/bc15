@@ -29,8 +29,7 @@ public class Beaver extends BaseBot {
           minerFactoryBuilt = true;
         }
       }
-    }
-    if (rc.isCoreReady()) {
+    } else if (rc.isCoreReady()) {
       if (rc.getTeamOre() < 500) {
         // mine
         if (MINING_TURNS > 0) {
