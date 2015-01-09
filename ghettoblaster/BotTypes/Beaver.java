@@ -1,5 +1,6 @@
 package ghettoblaster.BotTypes;
 
+import ghettoblaster.Messaging;
 import ghettoblaster.RobotPlayer.BaseBot;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -11,12 +12,24 @@ import battlecode.common.RobotType;
 public class Beaver extends BaseBot {
   public static final int MINING_HORIZON = 5;
   public static int MINING_TURNS = 0;
-  
-  public Beaver(RobotController rc) {
+  public static int beaverId;
+  public static boolean minerFactoryBuilt = false;
+  public static final Direction[] directions = Direction.values();
+
+  public Beaver(RobotController rc) throws GameActionException {
     super(rc);
+    beaverId = Messaging.announceBeaver(rc);
   }
 
   public void execute() throws GameActionException {
+    if (beaverId == 0 && minerFactoryBuilt == false) {
+      for (int i=0; i<8; i++) {
+        if (rc.canMove(directions[i]) && rc.hasBuildRequirements(RobotType.MINERFACTORY)) {
+          rc.build(directions[i], RobotType.MINERFACTORY);
+          minerFactoryBuilt = true;
+        }
+      }
+    }
     if (rc.isCoreReady()) {
       if (rc.getTeamOre() < 500) {
         // mine
@@ -30,7 +43,6 @@ public class Beaver extends BaseBot {
           double maxAmount = curAmount;
           MapLocation bestLoc = this.curLoc;
           int numMaxes = 1;
-          Direction[] directions = Direction.values();
           for (int i=0; i<8; i++) {
             if (rc.canMove(directions[i])) {
               MapLocation trialLoc = this.curLoc.add(directions[i]);
