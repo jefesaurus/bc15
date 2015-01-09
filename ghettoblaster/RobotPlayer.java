@@ -40,6 +40,10 @@ public class RobotPlayer {
     protected RobotController rc;
     protected MapLocation myHQ, theirHQ;
     protected Team myTeam, theirTeam;
+    
+    // Updated per turn
+    protected MapLocation curLoc;
+    protected int curRound;
 
     public BaseBot(RobotController rc) {
       this.rc = rc;
@@ -130,6 +134,11 @@ public class RobotPlayer {
 
     public void execute() throws GameActionException {
       rc.yield();
+    }
+    
+    public void updateRoundVariables() {
+    	curRound = Clock.getRoundNum();
+        curLoc = rc.getLocation();
     }
   }
 }
