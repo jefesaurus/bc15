@@ -22,9 +22,9 @@ public class Beaver extends BaseBot {
   }
 
   public void execute() throws GameActionException {
-    if (beaverId == 0 && minerFactoryBuilt == false) {
+    if (beaverId == 1 && minerFactoryBuilt == false) {
       for (int i=0; i<8; i++) {
-        if (rc.canMove(directions[i]) && rc.hasBuildRequirements(RobotType.MINERFACTORY)) {
+        if (rc.canMove(directions[i]) && rc.hasBuildRequirements(RobotType.MINERFACTORY) && rc.isCoreReady()) {
           rc.build(directions[i], RobotType.MINERFACTORY);
           minerFactoryBuilt = true;
         }

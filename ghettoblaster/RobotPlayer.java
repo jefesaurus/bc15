@@ -4,13 +4,15 @@ import battlecode.common.*;
 import ghettoblaster.BotTypes.Barracks;
 import ghettoblaster.BotTypes.Beaver;
 import ghettoblaster.BotTypes.HQ;
+import ghettoblaster.BotTypes.Miner;
+import ghettoblaster.BotTypes.MinerFactory;
 import ghettoblaster.BotTypes.Soldier;
 import ghettoblaster.BotTypes.Tower;
 
 import java.util.*;
 
 public class RobotPlayer {
-  public static void run(RobotController rc) {
+  public static void run(RobotController rc) throws GameActionException {
     BaseBot myself;
 
     if (rc.getType() == RobotType.HQ) {
@@ -23,6 +25,10 @@ public class RobotPlayer {
       myself = new Soldier(rc);
     } else if (rc.getType() == RobotType.TOWER) {
       myself = new Tower(rc);
+    } else if (rc.getType() == RobotType.MINERFACTORY) {
+      myself  = new MinerFactory(rc);
+    } else if (rc.getType() == RobotType.MINER) {
+      myself = new Miner(rc);
     } else {
       myself = new BaseBot(rc);
     }
