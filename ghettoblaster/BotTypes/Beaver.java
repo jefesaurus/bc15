@@ -26,14 +26,14 @@ public class Beaver extends BaseBot {
             rc.mine();
           }
         } else {
-          double curAmount = getOreAmount(rc.curLoc, MINING_HORIZON);
+          double curAmount = getOreAmount(this.curLoc, MINING_HORIZON);
           double maxAmount = curAmount;
-          MapLocation bestLoc = rc.curLoc;
+          MapLocation bestLoc = this.curLoc;
           int numMaxes = 1;
           Direction[] directions = Direction.values();
           for (int i=0; i<8; i++) {
             if (rc.canMove(directions[i])) {
-              MapLocation trialLoc = rc.curLoc.add(directions[i]);
+              MapLocation trialLoc = this.curLoc.add(directions[i]);
               double adjAmount = getOreAmount(trialLoc, MINING_HORIZON - 1);
               if (maxAmount < adjAmount) {
                 maxAmount = adjAmount;
@@ -49,15 +49,15 @@ public class Beaver extends BaseBot {
           }
           
           if (maxAmount == curAmount) {
-            bestLoc = rc.curLoc;
+            bestLoc = this.curLoc;
           }
           
-          if (bestLoc == rc.curLoc && rc.isCoreReady()) {
+          if (bestLoc == this.curLoc && rc.isCoreReady()) {
             this.MINING_TURNS = MINING_HORIZON;
             rc.mine();
           }
           
-          if (bestLoc != rc.curLoc && rc.isCoreReady()) {
+          if (bestLoc != this.curLoc && rc.isCoreReady()) {
             this.MINING_TURNS = MINING_HORIZON;
             rc.move(getMoveDir(bestLoc));
           }
