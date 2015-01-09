@@ -3,10 +3,15 @@ package ghettoblaster.BotTypes;
 import ghettoblaster.RobotPlayer.BaseBot;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
+import battlecode.common.GameConstants;
+import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
 
 public class Beaver extends BaseBot {
+  public static final int MINING_HORIZON = 5;
+  public static int MINING_TURNS = 0;
+  
   public Beaver(RobotController rc) {
     super(rc);
   }
@@ -15,13 +20,46 @@ public class Beaver extends BaseBot {
     if (rc.isCoreReady()) {
       if (rc.getTeamOre() < 500) {
         // mine
-        if (rc.senseOre(rc.getLocation()) > 0) {
-          rc.mine();
+        if (MINING_TURNS > 0) {
+          if (rc.isCoreReady()) {
+            MINING_TURNS--;
+            rc.mine();
+          }
         } else {
-          Direction newDir = getMoveDir(this.theirHQ);
-
-          if (newDir != null) {
-            rc.move(newDir);
+          double curAmount = getOreAmount(rc.curLoc, MINING_HORIZON);
+          double maxAmount = curAmount;
+          MapLocation bestLoc = rc.curLoc;
+          int numMaxes = 1;
+          Direction[] directions = Direction.values();
+          for (int i=0; i<8; i++) {
+            if (rc.canMove(directions[i])) {
+              MapLocation trialLoc = rc.curLoc.add(directions[i]);
+              double adjAmount = getOreAmount(trialLoc, MINING_HORIZON - 1);
+              if (maxAmount < adjAmount) {
+                maxAmount = adjAmount;
+                bestLoc = trialLoc;
+                numMaxes = 1;
+              } else if (maxAmount == adjAmount) {
+                numMaxes += 1;
+                if (Math.random() > 1.0 / numMaxes) {
+                  bestLoc = trialLoc;
+                }
+              }
+            }
+          }
+          
+          if (maxAmount == curAmount) {
+            bestLoc = rc.curLoc;
+          }
+          
+          if (bestLoc == rc.curLoc && rc.isCoreReady()) {
+            this.MINING_TURNS = MINING_HORIZON;
+            rc.mine();
+          }
+          
+          if (bestLoc != rc.curLoc && rc.isCoreReady()) {
+            this.MINING_TURNS = MINING_HORIZON;
+            rc.move(getMoveDir(bestLoc));
           }
         }
       } else {
@@ -34,5 +72,19 @@ public class Beaver extends BaseBot {
     }
 
     rc.yield();
+  }
+  
+  public double getOreAmount(MapLocation loc, int horizon) {
+    double startAmount = rc.senseOre(loc);
+    double currentAmount = startAmount;
+    double total = 0;
+    for (int i=0; i<horizon; i++) {
+      double amountMined = Math.max(
+                     Math.min(GameConstants.BEAVER_MINE_MAX, GameConstants.BEAVER_MINE_RATE * currentAmount), 
+                     GameConstants.MINIMUM_MINE_AMOUNT);
+      currentAmount -= amountMined; 
+      total += amountMined;
+    }
+    return total;
   }
 }
