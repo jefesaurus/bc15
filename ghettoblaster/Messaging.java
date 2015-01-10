@@ -12,6 +12,8 @@ public class Messaging {
   public final static int OUR_HQ = 13;
   public final static int ENEMY_HQ = 14;
   public final static int NUM_MINERS = 15;
+  public final static int RALLY_POINT_X = 16;
+  public final static int RALLY_POINT_Y = 17;
   
   public static int announceBeaver(RobotController rc) throws GameActionException {
     int numBeavers = rc.readBroadcast(NUM_BEAVERS);

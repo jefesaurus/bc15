@@ -26,5 +26,17 @@ public class HQ extends BaseBot {
         rc.broadcast(Messaging.NUM_BEAVERS, numBeavers + 1);
       }
     }
+    
+    MapLocation rallyPoint;
+    if (Clock.getRoundNum() < 600) {
+      rallyPoint = new MapLocation((this.myHQ.x + this.enemyHQ.x) / 2,
+          (this.myHQ.y + this.enemyHQ.y) / 2);
+    } else {
+      rallyPoint = this.enemyHQ;
+    }
+    rc.broadcast(Messaging.RALLY_POINT_X, rallyPoint.x);
+    rc.broadcast(Messaging.RALLY_POINT_Y, rallyPoint.y);
+
+    rc.yield();
   }
 }

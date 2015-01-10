@@ -1,5 +1,6 @@
 package ghettoblaster.BotTypes;
 
+import ghettoblaster.Messaging;
 import ghettoblaster.Nav;
 import ghettoblaster.RobotPlayer.BaseBot;
 import battlecode.common.Direction;
@@ -25,8 +26,8 @@ public class Soldier extends BaseBot {
       }
     } else if (rc.isCoreReady()) {
       if (rallyPoint == null) {
-        int rallyX = rc.readBroadcast(0);
-        int rallyY = rc.readBroadcast(1);
+        int rallyX = rc.readBroadcast(Messaging.RALLY_POINT_X);
+        int rallyY = rc.readBroadcast(Messaging.RALLY_POINT_Y);
         rallyPoint = new MapLocation(rallyX, rallyY);
       }
 
