@@ -12,8 +12,10 @@ public class Messaging {
   public final static int OUR_HQ = 13;
   public final static int ENEMY_HQ = 14;
   public final static int NUM_MINERS = 15;
-  public final static int RALLY_POINT = 16;
-  public final static int SOLDIER_MODE = 17;
+  public final static int RALLY_POINT_X = 16;
+  public final static int RALLY_POINT_Y = 17;
+
+  public final static int SOLDIER_MODE = 18;
   
   public static RobotController rc;
   public static BaseBot br;
@@ -32,11 +34,14 @@ public class Messaging {
   }
   
   public static MapLocation readRallyPoint() throws GameActionException {
-    return readLocation(RALLY_POINT);
+    int x = rc.readBroadcast(RALLY_POINT_X);
+    int y = rc.readBroadcast(RALLY_POINT_Y);
+    return new MapLocation(x, y);
   }
   
   public static void setRallyPoint(MapLocation loc) throws GameActionException {
-    writeLocation(RALLY_POINT, loc);
+    rc.broadcast(RALLY_POINT_X, loc.x);
+    rc.broadcast(RALLY_POINT_Y, loc.y);
   }
   
   public static void writeLocation(int register, MapLocation loc) throws GameActionException {
