@@ -23,6 +23,7 @@ public class Messaging {
     rc = brIn.rc;
     br = brIn;
   }
+
   
   public static int announceBeaver() throws GameActionException {
     int numBeavers = rc.readBroadcast(NUM_BEAVERS);
