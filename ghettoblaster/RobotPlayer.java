@@ -128,7 +128,7 @@ public class RobotPlayer {
     }
 
     public RobotInfo[] getEnemiesInAttackingRange() {
-      RobotInfo[] enemies = rc.senseNearbyRobots(RobotType.SOLDIER.attackRadiusSquared, theirTeam);
+      RobotInfo[] enemies = rc.senseNearbyRobots(rc.getType().attackRadiusSquared, theirTeam);
       return enemies;
     }
 
