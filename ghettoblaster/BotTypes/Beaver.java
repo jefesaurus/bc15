@@ -3,6 +3,7 @@ package ghettoblaster.BotTypes;
 import ghettoblaster.Nav;
 import ghettoblaster.Messaging;
 import ghettoblaster.RobotPlayer.BaseBot;
+import ghettoblaster.RobotPlayer.MovingBot;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.GameConstants;
@@ -10,7 +11,7 @@ import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
 
-public class Beaver extends BaseBot {
+public class Beaver extends MovingBot {
   public static final int MINING_HORIZON = 5;
   public static int MINING_TURNS = 0;
   public static int beaverId;
@@ -19,7 +20,10 @@ public class Beaver extends BaseBot {
 
   public Beaver(RobotController rc) throws GameActionException {
     super(rc);
-    beaverId = Messaging.announceBeaver(rc);
+  }
+  
+  public void setup() throws GameActionException {
+    beaverId = Messaging.announceBeaver();
   }
 
   public void execute() throws GameActionException {
