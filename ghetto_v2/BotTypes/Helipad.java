@@ -18,7 +18,6 @@ public class Helipad extends BaseBot {
         rc.spawn(newDir, RobotType.DRONE);
       }
     }
-
     rc.yield();
   }
 }

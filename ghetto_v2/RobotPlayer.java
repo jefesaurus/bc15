@@ -211,7 +211,8 @@ public class RobotPlayer {
 	    CONCAVE,
 	    TOWER_DIVE,
 	    DEFEND_TOWERS,
-	    HIBERNATE
+	    RALLYING,
+	    HUNT_FOR_MINERS
     }
 		  
     protected RobotInfo[] currentEnemies;
