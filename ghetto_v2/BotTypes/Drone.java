@@ -43,9 +43,14 @@ public class Drone extends MovingBot {
         }
       } else if (rc.isCoreReady()) {
         if (rallyPoint != null) {
-          Nav.goTo(rallyPoint, Engage.UNITS);
+          Nav.goTo(rallyPoint, Engage.TOWERS);
         }
       }
+      break;
+    case DEFEND_TOWERS:
+      MapLocation[] ourTowers = rc.senseTowerLocations();
+      int numTowers = ourTowers.length;
+      Nav.goTo(ourTowers[rc.getID()%numTowers], Engage.NONE);
       break;
     default:
       if (currentEnemies.length > 0) {
@@ -54,7 +59,7 @@ public class Drone extends MovingBot {
         }
       } else if (rc.isCoreReady()) {
         if (rallyPoint != null) {
-          Nav.goTo(rallyPoint, Engage.NONE);
+          Nav.goTo(rallyPoint, Engage.UNITS);
         }
       }
       break;

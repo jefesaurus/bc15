@@ -1,6 +1,7 @@
 package ghetto_v2;
 
 import ghetto_v2.RobotPlayer.BaseBot;
+import battlecode.common.Clock;
 import battlecode.common.GameActionException;
 import battlecode.common.GameConstants;
 import battlecode.common.RobotController;
@@ -8,11 +9,12 @@ import battlecode.common.RobotInfo;
 import battlecode.common.RobotType;
 
 public class SupplyDistribution {
-  private final RobotController rc;
-  private SupplyDistributionMode mode;
-  private final int minSupplyLaunch = 5000;
-  
-  private enum SupplyDistributionMode {
+  private static RobotController rc;
+  private static BaseBot br;
+  private static SupplyDistributionMode mode;
+  private static final int minSupplyLaunch = 5000;
+  private static final int minSupplyMiner = 2000;
+  private static enum SupplyDistributionMode {
     //Pool supply at HQ
     NO_TRANSFER,
     //Distribute supply to surrounding attacking units
@@ -23,28 +25,29 @@ public class SupplyDistribution {
     POOL_WORKER
   }
   
-  public SupplyDistribution(RobotController rc) {
-    this.rc = rc;
+  public SupplyDistribution(BaseBot br) {
+    SupplyDistribution.br = br;
+    SupplyDistribution.rc = br.rc;
     mode = SupplyDistributionMode.POOL_WORKER;
   }
   
-  public void setBatteryMode() {
+  public static void setBatteryMode() {
     mode = SupplyDistributionMode.BATTERY;
   }
   
-  public void setReinforcementMode() {
+  public static void setReinforcementMode() {
     mode = SupplyDistributionMode.POOL_REINFORCEMENT;
   }
   
-  public void setWorkerMode() {
+  public static void setWorkerMode() {
     mode = SupplyDistributionMode.POOL_WORKER;
   }
   
-  public void disable() {
+  public static void disable() {
     mode = SupplyDistributionMode.NO_TRANSFER;
   }
   
-  public void manageSupply() throws GameActionException {
+  public static void manageSupply() throws GameActionException {
     switch (mode) {
     case BATTERY:
       if (rc.getType() == RobotType.HQ) {
@@ -64,24 +67,29 @@ public class SupplyDistribution {
     }
   }
   
-  public void distributeBatteryHQ() throws GameActionException {
+  public static void distributeBatteryHQ() throws GameActionException {
     RobotInfo[] robots = rc.senseNearbyRobots(GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED, rc.getTeam());
     for (int i=robots.length; i-- > 0;) {
+      if (Clock.getBytecodesLeft() < 500) {
+        return;
+      }
       RobotInfo info = robots[i];
-      if (info.type == RobotType.DRONE && info.supplyLevel < minSupplyLaunch) {
+      if (info.type == RobotType.DRONE && info.supplyLevel < minSupplyLaunch*2/3) {
         rc.transferSupplies((int) (minSupplyLaunch - info.supplyLevel), info.location);
+      } else if (info.type == RobotType.MINER && info.supplyLevel < minSupplyMiner*2/3) {
+        rc.transferSupplies((int) (minSupplyMiner - info.supplyLevel), info.location);
       }
     }
   }
   
-  public void distributeBatteryUnit() {
+  public static void distributeBatteryUnit() {
     
   }
   
-  public void distributeReinforcement() {
+  public static void distributeReinforcement() {
   }
   
-  public void distributeWorker() {
+  public static void distributeWorker() {
   
   }
   

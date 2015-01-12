@@ -35,7 +35,7 @@ public class Nav {
   private static boolean tryMoveDirect() throws GameActionException {
     
     Direction dir = br.curLoc.directionTo(dest);
-    if (rc.canMove(dir) && moveIsAllowedByEngagementRules(dir)) {
+    if (completeSafeMoveCheck(dir)) {
       rc.move(dir);
       return true;
     }
@@ -44,20 +44,18 @@ public class Nav {
     Direction rightDir = dir.rotateRight();
     if (br.curLoc.add(leftDir).distanceSquaredTo(dest) < br.curLoc
         .add(rightDir).distanceSquaredTo(dest)) {
-      if (rc.canMove(leftDir) && moveIsAllowedByEngagementRules(leftDir)) {
+      if (completeSafeMoveCheck(leftDir)) {
         rc.move(leftDir);
         return true;
-      } else if (rc.canMove(rightDir)
-          && moveIsAllowedByEngagementRules(rightDir)) {
+      } else if (completeSafeMoveCheck(rightDir)) {
         rc.move(rightDir);
         return true;
       }
     } else {
-      if (rc.canMove(rightDir) && moveIsAllowedByEngagementRules(rightDir)) {
+      if (completeSafeMoveCheck(rightDir)) {
         rc.move(rightDir);
         return true;
-      } else if (rc.canMove(leftDir)
-          && moveIsAllowedByEngagementRules(leftDir)) {
+      } else if (completeSafeMoveCheck(leftDir)) {
         rc.move(leftDir);
         return true;
       }
@@ -75,19 +73,19 @@ public class Nav {
     // try to intelligently choose on which side we will keep the wall
     Direction leftTryDir = bugLastMoveDir.rotateLeft();
     for (int i = 0; i < 3; i++) {
-      if (!rc.canMove(leftTryDir)
-          || !moveIsAllowedByEngagementRules(leftTryDir))
+      if (!completeSafeMoveCheck(leftTryDir)) {
         leftTryDir = leftTryDir.rotateLeft();
-      else
+      } else {
         break;
+      }
     }
     Direction rightTryDir = bugLastMoveDir.rotateRight();
     for (int i = 0; i < 3; i++) {
-      if (!rc.canMove(rightTryDir)
-          || !moveIsAllowedByEngagementRules(rightTryDir))
+      if (!completeSafeMoveCheck(rightTryDir)) {
         rightTryDir = rightTryDir.rotateRight();
-      else
+      } else {
         break;
+      }
     }
     if (dest.distanceSquaredTo(rc.getLocation().add(leftTryDir)) < dest
         .distanceSquaredTo(rc.getLocation().add(rightTryDir))) {
@@ -101,8 +99,9 @@ public class Nav {
     bugMovesSinceSeenObstacle++;
     Direction dir = bugLookStartDir;
     for (int i = 8; i-- > 0;) {
-      if (rc.canMove(dir) && moveIsAllowedByEngagementRules(dir))
+      if (completeSafeMoveCheck(dir)) {
         return dir;
+      }
       dir = (bugWallSide == WallSide.LEFT ? dir.rotateRight() : dir
           .rotateLeft());
       bugMovesSinceSeenObstacle = 0;
@@ -201,7 +200,6 @@ public class Nav {
       }
     }
 
-
     // If that failed, or if bugging, bug
     if (bugState == BugState.BUG) {
       // Debug.indicateAppend("nav", 1, "bugging; ");
@@ -240,28 +238,46 @@ public class Nav {
   private static boolean fightDecisionIsCached = false;
   private static int allyIncludeRadius = 29;
   private static int enemyIncludeRadius = 49;
+  
+  private static boolean moveIsTowerSafe(Direction dir) throws GameActionException {
+    int[] numAttackingTowerDirs = br.calculateNumAttackingTowerDirs();
 
+    return numAttackingTowerDirs[dir.ordinal()] == 0;
+  }
+
+  private static boolean moveIsUnitSafe(Direction dir) throws GameActionException {
+    int[] numAttackingEnemyDirs = br.calculateNumAttackingEnemyDirs();
+    return numAttackingEnemyDirs[dir.ordinal()] == 0;
+  }
+  
+  private static boolean moveIsHQSafe(Direction dir) throws GameActionException {
+    return br.curLoc.add(dir).distanceSquaredTo(br.enemyHQ) > 24;
+  }
+  
+  private static boolean completeSafeMoveCheck(Direction dir) throws GameActionException {
+    if (rc.canMove(dir) && moveIsAllowedByEngagementRules(dir)) {
+      if (br.roundChanged()) {
+        return rc.canMove(dir);
+      } else {
+        return true;
+      }
+    } else {
+      return false;
+    }
+  }
+  
   private static boolean moveIsAllowedByEngagementRules(Direction dir) throws GameActionException {
     switch (engage) {
     case NONE:
-      int[] numAttackingTowerDirs = br.calculateNumAttackingTowerDirs();
-      if (numAttackingTowerDirs[dir.ordinal()] == 0) {
-
-        int[] numAttackingEnemyDirs = br.calculateNumAttackingEnemyDirs();
-        if (numAttackingEnemyDirs[dir.ordinal()] == 0) {
-          return rc.canMove(dir);
-        }
-      }
-      return false;
+      return moveIsTowerSafe(dir) && moveIsUnitSafe(dir) && moveIsHQSafe(dir);
     case UNITS:
-      int[] numAttackingTowerDirs2 = br.calculateNumAttackingTowerDirs();
-      if (numAttackingTowerDirs2[dir.ordinal()] == 0) {
+      if (moveIsTowerSafe(dir) && moveIsHQSafe(dir)) {
         if (fightDecisionIsCached) {
-          return rc.canMove(dir) && fightIsWinningDecision;
+          return fightIsWinningDecision;
         }
         RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(br.curLoc.add(dir), RobotType.TOWER.attackRadiusSquared, br.theirTeam); //Cache.getEngagementEnemies();
         if (nearbyEnemies.length == 0) {
-          return rc.canMove(dir);
+          return true;
         }
         
         RobotInfo closestEngageable = null;
@@ -294,76 +310,24 @@ public class Nav {
         }
         
         if (closestEngageable == null) {
-          return rc.canMove(dir);
+          return true;
         }
-
         
         double allyScore = Util.getDangerScore(rc.senseNearbyRobots(closestEngageable.location, allyIncludeRadius, br.myTeam));
         double enemyScore = Util.getDangerScore(rc.senseNearbyRobots(closestEngageable.location, enemyIncludeRadius, br.theirTeam));
-
+        rc.setIndicatorString(1, Double.toString(enemyScore));
+        rc.setIndicatorString(0, Double.toString(allyScore));
         fightIsWinningDecision = (allyScore > enemyScore);
         fightDecisionIsCached = true;
         
-        return rc.canMove(dir) && fightIsWinningDecision;
+        return fightIsWinningDecision;
       }
       return false;
     case TOWERS:
+      return true;
     case HQ:
       return true;
     }
     return false;
   }
-  /*
-  private static boolean moveIsAllowedByEngagementRules(Direction dir) throws GameActionException {
-    if (engage == Engage.NONE) {
-      return false;
-    }
-    if (fightDecisionIsCached) {
-      return fightIsWinningDecision;
-    }
-    RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(br.curLoc.add(dir), RobotType.TOWER.attackRadiusSquared, br.theirTeam); //Cache.getEngagementEnemies();
-    if (nearbyEnemies.length == 0) {
-      return true;
-    }
-    
-    RobotInfo closestEngageable = null;
-    double closestDist = Double.MAX_VALUE;
-    double tempDist = 0;
-    for (RobotInfo bot : nearbyEnemies) {
-      switch (bot.type) {
-      case HQ:
-      case TOWER:
-        if (engage != Engage.TOWERS && engage != Engage.HQ) {
-          return false;
-        }
-      case BEAVER:
-      case DRONE:
-      case SOLDIER:
-      case TANK:
-      case COMMANDER:
-      case MINER:
-      case BASHER:
-      case MISSILE:
-        tempDist = br.curLoc.distanceSquaredTo(bot.location);
-        if (tempDist < closestDist) {
-          closestDist = tempDist;
-          closestEngageable = bot;
-        }
-        break;
-      default:
-        break;
-      }
-    }
-    
-    if (closestEngageable == null) {
-      return true;
-    }
-    
-    double allyScore = Util.getDangerScore(rc.senseNearbyRobots(closestEngageable.location, allyIncludeRadius, br.myTeam));
-    double enemyScore = Util.getDangerScore(rc.senseNearbyRobots(closestEngageable.location, enemyIncludeRadius, br.theirTeam));
-    fightIsWinningDecision = (allyScore > enemyScore);
-    fightDecisionIsCached = true;
-    
-    return fightIsWinningDecision;
-  } */
 }

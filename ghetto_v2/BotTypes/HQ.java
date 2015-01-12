@@ -21,7 +21,7 @@ public class HQ extends BaseBot {
   
   public HQ(RobotController rc) {
     super(rc);
-    this.supply = new SupplyDistribution(rc);
+    this.supply = new SupplyDistribution(this);
   }
   
   public void setup() throws GameActionException {
@@ -32,8 +32,9 @@ public class HQ extends BaseBot {
   public void execute() throws GameActionException {
     int numBeavers = rc.readBroadcast(Messaging.NUM_BEAVERS);
     supply.setBatteryMode();
-    supply.manageSupply();
-    
+    if (Clock.getRoundNum() > 300) {
+      supply.manageSupply();
+    }
     // This checks which enemy towers are still alive and broadcasts it to save bytecode across the fleet
     Messaging.setSurvivingEnemyTowers(Cache.getEnemyTowerLocationsDirect());
     
@@ -54,41 +55,38 @@ public class HQ extends BaseBot {
         Messaging.queueMiners(10);
       }
     }
-    
-    if (Clock.getRoundNum() >= 600) {
+
+    if (Clock.getRoundNum() >= 600 && towersLeft > 0) {
+      MapLocation[] enemyTowers = Cache.getEnemyTowerLocationsDirect();
       Messaging.setSoldierMode(MovingBot.AttackMode.TOWER_DIVE);
-      targetNearestEnemyTower();
-      
+      towersLeft = enemyTowers.length;
+      targetNearestEnemyTower(enemyTowers);
+    } else {
+      Messaging.setSoldierMode(MovingBot.AttackMode.DEFEND_TOWERS);
+      Messaging.setRallyPoint(myHQ);
     }
+    
     rc.yield();
   }
   
   /*
    * Senses enemy towers and sets the soldier rally point to the nearest one
    */
-  private void targetNearestEnemyTower() throws GameActionException {
+  private void targetNearestEnemyTower(MapLocation[] enemyTowers) throws GameActionException {
     if (towersLeft <= 0) {
       return;
     }
-    enemyTowers = Cache.getEnemyTowerLocationsDirect();
-    towersLeft = enemyTowers.length;
-    
-    if (towersLeft > 0) {
-      double tempDist;
+    double tempDist;
 
-      double closestDist = myHQ.distanceSquaredTo(enemyTowers[0]);
-      int closestIndex = 0;
-      for (int i = 1; i < towersLeft; i++) {
-        tempDist = myHQ.distanceSquaredTo(enemyTowers[i]);
-        if (tempDist < closestDist) {
-          closestDist = tempDist;
-          closestIndex = i;
-        }
+    double closestDist = myHQ.distanceSquaredTo(enemyTowers[0]);
+    int closestIndex = 0;
+    for (int i = 1; i < towersLeft; i++) {
+      tempDist = myHQ.distanceSquaredTo(enemyTowers[i]);
+      if (tempDist < closestDist) {
+        closestDist = tempDist;
+        closestIndex = i;
       }
-      Messaging.setRallyPoint(enemyTowers[closestIndex]);
-    } else {
-      Messaging.setRallyPoint(enemyHQ);
-
     }
+    Messaging.setRallyPoint(enemyTowers[closestIndex]);
   }
 }

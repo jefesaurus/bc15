@@ -1,6 +1,7 @@
 package ghetto_v2_dummy;
 
 import ghetto_v2_dummy.RobotPlayer.BaseBot;
+import battlecode.common.Clock;
 import battlecode.common.GameActionException;
 import battlecode.common.GameConstants;
 import battlecode.common.RobotController;
@@ -9,6 +10,7 @@ import battlecode.common.RobotType;
 
 public class SupplyDistribution {
   private final RobotController rc;
+  private final BaseBot br;
   private SupplyDistributionMode mode;
   private final int minSupplyLaunch = 5000;
   
@@ -23,8 +25,9 @@ public class SupplyDistribution {
     POOL_WORKER
   }
   
-  public SupplyDistribution(RobotController rc) {
-    this.rc = rc;
+  public SupplyDistribution(BaseBot br) {
+    this.rc = br.rc;
+    this.br = br;
     mode = SupplyDistributionMode.POOL_WORKER;
   }
   
@@ -67,6 +70,9 @@ public class SupplyDistribution {
   public void distributeBatteryHQ() throws GameActionException {
     RobotInfo[] robots = rc.senseNearbyRobots(GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED, rc.getTeam());
     for (int i=robots.length; i-- > 0;) {
+      if (Clock.getBytecodesLeft() < 500) {
+        return;
+      }
       RobotInfo info = robots[i];
       if (info.type == RobotType.DRONE && info.supplyLevel < minSupplyLaunch) {
         rc.transferSupplies((int) (minSupplyLaunch - info.supplyLevel), info.location);
