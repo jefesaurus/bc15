@@ -97,7 +97,7 @@ public class Beaver extends MovingBot {
     double total = 0;
     for (int i=0; i<horizon; i++) {
       double amountMined = Math.max(
-                     Math.min(GameConstants.BEAVER_MINE_MAX, GameConstants.BEAVER_MINE_RATE * currentAmount), 
+                     Math.min(GameConstants.BEAVER_MINE_MAX, currentAmount/GameConstants.BEAVER_MINE_RATE), 
                      GameConstants.MINIMUM_MINE_AMOUNT);
       currentAmount -= amountMined; 
       total += amountMined;
