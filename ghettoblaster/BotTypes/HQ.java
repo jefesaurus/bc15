@@ -1,5 +1,6 @@
 package ghettoblaster.BotTypes;
 
+import ghettoblaster.Cache;
 import ghettoblaster.Messaging;
 import ghettoblaster.SupplyDistribution;
 import ghettoblaster.RobotPlayer.BaseBot;
@@ -9,6 +10,7 @@ import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
+import battlecode.common.RobotInfo;
 import battlecode.common.RobotType;
 
 public class HQ extends BaseBot {
@@ -28,8 +30,19 @@ public class HQ extends BaseBot {
 
   public void execute() throws GameActionException {
     int numBeavers = rc.readBroadcast(Messaging.NUM_BEAVERS);
+    
+    // This checks which enemy towers are still alive and broadcasts it to save bytecode across the fleet
     Messaging.setSurvivingEnemyTowers();
-
+    
+    // Attack enemies if possible.
+    RobotInfo[] enemies = getEnemiesInAttackingRange();
+    if (enemies.length > 0) {
+      if (rc.isWeaponReady()) {
+        attackLeastHealthEnemy(enemies);
+      }
+    }
+    
+    // Spawn if possible
     if (rc.isCoreReady() && rc.getTeamOre() > 100 && numBeavers < 1) {
       Direction newDir = getSpawnDirection(RobotType.BEAVER);
       if (newDir != null) {
@@ -37,6 +50,7 @@ public class HQ extends BaseBot {
         rc.broadcast(Messaging.NUM_BEAVERS, numBeavers + 1);
       }
     }
+
     if (Clock.getRoundNum() >= 570 && Clock.getRoundNum() <600) {
       supply.distributeBatteryHQ();
     }
@@ -45,6 +59,7 @@ public class HQ extends BaseBot {
       targetNearestEnemyTower();
       
     }
+    rc.yield();
   }
   
   /*
