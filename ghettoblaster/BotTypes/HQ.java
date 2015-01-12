@@ -2,6 +2,7 @@ package ghettoblaster.BotTypes;
 
 import ghettoblaster.Cache;
 import ghettoblaster.Messaging;
+import ghettoblaster.Util;
 import ghettoblaster.RobotPlayer.BaseBot;
 import ghettoblaster.BotTypes.Soldier.SoldierMode;
 import battlecode.common.Clock;
@@ -29,11 +30,11 @@ public class HQ extends BaseBot {
     int numBeavers = rc.readBroadcast(Messaging.NUM_BEAVERS);
     
     // This checks which enemy towers are still alive and broadcasts it to save bytecode across the fleet
-    Messaging.setSurvivingEnemyTowers();
+    Messaging.setSurvivingEnemyTowers(Cache.getEnemyTowerLocationsDirect());
 
     // Do some macro commanding.
     if (Clock.getRoundNum() >= 600) {
-      Messaging.setSoldierMode(SoldierMode.TOWER_DIVE);
+      //Messaging.setSoldierMode(SoldierMode.TOWER_DIVE);
       targetNearestEnemyTower();
     }
     
@@ -64,7 +65,7 @@ public class HQ extends BaseBot {
     if (towersLeft <= 0) {
       return;
     }
-    enemyTowers = rc.senseEnemyTowerLocations();
+    enemyTowers = Cache.getEnemyTowerLocationsDirect();
     towersLeft = enemyTowers.length;
     
     if (towersLeft > 0) {

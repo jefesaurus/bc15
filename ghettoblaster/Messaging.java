@@ -67,8 +67,7 @@ public class Messaging {
     return SoldierMode.values()[rc.readBroadcast(SOLDIER_MODE)];
   }
   
-  public static void setSurvivingEnemyTowers() throws GameActionException {
-    MapLocation[] curEnemyTowers = rc.senseEnemyTowerLocations();
+  public static void setSurvivingEnemyTowers(MapLocation[] curEnemyTowers) throws GameActionException {
     int val = 0;
     for (int i = br.enemyTowers.length; i-- > 0;) {
       val = val << 1;

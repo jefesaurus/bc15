@@ -224,7 +224,7 @@ public class RobotPlayer {
             continue;
           }
           MapLocation enemyLoc = visibleEnemies[i].location;
-          int[] attackedDirs = Util.ATTACK_NOTES[visibleEnemies[i].type.ordinal()][5 + enemyLoc.x - curLoc.x][5 + enemyLoc.y - curLoc.y];
+          int[] attackedDirs = Util.ATTACK_NOTES[Util.RANGE_TYPE_MAP[visibleEnemies[i].type.ordinal()]][5 + enemyLoc.x - curLoc.x][5 + enemyLoc.y - curLoc.y];
           for (int j = attackedDirs.length; j-- > 0;) {
             cachedNumAttackingEnemyDirs[attackedDirs[j]]++;
           }
@@ -238,7 +238,7 @@ public class RobotPlayer {
       if (cachedNumAttackingTowerDirs == null) {
         cachedNumAttackingTowerDirs = new int[8];
         MapLocation[] enemyTowers = Cache.getEnemyTowerLocations();
-        
+
         int xdiff;
         int ydiff;
         for (int i = enemyTowers.length; i-- > 0;) {
@@ -246,10 +246,11 @@ public class RobotPlayer {
             // Tower wasn't there or is dead.
             continue;
           }
+
           xdiff = enemyTowers[i].x - curLoc.x;
           ydiff = enemyTowers[i].y - curLoc.y;
           if (xdiff <= 5 && xdiff >= -5 && ydiff <= 5 && ydiff >= -5) {
-            int[] attackedDirs = Util.ATTACK_NOTES[RobotType.TOWER.ordinal()][5 + xdiff][5 + ydiff];
+            int[] attackedDirs = Util.ATTACK_NOTES[Util.RANGE_TYPE_MAP[RobotType.TOWER.ordinal()]][5 + xdiff][5 + ydiff];
             for (int j = attackedDirs.length; j-- > 0;) {
               cachedNumAttackingTowerDirs[attackedDirs[j]]++;
             }
