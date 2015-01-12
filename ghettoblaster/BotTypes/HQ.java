@@ -33,7 +33,7 @@ public class HQ extends BaseBot {
     int numBeavers = rc.readBroadcast(Messaging.NUM_BEAVERS);
     
     // This checks which enemy towers are still alive and broadcasts it to save bytecode across the fleet
-    Messaging.setSurvivingEnemyTowers();
+    Messaging.setSurvivingEnemyTowers(Cache.getEnemyTowerLocationsDirect());
     
     // Attack enemies if possible.
     RobotInfo[] enemies = getEnemiesInAttackingRange();
