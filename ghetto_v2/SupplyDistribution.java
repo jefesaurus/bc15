@@ -9,12 +9,12 @@ import battlecode.common.RobotInfo;
 import battlecode.common.RobotType;
 
 public class SupplyDistribution {
-  private final RobotController rc;
-  private final BaseBot br;
-  private SupplyDistributionMode mode;
-  private final int minSupplyLaunch = 5000;
-  private final int minSupplyMiner = 4000;
-  private enum SupplyDistributionMode {
+  private static RobotController rc;
+  private static BaseBot br;
+  private static SupplyDistributionMode mode;
+  private static final int minSupplyLaunch = 5000;
+  private static final int minSupplyMiner = 2000;
+  private static enum SupplyDistributionMode {
     //Pool supply at HQ
     NO_TRANSFER,
     //Distribute supply to surrounding attacking units
@@ -26,28 +26,28 @@ public class SupplyDistribution {
   }
   
   public SupplyDistribution(BaseBot br) {
-    this.br = br;
-    this.rc = br.rc;
+    SupplyDistribution.br = br;
+    SupplyDistribution.rc = br.rc;
     mode = SupplyDistributionMode.POOL_WORKER;
   }
   
-  public void setBatteryMode() {
+  public static void setBatteryMode() {
     mode = SupplyDistributionMode.BATTERY;
   }
   
-  public void setReinforcementMode() {
+  public static void setReinforcementMode() {
     mode = SupplyDistributionMode.POOL_REINFORCEMENT;
   }
   
-  public void setWorkerMode() {
+  public static void setWorkerMode() {
     mode = SupplyDistributionMode.POOL_WORKER;
   }
   
-  public void disable() {
+  public static void disable() {
     mode = SupplyDistributionMode.NO_TRANSFER;
   }
   
-  public void manageSupply() throws GameActionException {
+  public static void manageSupply() throws GameActionException {
     switch (mode) {
     case BATTERY:
       if (rc.getType() == RobotType.HQ) {
@@ -67,7 +67,7 @@ public class SupplyDistribution {
     }
   }
   
-  public void distributeBatteryHQ() throws GameActionException {
+  public static void distributeBatteryHQ() throws GameActionException {
     RobotInfo[] robots = rc.senseNearbyRobots(GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED, rc.getTeam());
     for (int i=robots.length; i-- > 0;) {
       if (Clock.getBytecodesLeft() < 500) {
@@ -82,14 +82,14 @@ public class SupplyDistribution {
     }
   }
   
-  public void distributeBatteryUnit() {
+  public static void distributeBatteryUnit() {
     
   }
   
-  public void distributeReinforcement() {
+  public static void distributeReinforcement() {
   }
   
-  public void distributeWorker() {
+  public static void distributeWorker() {
   
   }
   
