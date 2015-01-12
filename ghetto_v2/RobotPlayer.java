@@ -322,7 +322,7 @@ public class RobotPlayer {
         
         // Do Towers
         double dangerVal = Util.DANGER_VALUE_MAP[RobotType.TOWER.ordinal()];
-        int[] attackingTowerDirs = calculateNumAttackingTowerDirs();
+        int[] attackingTowerDirs = calculateNumAttackingTowerDirs(null);
         for (int i = attackingTowerDirs.length; i-- > 0;) {
           cachedDangerVals[attackingTowerDirs[i]] += dangerVal;
         }
@@ -338,7 +338,7 @@ public class RobotPlayer {
       return cachedDangerVals;
     }
     
-    protected int[] calculateNumAttackingTowerDirs() throws GameActionException {
+    protected int[] calculateNumAttackingTowerDirs(MapLocation ignoreTower) throws GameActionException {
       if (cachedNumAttackingTowerDirs == null) {
         cachedNumAttackingTowerDirs = new int[9];
         MapLocation[] enemyTowers = Cache.getEnemyTowerLocations();
@@ -346,7 +346,7 @@ public class RobotPlayer {
         int xdiff;
         int ydiff;
         for (int i = enemyTowers.length; i-- > 0;) {
-          if (enemyTowers[i] == null) {
+          if (enemyTowers[i] == null || (ignoreTower != null && enemyTowers[i].x == ignoreTower.x && enemyTowers[i].y == ignoreTower.y)) {
             continue;
           }
 

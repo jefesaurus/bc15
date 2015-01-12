@@ -239,8 +239,8 @@ public class Nav {
   private static int allyIncludeRadius = 29;
   private static int enemyIncludeRadius = 49;
   
-  private static boolean moveIsTowerSafe(Direction dir) throws GameActionException {
-    int[] numAttackingTowerDirs = br.calculateNumAttackingTowerDirs();
+  private static boolean moveIsTowerSafe(Direction dir, MapLocation ignoreTower) throws GameActionException {
+    int[] numAttackingTowerDirs = br.calculateNumAttackingTowerDirs(ignoreTower);
     return numAttackingTowerDirs[dir.ordinal()] == 0;
   }
 
@@ -268,9 +268,9 @@ public class Nav {
   private static boolean moveIsAllowedByEngagementRules(Direction dir) throws GameActionException {
     switch (engage) {
     case NONE:
-      return moveIsTowerSafe(dir) && moveIsUnitSafe(dir) && moveIsHQSafe(dir);
+      return moveIsTowerSafe(dir, null) && moveIsUnitSafe(dir) && moveIsHQSafe(dir);
     case UNITS:
-      if (moveIsTowerSafe(dir) && moveIsHQSafe(dir)) {
+      if (moveIsTowerSafe(dir, null) && moveIsHQSafe(dir)) {
         if (fightDecisionIsCached) {
           return fightIsWinningDecision;
         }
@@ -321,7 +321,8 @@ public class Nav {
       }
       return false;
     case TOWERS:
-      return true;
+      // Filter out the tower we are diving.
+      return moveIsTowerSafe(dir, dest);
     case HQ:
       return true;
     }
