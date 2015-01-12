@@ -2,6 +2,7 @@ package ghettoblaster.BotTypes;
 
 import ghettoblaster.Cache;
 import ghettoblaster.Messaging;
+import ghettoblaster.Util;
 import ghettoblaster.SupplyDistribution;
 import ghettoblaster.RobotPlayer.BaseBot;
 import ghettoblaster.RobotPlayer.MovingBot;
@@ -32,7 +33,7 @@ public class HQ extends BaseBot {
     int numBeavers = rc.readBroadcast(Messaging.NUM_BEAVERS);
     
     // This checks which enemy towers are still alive and broadcasts it to save bytecode across the fleet
-    Messaging.setSurvivingEnemyTowers();
+    Messaging.setSurvivingEnemyTowers(Cache.getEnemyTowerLocationsDirect());
     
     // Attack enemies if possible.
     RobotInfo[] enemies = getEnemiesInAttackingRange();
@@ -69,7 +70,7 @@ public class HQ extends BaseBot {
     if (towersLeft <= 0) {
       return;
     }
-    enemyTowers = rc.senseEnemyTowerLocations();
+    enemyTowers = Cache.getEnemyTowerLocationsDirect();
     towersLeft = enemyTowers.length;
     
     if (towersLeft > 0) {
