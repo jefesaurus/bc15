@@ -322,7 +322,7 @@ public class Nav {
       return false;
     case TOWERS:
       // Filter out the tower we are diving.
-      return moveIsTowerSafe(dir, dest);
+      return moveIsTowerSafe(dir, dest) && moveIsHQSafe(dir);
     case HQ:
       return true;
     }

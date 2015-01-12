@@ -21,11 +21,13 @@ public class Messaging {
   public final static int FLEET_COUNT = 19;
   public final static int FLEET_CENTROID_X = 20;
   public final static int FLEET_CENTROID_Y = 21;
-  
+
   public final static int HQ_UNDER_ATTACK = 22;
   public final static int TOWERS_UNDER_ATTACK = 23;
   
-
+  public final static int VULNERABLE_TOWER_COMPUTATION = 24;
+  public final static int VULNERABLE_TOWER_LIST = 25;
+  
 
   public static RobotController rc;
   public static BaseBot br;
@@ -34,6 +36,16 @@ public class Messaging {
   public static void init(BaseBot brIn) throws GameActionException {
     rc = brIn.rc;
     br = brIn;
+  }
+  
+  public static boolean queueVulnerableTowerComputation() throws GameActionException {
+    int x = rc.readBroadcast(VULNERABLE_TOWER_COMPUTATION);
+    if (x == 1) {
+      return false;
+    } else {
+      rc.broadcast(VULNERABLE_TOWER_COMPUTATION, 1);
+      return true;
+    }
   }
 
   public static void queueMiners(int quantity) throws GameActionException {
