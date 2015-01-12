@@ -53,6 +53,7 @@ public class Drone extends MovingBot {
 
   protected MapLocation rallyPoint = null;
   protected MovingBot.AttackMode mode = MovingBot.AttackMode.OFFENSIVE_SWARM;
+  public MapLocation towerToHelp = null;
 
   public void execute() throws GameActionException {
     currentEnemies = getEnemiesInAttackingRange();
@@ -62,9 +63,12 @@ public class Drone extends MovingBot {
     
     if (mode == MovingBot.AttackMode.RALLYING || mode == MovingBot.AttackMode.DEFEND_TOWERS) {
        if (currentEnemies.length == 0 && (Nav.dest == null || this.curLoc.distanceSquaredTo(Nav.dest) < HIBERNATE_DISTANCE)) {
-         //Hibernate
-         rc.yield();
-         return;
+         towerToHelp = Messaging.getClosestTowerUnderAttack();
+         if (towerToHelp == null) {
+           //Hibernate
+           rc.yield();
+           return;
+         }
        }
     }
     
@@ -107,8 +111,13 @@ public class Drone extends MovingBot {
           attackLeastHealthEnemy(currentEnemies);
         // Can move, not in danger, can't attack: Advance
         } else {
-          MapLocation[] ourTowers = rc.senseTowerLocations();
-          Nav.goTo(ourTowers[rc.getID()%ourTowers.length], Engage.UNITS);
+          towerToHelp = Messaging.getClosestTowerUnderAttack();
+          if (towerToHelp != null) {
+            Nav.goTo(towerToHelp, Engage.UNITS);
+          } else {
+            MapLocation[] ourTowers = rc.senseTowerLocations();
+            Nav.goTo(ourTowers[rc.getID()%ourTowers.length], Engage.UNITS);
+          }
         }
       // If we can't move, but we can attack, do so only if we aren't in danger.
       } else if (rc.isWeaponReady()) {

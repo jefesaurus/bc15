@@ -71,6 +71,7 @@ public class RobotPlayer {
     protected MapLocation myHQ;
     public MapLocation enemyHQ;
     public MapLocation[] enemyTowers;
+    public MapLocation[] myTowers;
     protected Team myTeam, theirTeam;
 
     // Updated per turn
@@ -84,6 +85,7 @@ public class RobotPlayer {
       this.myTeam = rc.getTeam();
       this.theirTeam = this.myTeam.opponent();
       this.enemyTowers = rc.senseEnemyTowerLocations();
+      this.myTowers = rc.senseTowerLocations();
     }
     
     public void init() throws GameActionException {
@@ -148,6 +150,11 @@ public class RobotPlayer {
 
     public RobotInfo[] getEnemiesInAttackingRange() {
       RobotInfo[] enemies = rc.senseNearbyRobots(rc.getType().attackRadiusSquared, theirTeam);
+      return enemies;
+    }
+    
+    public RobotInfo[] getVisibleEnemies() {
+      RobotInfo[] enemies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, theirTeam);
       return enemies;
     }
 
