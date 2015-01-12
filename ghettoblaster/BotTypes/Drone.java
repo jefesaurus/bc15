@@ -12,9 +12,9 @@ import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotInfo;
 
-public class Soldier extends MovingBot {  
-  
-  public Soldier(RobotController rc) {
+public class Drone extends MovingBot {  
+
+  public Drone(RobotController rc) {
     super(rc);
   }
   
@@ -27,13 +27,10 @@ public class Soldier extends MovingBot {
 
   public void execute() throws GameActionException {
     currentEnemies = getEnemiesInAttackingRange();
-
-    rc.setIndicatorString(0, Integer.toString(Clock.getBytecodeNum()));
-
     
     rallyPoint = Messaging.readRallyPoint();
     mode = Messaging.getSoldierMode();
-
+    
     switch (mode) {
     case TOWER_DIVE:
       if (currentEnemies.length > 0) {
@@ -49,7 +46,6 @@ public class Soldier extends MovingBot {
           Nav.goTo(rallyPoint, Engage.TOWERS);
         }
       }
-      
       break;
     default:
       if (currentEnemies.length > 0) {
@@ -57,16 +53,12 @@ public class Soldier extends MovingBot {
           attackLeastHealthEnemy(currentEnemies);
         }
       } else if (rc.isCoreReady()) {
-
         if (rallyPoint != null) {
-
           Nav.goTo(rallyPoint, Engage.NONE);
-
         }
       }
       break;
     }
-    rc.setIndicatorString(1, Integer.toString(Clock.getBytecodeNum()));
 
     rc.yield();
   }

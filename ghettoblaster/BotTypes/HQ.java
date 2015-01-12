@@ -2,9 +2,13 @@ package ghettoblaster.BotTypes;
 
 import ghettoblaster.Cache;
 import ghettoblaster.Messaging;
+<<<<<<< HEAD
 import ghettoblaster.Util;
+=======
+import ghettoblaster.SupplyDistribution;
+>>>>>>> 4979e4607ab0fe7638f5171cc4a6345e157dbea1
 import ghettoblaster.RobotPlayer.BaseBot;
-import ghettoblaster.BotTypes.Soldier.SoldierMode;
+import ghettoblaster.RobotPlayer.MovingBot;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -16,13 +20,15 @@ import battlecode.common.RobotType;
 public class HQ extends BaseBot {
   private MapLocation[] enemyTowers;
   private int towersLeft = 6;
+  private SupplyDistribution supply;
   
   public HQ(RobotController rc) {
     super(rc);
+    this.supply = new SupplyDistribution(rc);
   }
   
   public void setup() throws GameActionException {
-    MapLocation rallyPoint = new MapLocation((this.myHQ.x + this.enemyHQ.x) / 2, (this.myHQ.y + this.enemyHQ.y) / 2);
+    MapLocation rallyPoint = this.myHQ;
     Messaging.setRallyPoint(rallyPoint);
   }
 
@@ -30,13 +36,7 @@ public class HQ extends BaseBot {
     int numBeavers = rc.readBroadcast(Messaging.NUM_BEAVERS);
     
     // This checks which enemy towers are still alive and broadcasts it to save bytecode across the fleet
-    Messaging.setSurvivingEnemyTowers(Cache.getEnemyTowerLocationsDirect());
-
-    // Do some macro commanding.
-    if (Clock.getRoundNum() >= 600) {
-      //Messaging.setSoldierMode(SoldierMode.TOWER_DIVE);
-      targetNearestEnemyTower();
-    }
+    Messaging.setSurvivingEnemyTowers();
     
     // Attack enemies if possible.
     RobotInfo[] enemies = getEnemiesInAttackingRange();
@@ -55,6 +55,14 @@ public class HQ extends BaseBot {
       }
     }
 
+    if (Clock.getRoundNum() >= 570 && Clock.getRoundNum() <600) {
+      supply.distributeBatteryHQ();
+    }
+    if (Clock.getRoundNum() >= 600) {
+      Messaging.setSoldierMode(MovingBot.AttackMode.TOWER_DIVE);
+      targetNearestEnemyTower();
+      
+    }
     rc.yield();
   }
   

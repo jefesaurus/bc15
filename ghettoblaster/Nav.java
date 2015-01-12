@@ -1,8 +1,8 @@
 package ghettoblaster;
 
+import ghettoblaster.Util;
 import ghettoblaster.RobotPlayer.BaseBot;
 import ghettoblaster.RobotPlayer.MovingBot;
-import ghettoblaster.Util;
 import battlecode.common.*;
 import battlecode.world.Robot;
 
