@@ -13,7 +13,7 @@ public class Barracks extends BaseBot {
 
   public void execute() throws GameActionException {
     if (rc.isCoreReady() && rc.getTeamOre() > 200) {
-      Direction newDir = getSpawnDirection(RobotType.SOLDIER);
+      Direction newDir = getOffensiveSpawnDirection(RobotType.SOLDIER);
       if (newDir != null) {
         rc.spawn(newDir, RobotType.SOLDIER);
       }

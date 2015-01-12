@@ -27,6 +27,19 @@ public class Messaging {
     br = brIn;
   }
 
+  public static void queueMiners(int quantity) throws GameActionException {
+    rc.broadcast(NUM_MINERS, quantity);
+  }
+  
+  public static boolean dequeueMiner() throws GameActionException {
+    int numQueuedMiners = rc.readBroadcast(NUM_MINERS);
+    if (numQueuedMiners > 0) {
+      rc.broadcast(NUM_MINERS, numQueuedMiners - 1);
+      return true;
+    } else {
+      return false;
+    }
+  }
   
   public static int announceBeaver() throws GameActionException {
     int numBeavers = rc.readBroadcast(NUM_BEAVERS);

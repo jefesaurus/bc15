@@ -32,6 +32,8 @@ public class HQ extends BaseBot {
   public void execute() throws GameActionException {
     int numBeavers = rc.readBroadcast(Messaging.NUM_BEAVERS);
     
+    supply.manageSupply();
+    
     // This checks which enemy towers are still alive and broadcasts it to save bytecode across the fleet
     Messaging.setSurvivingEnemyTowers(Cache.getEnemyTowerLocationsDirect());
     
@@ -45,15 +47,16 @@ public class HQ extends BaseBot {
     
     // Spawn if possible
     if (rc.isCoreReady() && rc.getTeamOre() > 100 && numBeavers < 1) {
-      Direction newDir = getSpawnDirection(RobotType.BEAVER);
+      Direction newDir = getOffensiveSpawnDirection(RobotType.BEAVER);
       if (newDir != null) {
         rc.spawn(newDir, RobotType.BEAVER);
         rc.broadcast(Messaging.NUM_BEAVERS, numBeavers + 1);
+        Messaging.queueMiners(5);
       }
     }
 
-    if (Clock.getRoundNum() >= 570 && Clock.getRoundNum() <600) {
-      supply.distributeBatteryHQ();
+    if (Clock.getRoundNum() >= 300 && Clock.getRoundNum() <600) {
+      supply.setBatteryMode();
     }
     if (Clock.getRoundNum() >= 600) {
       Messaging.setSoldierMode(MovingBot.AttackMode.TOWER_DIVE);

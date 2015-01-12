@@ -110,8 +110,18 @@ public class RobotPlayer {
       return null;
     }
 
-    public Direction getSpawnDirection(RobotType type) {
+    public Direction getOffensiveSpawnDirection(RobotType type) {
       Direction[] dirs = getDirectionsToward(this.enemyHQ);
+      for (Direction d : dirs) {
+        if (rc.canSpawn(d, type)) {
+          return d;
+        }
+      }
+      return null;
+    }
+    
+    public Direction getDefensiveSpawnDirection(RobotType type) {
+      Direction[] dirs = getDirectionsToward(this.myHQ);
       for (Direction d : dirs) {
         if (rc.canSpawn(d, type)) {
           return d;
