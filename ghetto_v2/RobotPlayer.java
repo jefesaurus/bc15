@@ -71,6 +71,7 @@ public class RobotPlayer {
     protected MapLocation myHQ;
     public MapLocation enemyHQ;
     public MapLocation[] enemyTowers;
+    public MapLocation[] myTowers;
     protected Team myTeam, theirTeam;
 
     // Updated per turn
@@ -84,6 +85,7 @@ public class RobotPlayer {
       this.myTeam = rc.getTeam();
       this.theirTeam = this.myTeam.opponent();
       this.enemyTowers = rc.senseEnemyTowerLocations();
+      this.myTowers = rc.senseTowerLocations();
     }
     
     public void init() throws GameActionException {
@@ -148,6 +150,11 @@ public class RobotPlayer {
 
     public RobotInfo[] getEnemiesInAttackingRange() {
       RobotInfo[] enemies = rc.senseNearbyRobots(rc.getType().attackRadiusSquared, theirTeam);
+      return enemies;
+    }
+    
+    public RobotInfo[] getVisibleEnemies() {
+      RobotInfo[] enemies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, theirTeam);
       return enemies;
     }
 
@@ -315,7 +322,7 @@ public class RobotPlayer {
         
         // Do Towers
         double dangerVal = Util.DANGER_VALUE_MAP[RobotType.TOWER.ordinal()];
-        int[] attackingTowerDirs = calculateNumAttackingTowerDirs();
+        int[] attackingTowerDirs = calculateNumAttackingTowerDirs(null);
         for (int i = attackingTowerDirs.length; i-- > 0;) {
           cachedDangerVals[attackingTowerDirs[i]] += dangerVal;
         }
@@ -331,7 +338,7 @@ public class RobotPlayer {
       return cachedDangerVals;
     }
     
-    protected int[] calculateNumAttackingTowerDirs() throws GameActionException {
+    protected int[] calculateNumAttackingTowerDirs(MapLocation ignoreTower) throws GameActionException {
       if (cachedNumAttackingTowerDirs == null) {
         cachedNumAttackingTowerDirs = new int[9];
         MapLocation[] enemyTowers = Cache.getEnemyTowerLocations();
@@ -339,7 +346,7 @@ public class RobotPlayer {
         int xdiff;
         int ydiff;
         for (int i = enemyTowers.length; i-- > 0;) {
-          if (enemyTowers[i] == null) {
+          if (enemyTowers[i] == null || (ignoreTower != null && enemyTowers[i].x == ignoreTower.x && enemyTowers[i].y == ignoreTower.y)) {
             continue;
           }
 

@@ -54,6 +54,7 @@ public class HQ extends BaseBot {
     MapLocation fleetCentroid = Messaging.getFleetCentroid();
     int fleetCount = Messaging.getFleetCount();
     Messaging.resetFleetCentroid();
+    Messaging.resetTowersUnderAttack();
     
     // Attack enemies if possible.
     RobotInfo[] enemies = getEnemiesInAttackingRange();

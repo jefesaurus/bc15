@@ -1,5 +1,6 @@
 package ghetto_v2.BotTypes;
 
+import ghetto_v2.Messaging;
 import ghetto_v2.RobotPlayer.BaseBot;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -13,12 +14,12 @@ public class Tower extends BaseBot {
   }
 
   public void execute() throws GameActionException {
-    RobotInfo[] enemies = getEnemiesInAttackingRange();
-
-    if (enemies.length > 0) {
-      // attack!
-      if (rc.isWeaponReady()) {
-        attackLeastHealthEnemy(enemies);
+    RobotInfo[] visibleEnemies = getVisibleEnemies();
+    if (visibleEnemies.length > 0) {
+      Messaging.setTowerUnderAttack(this.curLoc);
+      RobotInfo[] attackableEnemies = this.getEnemiesInAttackingRange();
+      if (attackableEnemies.length > 0 && rc.isWeaponReady()) {
+        attackLeastHealthEnemy(attackableEnemies);
       }
     }
     rc.yield();

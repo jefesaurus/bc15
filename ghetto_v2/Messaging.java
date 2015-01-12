@@ -21,8 +21,12 @@ public class Messaging {
   public final static int FLEET_COUNT = 19;
   public final static int FLEET_CENTROID_X = 20;
   public final static int FLEET_CENTROID_Y = 21;
-
   
+  public final static int HQ_UNDER_ATTACK = 22;
+  public final static int TOWERS_UNDER_ATTACK = 23;
+  
+
+
   public static RobotController rc;
   public static BaseBot br;
   
@@ -139,5 +143,39 @@ public class Messaging {
     rc.broadcast(FLEET_COUNT, 0);
     rc.broadcast(FLEET_CENTROID_X, 0);
     rc.broadcast(FLEET_CENTROID_Y, 0);
+  }
+  
+  public static void resetTowersUnderAttack() throws GameActionException {
+    rc.broadcast(TOWERS_UNDER_ATTACK, 0);
+  }
+  
+  public static void setTowerUnderAttack(MapLocation towerLoc) throws GameActionException {
+    int curVal = rc.readBroadcast(TOWERS_UNDER_ATTACK);
+    int mask = 0x1;
+    for (int j = br.myTowers.length; j-- > 0;) {
+      if (br.myTowers[j].x == towerLoc.x && br.myTowers[j].y == towerLoc.y) {
+        curVal |= mask;
+      }
+      mask <<= 1;
+    }
+    rc.broadcast(TOWERS_UNDER_ATTACK, curVal);
+  }
+  
+  public static MapLocation getClosestTowerUnderAttack() throws GameActionException {
+    int val = rc.readBroadcast(TOWERS_UNDER_ATTACK);
+    MapLocation closest = null;
+    double closestDist = Double.MAX_VALUE;
+    double tempDist;
+    for (int i = br.myTowers.length; i-- > 0;) {
+      if ((val & 0x1) > 0) {
+        tempDist = br.myTowers[i].distanceSquaredTo(br.curLoc);
+        if (tempDist < closestDist) {
+          closestDist = tempDist;
+          closest = br.myTowers[i];
+        }
+      }
+      val >>= 1;
+    }
+    return closest;
   }
 }

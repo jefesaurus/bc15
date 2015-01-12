@@ -17,6 +17,8 @@ public class Drone extends MovingBot {
 
   private SupplyDistribution supply;
   private final int HIBERNATE_DISTANCE = 25;
+  private boolean TRYING_TO_HIBERNATE = false;
+  private int HIBERNATE_COUNT_DOWN = 5;
   public Drone(RobotController rc) {
     super(rc);
     SupplyDistribution.init(this);
@@ -53,6 +55,7 @@ public class Drone extends MovingBot {
 
   protected MapLocation rallyPoint = null;
   protected MovingBot.AttackMode mode = MovingBot.AttackMode.OFFENSIVE_SWARM;
+  public MapLocation towerToHelp = null;
 
   public void execute() throws GameActionException {
     currentEnemies = getEnemiesInAttackingRange();
@@ -61,10 +64,22 @@ public class Drone extends MovingBot {
     Messaging.addToFleetCentroid();
     
     if (mode == MovingBot.AttackMode.RALLYING || mode == MovingBot.AttackMode.DEFEND_TOWERS) {
-       if (currentEnemies.length == 0 && (Nav.dest == null || this.curLoc.distanceSquaredTo(Nav.dest) < HIBERNATE_DISTANCE)) {
+       towerToHelp = Messaging.getClosestTowerUnderAttack();
+       if (currentEnemies.length == 0 && towerToHelp == null && (Nav.dest == null || this.curLoc.distanceSquaredTo(Nav.dest) < HIBERNATE_DISTANCE)) {
          //Hibernate
-         rc.yield();
-         return;
+         if (TRYING_TO_HIBERNATE) {
+           if (HIBERNATE_COUNT_DOWN > 0) {
+             HIBERNATE_COUNT_DOWN--;
+           } else {
+             rc.yield();
+             return;
+           }
+         } else {
+           TRYING_TO_HIBERNATE = true;
+         }
+       } else {
+         TRYING_TO_HIBERNATE = false;
+         HIBERNATE_COUNT_DOWN = 5;
        }
     }
     
@@ -107,8 +122,13 @@ public class Drone extends MovingBot {
           attackLeastHealthEnemy(currentEnemies);
         // Can move, not in danger, can't attack: Advance
         } else {
-          MapLocation[] ourTowers = rc.senseTowerLocations();
-          Nav.goTo(ourTowers[rc.getID()%ourTowers.length], Engage.UNITS);
+          towerToHelp = Messaging.getClosestTowerUnderAttack();
+          if (towerToHelp != null) {
+            Nav.goTo(towerToHelp, Engage.UNITS);
+          } else {
+            MapLocation[] ourTowers = rc.senseTowerLocations();
+            Nav.goTo(ourTowers[rc.getID()%ourTowers.length], Engage.UNITS);
+          }
         }
       // If we can't move, but we can attack, do so only if we aren't in danger.
       } else if (rc.isWeaponReady()) {
