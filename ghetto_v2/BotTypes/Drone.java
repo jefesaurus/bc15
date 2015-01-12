@@ -59,7 +59,6 @@ public class Drone extends MovingBot {
     rallyPoint = Messaging.readRallyPoint();
     mode = Messaging.getFleetMode();
     Messaging.addToFleetCentroid();
-    SupplyDistribution.manageSupply();
     
     if (mode == MovingBot.AttackMode.RALLYING || mode == MovingBot.AttackMode.DEFEND_TOWERS) {
        if (currentEnemies.length == 0 && this.curLoc.distanceSquaredTo(Nav.getDest()) < HIBERNATE_DISTANCE) {
@@ -67,6 +66,8 @@ public class Drone extends MovingBot {
          return;
        }
     }
+    
+    SupplyDistribution.manageSupply();
     
     switch (mode) {
     case HUNT_FOR_MINERS:
