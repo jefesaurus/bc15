@@ -1,7 +1,7 @@
 package ghettoblaster.BotTypes;
 
-import ghettoblaster.Nav;
 import ghettoblaster.Messaging;
+import ghettoblaster.Nav;
 import ghettoblaster.RobotPlayer.BaseBot;
 import ghettoblaster.RobotPlayer.MovingBot;
 import battlecode.common.Direction;
@@ -80,10 +80,10 @@ public class Beaver extends MovingBot {
           }
         }
       } else {
-        // build barracks
-        Direction newDir = getBuildDirection(RobotType.BARRACKS);
+        // build helipad
+        Direction newDir = getBuildDirection(RobotType.HELIPAD);
         if (newDir != null) {
-          rc.build(newDir, RobotType.BARRACKS);
+          rc.build(newDir, RobotType.HELIPAD);
         }
       }
     }

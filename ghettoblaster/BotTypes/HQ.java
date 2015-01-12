@@ -1,8 +1,9 @@
 package ghettoblaster.BotTypes;
 
 import ghettoblaster.Messaging;
+import ghettoblaster.SupplyDistribution;
 import ghettoblaster.RobotPlayer.BaseBot;
-import ghettoblaster.BotTypes.Soldier.SoldierMode;
+import ghettoblaster.RobotPlayer.MovingBot;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -13,13 +14,15 @@ import battlecode.common.RobotType;
 public class HQ extends BaseBot {
   private MapLocation[] enemyTowers;
   private int towersLeft = 6;
+  private SupplyDistribution supply;
   
   public HQ(RobotController rc) {
     super(rc);
+    this.supply = new SupplyDistribution(rc);
   }
   
   public void setup() throws GameActionException {
-    MapLocation rallyPoint = new MapLocation((this.myHQ.x + this.enemyHQ.x) / 2, (this.myHQ.y + this.enemyHQ.y) / 2);
+    MapLocation rallyPoint = this.myHQ;
     Messaging.setRallyPoint(rallyPoint);
   }
 
@@ -34,9 +37,13 @@ public class HQ extends BaseBot {
         rc.broadcast(Messaging.NUM_BEAVERS, numBeavers + 1);
       }
     }
+    if (Clock.getRoundNum() >= 570 && Clock.getRoundNum() <600) {
+      supply.distributeBatteryHQ();
+    }
     if (Clock.getRoundNum() >= 600) {
-      Messaging.setSoldierMode(SoldierMode.TOWER_DIVE);
+      Messaging.setSoldierMode(MovingBot.AttackMode.TOWER_DIVE);
       targetNearestEnemyTower();
+      
     }
   }
   

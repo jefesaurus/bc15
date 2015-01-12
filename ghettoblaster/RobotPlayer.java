@@ -1,14 +1,16 @@
 package ghettoblaster;
 
 import battlecode.common.*;
+import ghettoblaster.Nav;
 import ghettoblaster.BotTypes.Barracks;
 import ghettoblaster.BotTypes.Beaver;
+import ghettoblaster.BotTypes.Drone;
 import ghettoblaster.BotTypes.HQ;
+import ghettoblaster.BotTypes.Helipad;
 import ghettoblaster.BotTypes.Miner;
 import ghettoblaster.BotTypes.MinerFactory;
 import ghettoblaster.BotTypes.Soldier;
 import ghettoblaster.BotTypes.Tower;
-import ghettoblaster.Nav;
 
 import java.util.*;
 
@@ -38,6 +40,12 @@ public class RobotPlayer {
     case MINER:
       myself = new Miner(rc);
       break;
+    case HELIPAD:
+        myself = new Helipad(rc);
+        break;
+    case DRONE:
+    	myself = new Drone(rc);
+    	break;
     default:
       myself = new BaseBot(rc);
       break;
@@ -179,6 +187,14 @@ public class RobotPlayer {
   }
   
   public static class MovingBot extends BaseBot {
+	  
+    public enum AttackMode {
+	    OFFENSIVE_SWARM,
+	    DEFENSIVE_SWARM,
+	    CONCAVE,
+	    TOWER_DIVE
+    }
+		  
     protected RobotInfo[] currentEnemies;
     protected int currentEnemiesRound = -1;
     

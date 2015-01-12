@@ -12,9 +12,9 @@ import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotInfo;
 
-public class Soldier extends MovingBot {  
-  
-  public Soldier(RobotController rc) {
+public class Drone extends MovingBot {  
+
+  public Drone(RobotController rc) {
     super(rc);
   }
   
@@ -46,7 +46,6 @@ public class Soldier extends MovingBot {
           Nav.goTo(rallyPoint, Engage.TOWERS);
         }
       }
-      
       break;
     default:
       if (currentEnemies.length > 0) {

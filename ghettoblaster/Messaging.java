@@ -4,7 +4,8 @@ import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import ghettoblaster.RobotPlayer.BaseBot;
-import ghettoblaster.BotTypes.Soldier.SoldierMode;
+import ghettoblaster.RobotPlayer.MovingBot;
+
 
 public class Messaging {
   public final static int NUM_BEAVERS = 0;
@@ -54,12 +55,12 @@ public class Messaging {
     return new MapLocation((val >> 16) - 120 + br.myHQ.x, (val & 0x0000FFFF) - 120 + br.myHQ.y);
   }
   
-  public static void setSoldierMode(SoldierMode mode) throws GameActionException {
+  public static void setSoldierMode(MovingBot.AttackMode mode) throws GameActionException {
     rc.broadcast(SOLDIER_MODE, mode.ordinal());
   }
   
-  public static SoldierMode getSoldierMode() throws GameActionException {
-    return SoldierMode.values()[rc.readBroadcast(SOLDIER_MODE)];
+  public static MovingBot.AttackMode getSoldierMode() throws GameActionException {
+    return MovingBot.AttackMode.values()[rc.readBroadcast(SOLDIER_MODE)];
   }
   
   public static void setSurvivingEnemyTowers() throws GameActionException {
