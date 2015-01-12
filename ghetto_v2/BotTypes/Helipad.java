@@ -13,7 +13,7 @@ public class Helipad extends BaseBot {
 
   public void execute() throws GameActionException {
     if (rc.isCoreReady() && rc.hasSpawnRequirements(RobotType.DRONE)) {
-      Direction newDir = getSpawnDirection(RobotType.DRONE);
+      Direction newDir = getDefensiveSpawnDirection(RobotType.DRONE);
       if (newDir != null) {
         rc.spawn(newDir, RobotType.DRONE);
       }
