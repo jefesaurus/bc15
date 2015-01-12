@@ -2,11 +2,8 @@ package ghettoblaster.BotTypes;
 
 import ghettoblaster.Cache;
 import ghettoblaster.Messaging;
-<<<<<<< HEAD
 import ghettoblaster.Util;
-=======
 import ghettoblaster.SupplyDistribution;
->>>>>>> 4979e4607ab0fe7638f5171cc4a6345e157dbea1
 import ghettoblaster.RobotPlayer.BaseBot;
 import ghettoblaster.RobotPlayer.MovingBot;
 import battlecode.common.Clock;
