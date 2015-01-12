@@ -60,6 +60,9 @@ public class Drone extends MovingBot {
     mode = Messaging.getFleetMode();
     Messaging.addToFleetCentroid();
     
+    rc.setIndicatorString(2, "Dest: " + rallyPoint + ", Mode: " + mode.name());
+    
+
     if (mode == MovingBot.AttackMode.RALLYING || mode == MovingBot.AttackMode.DEFEND_TOWERS) {
        if (currentEnemies.length == 0 && this.curLoc.distanceSquaredTo(Nav.getDest()) < HIBERNATE_DISTANCE) {
          //Hibernate
@@ -94,10 +97,30 @@ public class Drone extends MovingBot {
           Nav.goTo(rallyPoint, Engage.TOWERS);
         }
       }
+      
       break;
     case DEFEND_TOWERS:
-      MapLocation[] ourTowers = rc.senseTowerLocations();
-      Nav.goTo(ourTowers[rc.getID()%ourTowers.length], Engage.UNITS);
+      if (rc.isCoreReady()) {
+        double[] dangerVals = this.getAllDangerVals();
+        // If the center square is in danger, retreat
+        if (dangerVals[8] > 0) {
+          Nav.retreat(dangerVals);
+        } else if (currentEnemies.length > 0 && rc.isWeaponReady()){
+          attackLeastHealthEnemy(currentEnemies);
+        // Can move, not in danger, can't attack: Advance
+        } else {
+          MapLocation[] ourTowers = rc.senseTowerLocations();
+          Nav.goTo(ourTowers[rc.getID()%ourTowers.length], Engage.UNITS);
+        }
+      // If we can't move, but we can attack, do so only if we aren't in danger.
+      } else if (rc.isWeaponReady()) {
+        double[] dangerVals = this.getAllDangerVals();
+        // If the center square is in danger, retreat
+        if (dangerVals[8] <= 0) {
+          attackLeastHealthEnemy(currentEnemies);
+        }
+      }
+      
       break;
       
     case OFFENSIVE_SWARM:
@@ -111,7 +134,7 @@ public class Drone extends MovingBot {
           
         // Can move, not in danger, can't attack: Advance
         } else {
-          Nav.goTo(rallyPoint, Engage.UNITS);
+          Nav.goTo(rallyPoint, Engage.NONE);
         }
 
       // If we can't move, but we can attack, do so only if we aren't in danger.

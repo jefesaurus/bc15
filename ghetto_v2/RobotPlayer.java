@@ -340,7 +340,6 @@ public class RobotPlayer {
         int ydiff;
         for (int i = enemyTowers.length; i-- > 0;) {
           if (enemyTowers[i] == null) {
-            // Tower wasn't there or is dead.
             continue;
           }
 
