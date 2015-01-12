@@ -115,27 +115,19 @@ public class HQ extends BaseBot {
   }
   
   public void approachTower(MapLocation towerLoc) throws GameActionException {
-    System.out.println("Approaching");
-
-    System.out.println(towerLoc.toString());
     strat = HighLevelStrat.APPROACHING_TOWER;
     currentTargetTower = towerLoc;
     setRallyPoint(currentTargetTower);
-    System.out.println(Messaging.readRallyPoint());
     setFleetMode(MovingBot.AttackMode.OFFENSIVE_SWARM);
   }
   
   public void diveTower(MapLocation towerLoc) throws GameActionException {
-    System.out.println("Diving");
-
     strat = HighLevelStrat.TOWER_DIVING;
     setRallyPoint(towerLoc);
     setFleetMode(MovingBot.AttackMode.TOWER_DIVE);
   }
   
   public void defendTowers() throws GameActionException {
-    System.out.println("Defending");
-
     strat = HighLevelStrat.TOWER_DEFENDING;
     setFleetMode(MovingBot.AttackMode.DEFEND_TOWERS);
     setRallyPoint(myHQ);

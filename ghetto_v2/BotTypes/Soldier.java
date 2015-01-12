@@ -32,7 +32,7 @@ public class Soldier extends MovingBot {
 
     
     rallyPoint = Messaging.readRallyPoint();
-    mode = Messaging.getSoldierMode();
+    mode = Messaging.getFleetMode();
 
     switch (mode) {
     case TOWER_DIVE:
