@@ -21,7 +21,7 @@ public class MinerFactory extends BaseBot {
       while (!rc.isCoreReady() || !rc.hasSpawnRequirements(RobotType.MINER)) {
         rc.yield();
       };
-      Direction newDir = getSpawnDirection(RobotType.MINER);
+      Direction newDir = getOffensiveSpawnDirection(RobotType.MINER);
       if (newDir != null) {
         rc.spawn(newDir, RobotType.MINER);
       }
