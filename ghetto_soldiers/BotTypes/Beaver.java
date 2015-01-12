@@ -1,9 +1,9 @@
-package ghetto_v2.BotTypes;
+package ghetto_soldiers.BotTypes;
 
-import ghetto_v2.Messaging;
-import ghetto_v2.Nav;
-import ghetto_v2.RobotPlayer.BaseBot;
-import ghetto_v2.RobotPlayer.MovingBot;
+import ghetto_soldiers.Messaging;
+import ghetto_soldiers.Nav;
+import ghetto_soldiers.RobotPlayer.BaseBot;
+import ghetto_soldiers.RobotPlayer.MovingBot;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.GameConstants;
@@ -80,10 +80,10 @@ public class Beaver extends MovingBot {
           }
         }
       } else {
-        // build helipad
-        Direction newDir = getBuildDirection(RobotType.HELIPAD);
+        // build barracks
+        Direction newDir = getBuildDirection(RobotType.BARRACKS);
         if (newDir != null) {
-          rc.build(newDir, RobotType.HELIPAD);
+          rc.build(newDir, RobotType.BARRACKS);
         }
       }
     }
@@ -97,7 +97,7 @@ public class Beaver extends MovingBot {
     double total = 0;
     for (int i=0; i<horizon; i++) {
       double amountMined = Math.max(
-                     Math.min(GameConstants.BEAVER_MINE_MAX, currentAmount/GameConstants.BEAVER_MINE_RATE), 
+                     Math.min(GameConstants.BEAVER_MINE_MAX, GameConstants.BEAVER_MINE_RATE * currentAmount), 
                      GameConstants.MINIMUM_MINE_AMOUNT);
       currentAmount -= amountMined; 
       total += amountMined;
