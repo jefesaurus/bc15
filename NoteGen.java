@@ -99,10 +99,32 @@ public class NoteGen {
     }
       
   }
+  
+  public static void vectorMags() {
+    System.out.print("{");
+    RobotType.values();
+    for (int ex = -4; ex <= +4; ex++) {
+      System.out.print("{");
+      for (int ey = -4; ey <= +4; ey++) {
+        double mag = Math.sqrt(ex*ex + ey*ey);
+        double xComp = ex/mag;
+        double yComp = ey/mag;
+
+        if (ex==0 && ey==0) {
+          System.out.print("{" + 0 + ", " + 0 + ", " + 0 + "},");
+        } else{
+          System.out.print("{" + xComp + ", " + yComp + ", " + mag + "},");
+        }
+      }
+      System.out.println("},");
+    }
+    System.out.println("},");
+  }
 
   public static void main(String[] args) {
     // centerNotes();
-    getOrdinalValues();
+    // getOrdinalValues();
+    vectorMags();
   }
 
 }

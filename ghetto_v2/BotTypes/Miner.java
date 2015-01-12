@@ -5,6 +5,7 @@ import ghetto_v2.Util;
 import ghetto_v2.Nav.Engage;
 import ghetto_v2.RobotPlayer.BaseBot;
 import ghetto_v2.RobotPlayer.MovingBot;
+import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.GameConstants;
@@ -36,14 +37,7 @@ public class Miner extends MovingBot {
       } else {
         // mine
         mineMethod();
-      }
-
-    // If we can't move, but we can attack, do so only if we aren't in danger.
-    } else if (rc.isWeaponReady()) {
-      double[] dangerVals = this.getAllDangerVals();
-      // If the center square is in danger, retreat
-      if (dangerVals[8] <= 0) {
-//        attackLeastHealthEnemy(currentEnemies);
+        
       }
     }
   }
@@ -56,7 +50,9 @@ public class Miner extends MovingBot {
           rc.mine();
       } else {
         // no more mining turns left for this location; determine next best course of action
+        
         determineNewCourse();
+        
       }
     }
   }
@@ -67,32 +63,39 @@ public class Miner extends MovingBot {
     MapLocation bestLoc = this.curLoc;
     int numMaxes = 1;
 
-
     // get all visible squares
-    MapLocation[] locationsInVisionRange = MapLocation.getAllMapLocationsWithinRadiusSq(this.curLoc, RobotType.MINER.sensorRadiusSquared);
+    MapLocation[] locationsInVisionRange = MapLocation.getAllMapLocationsWithinRadiusSq(this.curLoc, 15);
+    
+
     
     // calculate the ore in x- and y- directions, weighted by distance
     double xWeightedOreTotal = 0;
     double yWeightedOreTotal = 0; 
-    for (MapLocation loc : locationsInVisionRange) {
-      if (rc.senseTerrainTile(loc) == TerrainTile.NORMAL && // normal tiles can have ore
-          !loc.equals(this.curLoc) && // this tile is not the one we are currently on
-          !rc.isLocationOccupied(loc)) { // this tile is not covered
-        int xDiff = loc.x - this.curLoc.x;
-        int yDiff = loc.y - this.curLoc.y;
-        double magnitude = Math.sqrt(xDiff*xDiff + yDiff*yDiff);
-        double xUnitCmpt = xDiff/magnitude;
-        double yUnitCmpt = yDiff/magnitude;
-        double oreAtLoc = rc.senseOre(loc);
+
+//    int bc = Clock.getBytecodeNum();
+
+    for (int i = locationsInVisionRange.length; i-- > 0;) {
+        
+        int xDiff = (locationsInVisionRange[i].x - this.curLoc.x)+4;
+        int yDiff = (locationsInVisionRange[i].y - this.curLoc.y)+4;  
+        
+        double xUnitCmpt = Util.VECTOR_MAGS[xDiff][yDiff][0];
+        double yUnitCmpt = Util.VECTOR_MAGS[xDiff][yDiff][1];
+        double oreAtLoc = rc.senseOre(locationsInVisionRange[i]);
         xWeightedOreTotal += xUnitCmpt*oreAtLoc;
         yWeightedOreTotal += yUnitCmpt*oreAtLoc; 
-      }    
+         
     }
-    
+//    int bc2 = Clock.getBytecodeNum();
+//    System.out.println("bc num for calculation(): "+ (bc2-bc));
+
     // calculate the desired next square to move to
     double mag = Math.sqrt(xWeightedOreTotal*xWeightedOreTotal + yWeightedOreTotal*yWeightedOreTotal);
     MapLocation desiredLoc = new MapLocation( this.curLoc.x + (int) Math.round(xWeightedOreTotal/mag), 
                                             this.curLoc.y + (int) Math.round(yWeightedOreTotal/mag));    
+    
+    
+    
     bestLoc = desiredLoc;
 //    double adjAmount = getOreAmount(desiredLoc, MINING_HORIZON - this.curLoc.distanceSquaredTo(desiredLoc));
 //    
