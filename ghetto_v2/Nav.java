@@ -239,28 +239,43 @@ public class Nav {
   private static boolean fightDecisionIsCached = false;
   private static int allyIncludeRadius = 29;
   private static int enemyIncludeRadius = 49;
+  
+  private static boolean moveIsTowerSafe(Direction dir) throws GameActionException {
+    int[] numAttackingTowerDirs = br.calculateNumAttackingTowerDirs();
+    return numAttackingTowerDirs[dir.ordinal()] == 0;
+  }
 
+  private static boolean moveIsUnitSafe(Direction dir) throws GameActionException {
+    int[] numAttackingEnemyDirs = br.calculateNumAttackingEnemyDirs();
+    return numAttackingEnemyDirs[dir.ordinal()] == 0;
+  }
+  
+  private static boolean moveIsHQSafe(Direction dir) throws GameActionException {
+    return br.curLoc.add(dir).distanceSquaredTo(br.enemyHQ) > 24;
+  }
+  
+  private static boolean prevMoveCheckStillValid(Direction dir) {
+    if (br.roundChanged()) {
+      return rc.canMove(dir);
+    }
+    return true;
+  }
+  
   private static boolean moveIsAllowedByEngagementRules(Direction dir) throws GameActionException {
+    if (!prevMoveCheckStillValid(dir)) {
+      return false;
+    }
     switch (engage) {
     case NONE:
-      int[] numAttackingTowerDirs = br.calculateNumAttackingTowerDirs();
-      if (numAttackingTowerDirs[dir.ordinal()] == 0) {
-
-        int[] numAttackingEnemyDirs = br.calculateNumAttackingEnemyDirs();
-        if (numAttackingEnemyDirs[dir.ordinal()] == 0) {
-          return rc.canMove(dir);
-        }
-      }
-      return false;
+      return moveIsTowerSafe(dir) && moveIsUnitSafe(dir) && moveIsHQSafe(dir) && prevMoveCheckStillValid(dir);
     case UNITS:
-      int[] numAttackingTowerDirs2 = br.calculateNumAttackingTowerDirs();
-      if (numAttackingTowerDirs2[dir.ordinal()] == 0) {
+      if (moveIsTowerSafe(dir) && moveIsHQSafe(dir)) {
         if (fightDecisionIsCached) {
-          return rc.canMove(dir) && fightIsWinningDecision;
+          return fightIsWinningDecision && (br.roundChanged() && prevMoveCheckStillValid(dir));
         }
         RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(br.curLoc.add(dir), RobotType.TOWER.attackRadiusSquared, br.theirTeam); //Cache.getEngagementEnemies();
         if (nearbyEnemies.length == 0) {
-          return rc.canMove(dir);
+          return prevMoveCheckStillValid(dir);
         }
         
         RobotInfo closestEngageable = null;
@@ -293,7 +308,7 @@ public class Nav {
         }
         
         if (closestEngageable == null) {
-          return rc.canMove(dir);
+          return prevMoveCheckStillValid(dir);
         }
         
         double allyScore = Util.getDangerScore(rc.senseNearbyRobots(closestEngageable.location, allyIncludeRadius, br.myTeam));
@@ -303,67 +318,14 @@ public class Nav {
         fightIsWinningDecision = (allyScore > enemyScore);
         fightDecisionIsCached = true;
         
-        return rc.canMove(dir) && fightIsWinningDecision;
+        return fightIsWinningDecision && prevMoveCheckStillValid(dir);
       }
       return false;
     case TOWERS:
-      return rc.canMove(dir);
+      return prevMoveCheckStillValid(dir);
     case HQ:
-      return true;
+      return prevMoveCheckStillValid(dir);
     }
     return false;
   }
-  /*
-  private static boolean moveIsAllowedByEngagementRules(Direction dir) throws GameActionException {
-    if (engage == Engage.NONE) {
-      return false;
-    }
-    if (fightDecisionIsCached) {
-      return fightIsWinningDecision;
-    }
-    RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(br.curLoc.add(dir), RobotType.TOWER.attackRadiusSquared, br.theirTeam); //Cache.getEngagementEnemies();
-    if (nearbyEnemies.length == 0) {
-      return true;
-    }
-    
-    RobotInfo closestEngageable = null;
-    double closestDist = Double.MAX_VALUE;
-    double tempDist = 0;
-    for (RobotInfo bot : nearbyEnemies) {
-      switch (bot.type) {
-      case HQ:
-      case TOWER:
-        if (engage != Engage.TOWERS && engage != Engage.HQ) {
-          return false;
-        }
-      case BEAVER:
-      case DRONE:
-      case SOLDIER:
-      case TANK:
-      case COMMANDER:
-      case MINER:
-      case BASHER:
-      case MISSILE:
-        tempDist = br.curLoc.distanceSquaredTo(bot.location);
-        if (tempDist < closestDist) {
-          closestDist = tempDist;
-          closestEngageable = bot;
-        }
-        break;
-      default:
-        break;
-      }
-    }
-    
-    if (closestEngageable == null) {
-      return true;
-    }
-    
-    double allyScore = Util.getDangerScore(rc.senseNearbyRobots(closestEngageable.location, allyIncludeRadius, br.myTeam));
-    double enemyScore = Util.getDangerScore(rc.senseNearbyRobots(closestEngageable.location, enemyIncludeRadius, br.theirTeam));
-    fightIsWinningDecision = (allyScore > enemyScore);
-    fightDecisionIsCached = true;
-    
-    return fightIsWinningDecision;
-  } */
 }

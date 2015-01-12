@@ -194,6 +194,14 @@ public class RobotPlayer {
       curRound = Clock.getRoundNum();
       curLoc = rc.getLocation();
     }
+    
+    public boolean roundChanged() {
+      if (Clock.getRoundNum() > curRound) {
+        curRound = Clock.getRoundNum();
+        return true;
+      }
+      return false;
+    }
   }
   
   public static class MovingBot extends BaseBot {
@@ -210,6 +218,7 @@ public class RobotPlayer {
     
     protected int[] cachedNumAttackingEnemyDirs;
     protected int[] cachedNumAttackingTowerDirs;
+    protected int[] cachedAttackingHQDirs;
     
     public MovingBot(RobotController rc) {
       super(rc);
@@ -223,6 +232,8 @@ public class RobotPlayer {
     public void beginningOfTurn() {
       cachedNumAttackingEnemyDirs = null;
       cachedNumAttackingTowerDirs = null;
+      cachedAttackingHQDirs = null;
+
 
       super.beginningOfTurn();
     }
@@ -284,6 +295,23 @@ public class RobotPlayer {
         }
       }
       return cachedNumAttackingTowerDirs;
+    }
+    
+    protected int[] calculateAttackingHQDirs() throws GameActionException {
+      if (cachedAttackingHQDirs == null) {
+        cachedAttackingHQDirs = new int[8];
+        int xdiff, ydiff;
+
+        xdiff = this.enemyHQ.x - curLoc.x;
+        ydiff = this.enemyHQ.y - curLoc.y;
+        if (xdiff <= 5 && xdiff >= -5 && ydiff <= 5 && ydiff >= -5) {
+          int[] attackedDirs = Util.ATTACK_NOTES[Util.RANGE_TYPE_MAP[RobotType.HQ.ordinal()]][5 + xdiff][5 + ydiff];
+          for (int j = attackedDirs.length; j-- > 0;) {
+            cachedAttackingHQDirs[attackedDirs[j]]++;
+          }
+        }
+      }
+      return cachedAttackingHQDirs;
     }
   }
 }
