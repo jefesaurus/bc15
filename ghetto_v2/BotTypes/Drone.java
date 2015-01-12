@@ -5,6 +5,7 @@ import ghetto_v2.Nav;
 import ghetto_v2.Nav.Engage;
 import ghetto_v2.RobotPlayer.BaseBot;
 import ghetto_v2.RobotPlayer.MovingBot;
+import ghetto_v2.SupplyDistribution;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -14,12 +15,40 @@ import battlecode.common.RobotInfo;
 
 public class Drone extends MovingBot {  
 
+  private SupplyDistribution supply;
+  private final int HIBERNATE_DISTANCE = 25;
   public Drone(RobotController rc) {
     super(rc);
+    SupplyDistribution.init(this);
+    SupplyDistribution.setBatteryMode();
   }
   
   public void setup() {
     
+  }
+  
+  private void attackMicro(MapLocation loc) throws GameActionException {
+    if (rc.isCoreReady()) {
+      double[] dangerVals = this.getAllDangerVals();
+      // If the center square is in danger, retreat
+      if (dangerVals[8] > 0) {
+        Nav.retreat(dangerVals);
+      } else if (currentEnemies.length > 0 && rc.isWeaponReady()){
+        attackLeastHealthEnemy(currentEnemies);
+        
+      // Can move, not in danger, can't attack: Advance
+      } else {
+        Nav.goTo(loc, Engage.UNITS);
+      }
+
+    // If we can't move, but we can attack, do so only if we aren't in danger.
+    } else if (rc.isWeaponReady()) {
+      double[] dangerVals = this.getAllDangerVals();
+      // If the center square is in danger, retreat
+      if (dangerVals[8] <= 0) {
+        attackLeastHealthEnemy(currentEnemies);
+      }
+    }
   }
 
   protected MapLocation rallyPoint = null;
@@ -30,10 +59,26 @@ public class Drone extends MovingBot {
     rallyPoint = Messaging.readRallyPoint();
     mode = Messaging.getFleetMode();
     Messaging.addToFleetCentroid();
+    SupplyDistribution.manageSupply();
     
-
+    if (mode == MovingBot.AttackMode.RALLYING || mode == MovingBot.AttackMode.DEFEND_TOWERS) {
+       if (currentEnemies.length == 0 && this.curLoc.distanceSquaredTo(Nav.getDest()) < HIBERNATE_DISTANCE) {
+         //Hibernate
+         return;
+       }
+    }
     
     switch (mode) {
+    case HUNT_FOR_MINERS:
+      attackMicro(this.enemyHQ);
+      break;
+    case RALLYING:
+      if (currentEnemies.length < 0) {
+        Nav.goTo(rallyPoint, Engage.UNITS);
+      } else {
+        attackMicro(rallyPoint);
+      }
+      break;
     case TOWER_DIVE:
       if (currentEnemies.length > 0) {
         if (rc.isWeaponReady()) {

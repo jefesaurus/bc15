@@ -8,8 +8,8 @@ import battlecode.world.Robot;
 
 public class Nav {
   private static MapLocation dest;
-  private static MovingBot br;
   private static RobotController rc;
+  private static BaseBot br;
 
   private enum BugState {
     BUG, DIRECT
@@ -27,6 +27,10 @@ public class Nav {
   private static int bugRotationCount;
   private static int bugMovesSinceSeenObstacle = 0;
 
+  public static MapLocation getDest() {
+    return Nav.dest;
+  }
+  
   public static void init(MovingBot theBr) {
     br = theBr;
     rc = theBr.rc;

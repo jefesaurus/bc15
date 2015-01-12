@@ -29,10 +29,11 @@ public class HQ extends BaseBot {
   
   public void setup() throws GameActionException {
     SupplyDistribution.init(this);
-    buildForces();
+    strat = HighLevelStrat.HARASS;
   }
   
   public enum HighLevelStrat {
+    HARASS,
     BUILDING_FORCES,
     SWARMING,
     APPROACHING_TOWER,
@@ -73,6 +74,13 @@ public class HQ extends BaseBot {
     }
     
     switch (strat) {
+    case HARASS:
+      if (Clock.getRoundNum() >= 600) {
+        buildForces();
+        break;
+      }
+      setFleetMode(MovingBot.AttackMode.HUNT_FOR_MINERS);
+      break;
     case BUILDING_FORCES:
       if (Clock.getRoundNum() >= 600 && fleetCount > FLEET_COUNT_ATTACK_THRESHOLD) {
         if (weHaveMoreTowers()) {
@@ -84,7 +92,8 @@ public class HQ extends BaseBot {
       break;
     case SWARMING:
       // Set rally point anywhere
-      setFleetMode(MovingBot.AttackMode.OFFENSIVE_SWARM);
+      setRallyPoint(new MapLocation((this.myHQ.x + this.enemyHQ.x) / 2,(this.myHQ.y + this.enemyHQ.y) / 2));
+      setFleetMode(MovingBot.AttackMode.RALLYING);
       break;
     case APPROACHING_TOWER:
       // Set rally point to just in front of nearest tower.

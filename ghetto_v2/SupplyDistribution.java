@@ -13,7 +13,8 @@ public class SupplyDistribution {
   private static BaseBot br;
   private static SupplyDistributionMode mode;
   private static final int minSupplyLaunch = 5000;
-  private static final int minSupplyMiner = 2000;
+  private static final int minSupplyMiner = 4000;
+  private static final int minSupplyBattle = 500;
   private static enum SupplyDistributionMode {
     //Pool supply at HQ
     NO_TRANSFER,
@@ -82,8 +83,25 @@ public class SupplyDistribution {
     }
   }
   
-  public static void distributeBatteryUnit() {
+  public static void distributeBatteryUnit() throws GameActionException {
+    int supplyToTransfer = (int) (rc.getSupplyLevel() - 2 * minSupplyBattle);
     
+    if (supplyToTransfer <= 0) {
+      return;
+    }
+    
+    RobotInfo[] robots = rc.senseNearbyRobots(GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED, rc.getTeam());
+    for (int i=robots.length-1; i >= 0 && supplyToTransfer > 0; i--) {
+      if (Clock.getBytecodesLeft() < 500) {
+        return;
+      }
+      RobotInfo info = robots[i];
+      if (info.type == RobotType.DRONE && info.supplyLevel < minSupplyBattle*2/3) {
+        int x = (int) Math.min(supplyToTransfer, minSupplyBattle - info.supplyLevel);
+        rc.transferSupplies(x, info.location);
+        supplyToTransfer -= x;
+      } 
+    }
   }
   
   public static void distributeReinforcement() {
