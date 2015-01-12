@@ -59,7 +59,6 @@ public class Drone extends MovingBot {
     rallyPoint = Messaging.readRallyPoint();
     mode = Messaging.getFleetMode();
     Messaging.addToFleetCentroid();
-    SupplyDistribution.manageSupply();
     
     rc.setIndicatorString(2, "Dest: " + rallyPoint + ", Mode: " + mode.name());
 
@@ -69,6 +68,8 @@ public class Drone extends MovingBot {
          return;
        }
     }
+    
+    SupplyDistribution.manageSupply();
     
     switch (mode) {
     case HUNT_FOR_MINERS:
