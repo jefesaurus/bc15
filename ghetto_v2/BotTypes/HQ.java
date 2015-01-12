@@ -21,7 +21,7 @@ public class HQ extends BaseBot {
   
   public HQ(RobotController rc) {
     super(rc);
-    this.supply = new SupplyDistribution(rc);
+    this.supply = new SupplyDistribution(this);
   }
   
   public void setup() throws GameActionException {
@@ -32,8 +32,9 @@ public class HQ extends BaseBot {
   public void execute() throws GameActionException {
     int numBeavers = rc.readBroadcast(Messaging.NUM_BEAVERS);
     supply.setBatteryMode();
-    supply.manageSupply();
-    
+    if (Clock.getRoundNum() > 300) {
+      supply.manageSupply();
+    }
     // This checks which enemy towers are still alive and broadcasts it to save bytecode across the fleet
     Messaging.setSurvivingEnemyTowers(Cache.getEnemyTowerLocationsDirect());
     

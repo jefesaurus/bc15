@@ -211,7 +211,8 @@ public class RobotPlayer {
 	    DEFENSIVE_SWARM,
 	    CONCAVE,
 	    TOWER_DIVE,
-	    DEFEND_TOWERS
+	    DEFEND_TOWERS,
+	    HIBERNATE
     }
 		  
     protected RobotInfo[] currentEnemies;

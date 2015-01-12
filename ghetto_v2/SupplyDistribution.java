@@ -9,9 +9,10 @@ import battlecode.common.RobotType;
 
 public class SupplyDistribution {
   private final RobotController rc;
+  private final BaseBot br;
   private SupplyDistributionMode mode;
   private final int minSupplyLaunch = 5000;
-  
+  private final int minSupplyMiner = 4000;
   private enum SupplyDistributionMode {
     //Pool supply at HQ
     NO_TRANSFER,
@@ -23,8 +24,9 @@ public class SupplyDistribution {
     POOL_WORKER
   }
   
-  public SupplyDistribution(RobotController rc) {
-    this.rc = rc;
+  public SupplyDistribution(BaseBot br) {
+    this.br = br;
+    this.rc = br.rc;
     mode = SupplyDistributionMode.POOL_WORKER;
   }
   
@@ -67,9 +69,14 @@ public class SupplyDistribution {
   public void distributeBatteryHQ() throws GameActionException {
     RobotInfo[] robots = rc.senseNearbyRobots(GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED, rc.getTeam());
     for (int i=robots.length; i-- > 0;) {
+      if (br.roundChanged()) {
+        return;
+      }
       RobotInfo info = robots[i];
-      if (info.type == RobotType.DRONE && info.supplyLevel < minSupplyLaunch) {
+      if (info.type == RobotType.DRONE && info.supplyLevel < minSupplyLaunch*2/3) {
         rc.transferSupplies((int) (minSupplyLaunch - info.supplyLevel), info.location);
+      } else if (info.type == RobotType.MINER && info.supplyLevel < minSupplyMiner*2/3) {
+        rc.transferSupplies((int) (minSupplyMiner - info.supplyLevel), info.location);
       }
     }
   }
