@@ -90,6 +90,7 @@ public class RobotPlayer {
       updateRoundVariables();
       Messaging.init(this);
       Cache.init(this);
+
     }
 
     public Direction[] getDirectionsToward(MapLocation dest) {
@@ -196,8 +197,7 @@ public class RobotPlayer {
     }
     
     public boolean roundChanged() {
-      if (Clock.getRoundNum() > curRound) {
-        curRound = Clock.getRoundNum();
+      if (Clock.getRoundNum() != curRound) {
         return true;
       }
       return false;
@@ -228,6 +228,9 @@ public class RobotPlayer {
     
     public void init() throws GameActionException {
       Nav.init(this);
+
+      // Hacky crap to get this huge chunk of bytecode out of the way.
+      int[] i = Util.ATTACK_NOTES[0][0][0];
       super.init();
     }
     
