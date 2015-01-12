@@ -151,10 +151,12 @@ public class Messaging {
   
   public static void setTowerUnderAttack(MapLocation towerLoc) throws GameActionException {
     int curVal = rc.readBroadcast(TOWERS_UNDER_ATTACK);
+    int mask = 0x1;
     for (int j = br.myTowers.length; j-- > 0;) {
       if (br.myTowers[j].x == towerLoc.x && br.myTowers[j].y == towerLoc.y) {
-        curVal |= 1;
+        curVal |= mask;
       }
+      mask <<= 1;
     }
     rc.broadcast(TOWERS_UNDER_ATTACK, curVal);
   }
