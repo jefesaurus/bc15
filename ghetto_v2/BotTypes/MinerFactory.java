@@ -17,7 +17,7 @@ public class MinerFactory extends BaseBot {
   }
 
   public void execute() throws GameActionException {
-    int numMiners = 2;
+    int numMiners = rc.readBroadcast(Messaging.NUM_MINERS);
 //    System.out.println("miner goal: " + numMiners);
 //    System.out.println("core ready: " + rc.isCoreReady());
 //    System.out.println("has reqs: " + rc.hasBuildRequirements(RobotType.MINER));

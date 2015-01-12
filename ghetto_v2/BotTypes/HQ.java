@@ -3,6 +3,7 @@ package ghetto_v2.BotTypes;
 import ghetto_v2.Cache;
 import ghetto_v2.Messaging;
 import ghetto_v2.SupplyDistribution;
+import ghetto_v2.Util;
 import ghetto_v2.RobotPlayer.BaseBot;
 import ghetto_v2.RobotPlayer.MovingBot;
 import battlecode.common.Clock;
@@ -32,7 +33,7 @@ public class HQ extends BaseBot {
     int numBeavers = rc.readBroadcast(Messaging.NUM_BEAVERS);
     
     // This checks which enemy towers are still alive and broadcasts it to save bytecode across the fleet
-    Messaging.setSurvivingEnemyTowers();
+    Messaging.setSurvivingEnemyTowers(Cache.getEnemyTowerLocationsDirect());
     
     // Attack enemies if possible.
     RobotInfo[] enemies = getEnemiesInAttackingRange();
@@ -43,7 +44,7 @@ public class HQ extends BaseBot {
     }
     
     // Spawn if possible
-    if (rc.isCoreReady() && rc.hasSpawnRequirements(RobotType.BEAVER) && numBeavers < 1) {
+    if (rc.isCoreReady() && rc.getTeamOre() > 100 && numBeavers < 1) {
       Direction newDir = getSpawnDirection(RobotType.BEAVER);
       if (newDir != null) {
         rc.spawn(newDir, RobotType.BEAVER);
@@ -69,7 +70,7 @@ public class HQ extends BaseBot {
     if (towersLeft <= 0) {
       return;
     }
-    enemyTowers = rc.senseEnemyTowerLocations();
+    enemyTowers = Cache.getEnemyTowerLocationsDirect();
     towersLeft = enemyTowers.length;
     
     if (towersLeft > 0) {

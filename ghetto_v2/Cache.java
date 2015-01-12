@@ -23,16 +23,16 @@ public class Cache {
    * Second, the last round it was refreshed. (*_last)
    */
   static RobotInfo[] visibleEnemies;
-  static int visibleEnemies_last;
+  static int visibleEnemies_last = -1;
   
   static RobotInfo[] soldierAttackableEnemies;
-  static int soldierAttackableEnemies_last;
+  static int soldierAttackableEnemies_last = -1;
   
   static RobotInfo[] engagementEnemies;
-  static int engagementEnemies_last;
+  static int engagementEnemies_last = -1;
   
   static MapLocation[] enemyTowerLocations;
-  static int enemyTowerLocations_last;
+  static int enemyTowerLocations_last = -1;
   
   public static RobotInfo[] getVisibleEnemies() {
     if (visibleEnemies_last < br.curRound) {
@@ -58,9 +58,19 @@ public class Cache {
     return engagementEnemies;
   }
   
+  // Will return some null locations.
   public static MapLocation[] getEnemyTowerLocations() throws GameActionException {
     if (enemyTowerLocations_last < br.curRound) {
       enemyTowerLocations = Messaging.getSurvivingEnemyTowers();
+      enemyTowerLocations_last = br.curRound;
+    }
+    return enemyTowerLocations;
+  }
+  
+  // Same effect as above, but does it using the direct API call, so it doesn't return null locations.
+  public static MapLocation[] getEnemyTowerLocationsDirect() throws GameActionException {
+    if (enemyTowerLocations_last < br.curRound) {
+      enemyTowerLocations = rc.senseEnemyTowerLocations();
       enemyTowerLocations_last = br.curRound;
     }
     return enemyTowerLocations;
