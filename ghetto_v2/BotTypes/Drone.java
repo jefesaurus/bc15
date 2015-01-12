@@ -62,10 +62,9 @@ public class Drone extends MovingBot {
     SupplyDistribution.manageSupply();
     
     rc.setIndicatorString(2, "Dest: " + rallyPoint + ", Mode: " + mode.name());
-    
 
     if (mode == MovingBot.AttackMode.RALLYING || mode == MovingBot.AttackMode.DEFEND_TOWERS) {
-       if (currentEnemies.length == 0 && this.curLoc.distanceSquaredTo(Nav.getDest()) < HIBERNATE_DISTANCE) {
+       if (currentEnemies.length == 0 && (Nav.dest != null && this.curLoc.distanceSquaredTo(Nav.dest) < HIBERNATE_DISTANCE)) {
          //Hibernate
          return;
        }

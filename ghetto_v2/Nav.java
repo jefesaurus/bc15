@@ -7,7 +7,7 @@ import battlecode.common.*;
 import battlecode.world.Robot;
 
 public class Nav {
-  private static MapLocation dest;
+  public static MapLocation dest;
   private static RobotController rc;
   private static MovingBot br;
 
@@ -26,10 +26,6 @@ public class Nav {
   private static Direction bugLookStartDir;
   private static int bugRotationCount;
   private static int bugMovesSinceSeenObstacle = 0;
-
-  public static MapLocation getDest() {
-    return Nav.dest;
-  }
   
   public static void init(MovingBot theBr) {
     br = theBr;
