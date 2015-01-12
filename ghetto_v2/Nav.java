@@ -351,7 +351,7 @@ public class Nav {
     }
     MapLocation enemyCentroid = new MapLocation(centerX/enemies.length, centerY/enemies.length);
     
-    int bestDir = enemyCentroid.directionTo(br.curLoc).ordinal();
+    int bestDir = enemyCentroid.directionTo(br.curLoc).ordinal() + 8;
     int tempDir;
     for (int i = 0; i < 8; i++) {
       if (i%2 == 0) {
