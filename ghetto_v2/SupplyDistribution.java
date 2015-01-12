@@ -1,6 +1,7 @@
 package ghetto_v2;
 
 import ghetto_v2.RobotPlayer.BaseBot;
+import battlecode.common.Clock;
 import battlecode.common.GameActionException;
 import battlecode.common.GameConstants;
 import battlecode.common.RobotController;
@@ -69,7 +70,7 @@ public class SupplyDistribution {
   public void distributeBatteryHQ() throws GameActionException {
     RobotInfo[] robots = rc.senseNearbyRobots(GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED, rc.getTeam());
     for (int i=robots.length; i-- > 0;) {
-      if (br.roundChanged()) {
+      if (Clock.getBytecodesLeft() < 500) {
         return;
       }
       RobotInfo info = robots[i];
