@@ -130,6 +130,13 @@ public class RobotPlayer {
       return null;
     }
 
+    public boolean roundChanged() {
+      if (Clock.getRoundNum() > curRound) {
+        curRound = Clock.getRoundNum();
+        return true;
+      }
+      return false;
+    }
     public Direction getBuildDirection(RobotType type) {
       Direction[] dirs = getDirectionsToward(this.enemyHQ);
       for (Direction d : dirs) {

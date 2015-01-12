@@ -21,7 +21,7 @@ public class HQ extends BaseBot {
   
   public HQ(RobotController rc) {
     super(rc);
-    this.supply = new SupplyDistribution(rc);
+    this.supply = new SupplyDistribution(this);
   }
   
   public void setup() throws GameActionException {
