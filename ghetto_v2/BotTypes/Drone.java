@@ -60,11 +60,10 @@ public class Drone extends MovingBot {
     mode = Messaging.getFleetMode();
     Messaging.addToFleetCentroid();
     
-    rc.setIndicatorString(2, "Dest: " + rallyPoint + ", Mode: " + mode.name());
-
     if (mode == MovingBot.AttackMode.RALLYING || mode == MovingBot.AttackMode.DEFEND_TOWERS) {
-       if (currentEnemies.length == 0 && (Nav.dest != null && this.curLoc.distanceSquaredTo(Nav.dest) < HIBERNATE_DISTANCE)) {
+       if (currentEnemies.length == 0 && (Nav.dest == null || this.curLoc.distanceSquaredTo(Nav.dest) < HIBERNATE_DISTANCE)) {
          //Hibernate
+         rc.yield();
          return;
        }
     }
