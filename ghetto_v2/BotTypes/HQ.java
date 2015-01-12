@@ -21,7 +21,6 @@ public class HQ extends BaseBot {
   public AttackMode currentFleetMode;
   public MapLocation currentRallyPoint = new MapLocation(0,0);
   public MapLocation currentTargetTower = new MapLocation(0,0);
-  private int towersLeft = 6;
   
   public HQ(RobotController rc) {
     super(rc);
@@ -70,7 +69,7 @@ public class HQ extends BaseBot {
       if (newDir != null) {
         rc.spawn(newDir, RobotType.BEAVER);
         rc.broadcast(Messaging.NUM_BEAVERS, numBeavers + 1);
-        Messaging.queueMiners(10);
+        Messaging.queueMiners(20);
       }
     }
     
@@ -173,14 +172,14 @@ public class HQ extends BaseBot {
    * Senses enemy towers and sets the soldier rally point to the nearest one
    */
   private MapLocation getNearestEnemyTower(MapLocation[] enemyTowers) throws GameActionException {
-    if (towersLeft <= 0) {
+    if (enemyTowers.length <= 0) {
       return null;
     }
     double tempDist;
 
     double closestDist = myHQ.distanceSquaredTo(enemyTowers[0]);
     int closestIndex = 0;
-    for (int i = 1; i < towersLeft; i++) {
+    for (int i = 1; i < enemyTowers.length; i++) {
       tempDist = myHQ.distanceSquaredTo(enemyTowers[i]);
       if (tempDist < closestDist) {
         closestDist = tempDist;
