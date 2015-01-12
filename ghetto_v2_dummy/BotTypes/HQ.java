@@ -1,11 +1,11 @@
-package ghetto_v2.BotTypes;
+package ghetto_v2_dummy.BotTypes;
 
-import ghetto_v2.Cache;
-import ghetto_v2.Messaging;
-import ghetto_v2.SupplyDistribution;
-import ghetto_v2.Util;
-import ghetto_v2.RobotPlayer.BaseBot;
-import ghetto_v2.RobotPlayer.MovingBot;
+import ghetto_v2_dummy.Cache;
+import ghetto_v2_dummy.Messaging;
+import ghetto_v2_dummy.SupplyDistribution;
+import ghetto_v2_dummy.Util;
+import ghetto_v2_dummy.RobotPlayer.BaseBot;
+import ghetto_v2_dummy.RobotPlayer.MovingBot;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -31,7 +31,7 @@ public class HQ extends BaseBot {
 
   public void execute() throws GameActionException {
     int numBeavers = rc.readBroadcast(Messaging.NUM_BEAVERS);
-    supply.setBatteryMode();
+    
     supply.manageSupply();
     
     // This checks which enemy towers are still alive and broadcasts it to save bytecode across the fleet
@@ -51,10 +51,13 @@ public class HQ extends BaseBot {
       if (newDir != null) {
         rc.spawn(newDir, RobotType.BEAVER);
         rc.broadcast(Messaging.NUM_BEAVERS, numBeavers + 1);
-        Messaging.queueMiners(10);
+        Messaging.queueMiners(5);
       }
     }
-    
+
+    if (Clock.getRoundNum() >= 300 && Clock.getRoundNum() <600) {
+      supply.setBatteryMode();
+    }
     if (Clock.getRoundNum() >= 600) {
       Messaging.setSoldierMode(MovingBot.AttackMode.TOWER_DIVE);
       targetNearestEnemyTower();
