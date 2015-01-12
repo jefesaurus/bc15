@@ -143,7 +143,6 @@ public class Miner extends MovingBot {
         this.MINING_TURNS = MINING_HORIZON;
         
         int bestDir = this.curLoc.directionTo(bestLoc).ordinal() + 8;
-        rc.setIndicatorString(0, "best direction: " + this.curLoc.directionTo(bestLoc) + ", bestDir: " + bestDir);
         
         int tempDir;
         for (int i = 0; i < 8; i++) {
@@ -152,7 +151,6 @@ public class Miner extends MovingBot {
           } else {
             tempDir = (bestDir + i)%8;
           }
-          rc.setIndicatorString(1, "tempDir: " + tempDir + " canmove? " + canMove[tempDir]);
           
           if (canMove[tempDir]) {
             if (rc.isCoreReady())
