@@ -229,8 +229,7 @@ public class Nav {
 
     if (!rc.isCoreReady()) {
       return;
-    }
-    
+    }    
     bugTo(dest);
   }
 
@@ -247,7 +246,7 @@ public class Nav {
 
   private static boolean moveIsUnitSafe(Direction dir) throws GameActionException {
     double[] numAttackingEnemyDirs = br.calculateEnemyDangerValsDirs();
-    return numAttackingEnemyDirs[dir.ordinal()] <= 0;
+    return numAttackingEnemyDirs[dir.ordinal()] <= numAttackingEnemyDirs[8];
   }
   
   private static boolean moveIsHQSafe(Direction dir) throws GameActionException {
@@ -315,8 +314,6 @@ public class Nav {
         
         double allyScore = Util.getDangerScore(rc.senseNearbyRobots(closestEngageable.location, allyIncludeRadius, br.myTeam));
         double enemyScore = Util.getDangerScore(rc.senseNearbyRobots(closestEngageable.location, enemyIncludeRadius, br.theirTeam));
-        rc.setIndicatorString(1, Double.toString(enemyScore));
-        rc.setIndicatorString(0, Double.toString(allyScore));
         fightIsWinningDecision = (allyScore > enemyScore);
         fightDecisionIsCached = true;
         

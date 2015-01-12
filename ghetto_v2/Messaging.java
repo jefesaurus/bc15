@@ -88,8 +88,8 @@ public class Messaging {
   
   public static void setSurvivingEnemyTowers(MapLocation[] curEnemyTowers) throws GameActionException {
     int val = 0;
-    for (int i = br.enemyTowers.length; i-- > 0;) {
-      val = val << 1;
+    for (int i = 0; i < br.enemyTowers.length; i++) {
+      val <<= 1;
       for (int j = curEnemyTowers.length; j-- > 0;) {
         if (curEnemyTowers[j].x == br.enemyTowers[i].x && curEnemyTowers[j].y == br.enemyTowers[i].y) {
           val |= 1;
@@ -106,6 +106,7 @@ public class Messaging {
       if ((val & 0x1) > 0) {
         enemyTowers[i] = br.enemyTowers[i];
       }
+      val >>= 1;
     }
     return enemyTowers;
   }
