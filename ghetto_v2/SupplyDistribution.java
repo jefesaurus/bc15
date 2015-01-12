@@ -25,7 +25,7 @@ public class SupplyDistribution {
     POOL_WORKER
   }
   
-  public SupplyDistribution(BaseBot br) {
+  public static void init(BaseBot br) {
     SupplyDistribution.br = br;
     SupplyDistribution.rc = br.rc;
     mode = SupplyDistributionMode.POOL_WORKER;

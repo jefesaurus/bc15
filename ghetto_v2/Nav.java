@@ -215,6 +215,7 @@ public class Nav {
 
   public static void goTo(MapLocation destIn, Engage engageIn) throws GameActionException {
     engage = engageIn;
+
     fightDecisionIsCached = false;
 
     if (!destIn.equals(dest)) {
@@ -241,13 +242,12 @@ public class Nav {
   
   private static boolean moveIsTowerSafe(Direction dir) throws GameActionException {
     int[] numAttackingTowerDirs = br.calculateNumAttackingTowerDirs();
-
     return numAttackingTowerDirs[dir.ordinal()] == 0;
   }
 
   private static boolean moveIsUnitSafe(Direction dir) throws GameActionException {
-    int[] numAttackingEnemyDirs = br.calculateNumAttackingEnemyDirs();
-    return numAttackingEnemyDirs[dir.ordinal()] == 0;
+    double[] numAttackingEnemyDirs = br.calculateEnemyDangerValsDirs();
+    return numAttackingEnemyDirs[dir.ordinal()] <= 0;
   }
   
   private static boolean moveIsHQSafe(Direction dir) throws GameActionException {
@@ -327,6 +327,45 @@ public class Nav {
       return true;
     case HQ:
       return true;
+    }
+    return false;
+  }
+  
+  public static boolean retreat(double[] dangerVals) throws GameActionException {
+    boolean[] canMove = new boolean[8];
+    for (int i = 8; i-- > 0;) {
+      if (rc.canMove(Util.REGULAR_DIRECTIONS[i])) {
+        if (dangerVals[i] == 0) {
+          rc.move(Util.REGULAR_DIRECTIONS[i]);
+          return true;
+        }
+        canMove[i] = true;
+      } else {
+        canMove[i] = false;
+      }
+    }
+    
+    RobotInfo[] enemies = Cache.getEngagementEnemies();
+    int centerX = 0;
+    int centerY = 0;
+    for (int i = enemies.length; i-- > 0;) {
+      centerX += enemies[i].location.x;
+      centerY += enemies[i].location.y;
+    }
+    MapLocation enemyCentroid = new MapLocation(centerX/enemies.length, centerY/enemies.length);
+    
+    int bestDir = enemyCentroid.directionTo(br.curLoc).ordinal();
+    int tempDir;
+    for (int i = 0; i < 8; i++) {
+      if (i%2 == 0) {
+        tempDir = (bestDir - i)%8;
+      } else {
+        tempDir = (bestDir + i)%8;
+      }
+      if (canMove[tempDir]) {
+        rc.move(Util.REGULAR_DIRECTIONS[tempDir]);
+        return true;
+      }
     }
     return false;
   }

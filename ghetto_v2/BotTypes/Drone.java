@@ -27,9 +27,11 @@ public class Drone extends MovingBot {
 
   public void execute() throws GameActionException {
     currentEnemies = getEnemiesInAttackingRange();
-    
     rallyPoint = Messaging.readRallyPoint();
-    mode = Messaging.getSoldierMode();
+    mode = Messaging.getFleetMode();
+    Messaging.addToFleetCentroid();
+    
+
     
     switch (mode) {
     case TOWER_DIVE:
@@ -49,8 +51,31 @@ public class Drone extends MovingBot {
       break;
     case DEFEND_TOWERS:
       MapLocation[] ourTowers = rc.senseTowerLocations();
-      int numTowers = ourTowers.length;
-      Nav.goTo(ourTowers[rc.getID()%numTowers], Engage.NONE);
+      Nav.goTo(ourTowers[rc.getID()%ourTowers.length], Engage.UNITS);
+      break;
+      
+    case OFFENSIVE_SWARM:
+      if (rc.isCoreReady()) {
+        double[] dangerVals = this.getAllDangerVals();
+        // If the center square is in danger, retreat
+        if (dangerVals[8] > 0) {
+          Nav.retreat(dangerVals);
+        } else if (currentEnemies.length > 0 && rc.isWeaponReady()){
+          attackLeastHealthEnemy(currentEnemies);
+          
+        // Can move, not in danger, can't attack: Advance
+        } else {
+          Nav.goTo(rallyPoint, Engage.UNITS);
+        }
+
+      // If we can't move, but we can attack, do so only if we aren't in danger.
+      } else if (rc.isWeaponReady()) {
+        double[] dangerVals = this.getAllDangerVals();
+        // If the center square is in danger, retreat
+        if (dangerVals[8] <= 0) {
+          attackLeastHealthEnemy(currentEnemies);
+        }
+      }
       break;
     default:
       if (currentEnemies.length > 0) {

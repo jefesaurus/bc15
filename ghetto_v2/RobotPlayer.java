@@ -151,18 +151,17 @@ public class RobotPlayer {
       return enemies;
     }
 
-    public void attackLeastHealthEnemy(RobotInfo[] enemies)
-        throws GameActionException {
+    public void attackLeastHealthEnemy(RobotInfo[] enemies) throws GameActionException {
       if (enemies.length == 0) {
         return;
       }
 
       double minEnergon = Double.MAX_VALUE;
       MapLocation toAttack = null;
-      for (RobotInfo info : enemies) {
-        if (info.health < minEnergon) {
-          toAttack = info.location;
-          minEnergon = info.health;
+      for (int i = enemies.length; i-- > 0;) {
+        if (enemies[i].health < minEnergon) {
+          toAttack = enemies[i].location;
+          minEnergon = enemies[i].health;
         }
       }
 
@@ -219,8 +218,10 @@ public class RobotPlayer {
     protected int currentEnemiesRound = -1;
     
     protected int[] cachedNumAttackingEnemyDirs;
+    protected double[] cachedEnemyDangerValsDirs;
     protected int[] cachedNumAttackingTowerDirs;
     protected int[] cachedAttackingHQDirs;
+    protected double[] cachedDangerVals;
     
     public MovingBot(RobotController rc) {
       super(rc);
@@ -235,10 +236,18 @@ public class RobotPlayer {
     }
     
     public void beginningOfTurn() {
+      // Moving enemies only
       cachedNumAttackingEnemyDirs = null;
+      cachedEnemyDangerValsDirs = null;
+      
+      // Number of enemy towers onl
       cachedNumAttackingTowerDirs = null;
+      
+      // Enemy HQ only
       cachedAttackingHQDirs = null;
-
+      
+      // All of the above
+      cachedDangerVals = null;
 
       super.beginningOfTurn();
     }
@@ -259,8 +268,8 @@ public class RobotPlayer {
     // Doesn't count towers or HQ
     protected int[] calculateNumAttackingEnemyDirs() throws GameActionException {
       if (cachedNumAttackingEnemyDirs == null) {
-        cachedNumAttackingEnemyDirs = new int[8];
-        RobotInfo[] visibleEnemies = Cache.getVisibleEnemies();
+        cachedNumAttackingEnemyDirs = new int[9];
+        RobotInfo[] visibleEnemies = Cache.getEngagementEnemies();
         for (int i = visibleEnemies.length; i-- > 0;) {
           if (visibleEnemies[i].type == RobotType.TOWER || visibleEnemies[i].type == RobotType.HQ) {
             continue;
@@ -272,13 +281,58 @@ public class RobotPlayer {
           }
         }
       }
-
       return cachedNumAttackingEnemyDirs;
+    }
+    
+    protected double[] calculateEnemyDangerValsDirs() throws GameActionException {
+      if (cachedEnemyDangerValsDirs == null) {
+        cachedEnemyDangerValsDirs = new double[9];
+        RobotInfo[] visibleEnemies = Cache.getEngagementEnemies();
+        int enemyType;
+        double dangerVal;
+        for (int i = visibleEnemies.length; i-- > 0;) {
+          enemyType = visibleEnemies[i].type.ordinal();
+          
+          // Ordinal values of HQ and Tower
+          if (enemyType == 1 || enemyType == 0) {
+            continue;
+          }
+          MapLocation enemyLoc = visibleEnemies[i].location;
+          dangerVal = (visibleEnemies[i].supplyLevel > 0) ? Util.DANGER_VALUE_MAP[enemyType] : Util.DANGER_VALUE_MAP[enemyType]/2;
+          int[] attackedDirs = Util.ATTACK_NOTES[Util.RANGE_TYPE_MAP[enemyType]][5 + enemyLoc.x - curLoc.x][5 + enemyLoc.y - curLoc.y];
+          for (int j = attackedDirs.length; j-- > 0;) {
+            cachedEnemyDangerValsDirs[attackedDirs[j]] += dangerVal;
+          }
+        }
+      }
+      return cachedEnemyDangerValsDirs;
+    }
+    
+    protected double[] getAllDangerVals() throws GameActionException {
+      if (cachedDangerVals == null) {
+        cachedDangerVals = calculateEnemyDangerValsDirs();
+        
+        // Do Towers
+        double dangerVal = Util.DANGER_VALUE_MAP[RobotType.TOWER.ordinal()];
+        int[] attackingTowerDirs = calculateNumAttackingTowerDirs();
+        for (int i = attackingTowerDirs.length; i-- > 0;) {
+          cachedDangerVals[attackingTowerDirs[i]] += dangerVal;
+        }
+
+        // Do HQ
+        dangerVal = Util.DANGER_VALUE_MAP[RobotType.HQ.ordinal()];
+        int[] attackingHQDirs = calculateAttackingHQDirs();
+        for (int i = attackingHQDirs.length; i-- > 0;) {
+          cachedDangerVals[attackingHQDirs[i]] += dangerVal;
+        }
+      }
+
+      return cachedDangerVals;
     }
     
     protected int[] calculateNumAttackingTowerDirs() throws GameActionException {
       if (cachedNumAttackingTowerDirs == null) {
-        cachedNumAttackingTowerDirs = new int[8];
+        cachedNumAttackingTowerDirs = new int[9];
         MapLocation[] enemyTowers = Cache.getEnemyTowerLocations();
 
         int xdiff;
@@ -304,7 +358,7 @@ public class RobotPlayer {
     
     protected int[] calculateAttackingHQDirs() throws GameActionException {
       if (cachedAttackingHQDirs == null) {
-        cachedAttackingHQDirs = new int[8];
+        cachedAttackingHQDirs = new int[9];
         int xdiff, ydiff;
 
         xdiff = this.enemyHQ.x - curLoc.x;

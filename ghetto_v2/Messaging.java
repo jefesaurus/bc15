@@ -16,7 +16,12 @@ public class Messaging {
   public final static int RALLY_POINT_X = 16;
   public final static int RALLY_POINT_Y = 17;
 
-  public final static int SOLDIER_MODE = 18;
+  public final static int FLEET_MODE = 18;
+  
+  public final static int FLEET_COUNT = 19;
+  public final static int FLEET_CENTROID_X = 20;
+  public final static int FLEET_CENTROID_Y = 21;
+
   
   public static RobotController rc;
   public static BaseBot br;
@@ -73,12 +78,12 @@ public class Messaging {
     return new MapLocation((val >> 16) - 120 + br.myHQ.x, (val & 0x0000FFFF) - 120 + br.myHQ.y);
   }
   
-  public static void setSoldierMode(MovingBot.AttackMode mode) throws GameActionException {
-    rc.broadcast(SOLDIER_MODE, mode.ordinal());
+  public static void setFleetMode(MovingBot.AttackMode mode) throws GameActionException {
+    rc.broadcast(FLEET_MODE, mode.ordinal());
   }
   
-  public static MovingBot.AttackMode getSoldierMode() throws GameActionException {
-    return MovingBot.AttackMode.values()[rc.readBroadcast(SOLDIER_MODE)];
+  public static MovingBot.AttackMode getFleetMode() throws GameActionException {
+    return MovingBot.AttackMode.values()[rc.readBroadcast(FLEET_MODE)];
   }
   
   public static void setSurvivingEnemyTowers(MapLocation[] curEnemyTowers) throws GameActionException {
@@ -103,5 +108,35 @@ public class Messaging {
       }
     }
     return enemyTowers;
+  }
+  
+  // Adds this unit to the array for fleet centroid.
+  public static void addToFleetCentroid() throws GameActionException {
+    int count = rc.readBroadcast(FLEET_COUNT);
+    rc.broadcast(FLEET_COUNT, count+1);
+    int centroidX = rc.readBroadcast(FLEET_CENTROID_X);
+    rc.broadcast(FLEET_CENTROID_X, centroidX + br.curLoc.x);
+    int centroidY = rc.readBroadcast(FLEET_CENTROID_Y);
+    rc.broadcast(FLEET_CENTROID_Y, centroidY + br.curLoc.y);
+  }
+  
+  public static int getFleetCount() throws GameActionException {
+    return rc.readBroadcast(FLEET_COUNT);
+  }
+  
+  public static MapLocation getFleetCentroid() throws GameActionException {
+    int count = rc.readBroadcast(FLEET_COUNT);
+    if (count == 0) {
+      return new MapLocation(0,0);
+    }
+    int centroidX = rc.readBroadcast(FLEET_CENTROID_X);
+    int centroidY = rc.readBroadcast(FLEET_CENTROID_Y);
+    return new MapLocation(centroidX/count, centroidY/count);
+  }
+  
+  public static void resetFleetCentroid() throws GameActionException {
+    rc.broadcast(FLEET_COUNT, 0);
+    rc.broadcast(FLEET_CENTROID_X, 0);
+    rc.broadcast(FLEET_CENTROID_Y, 0);
   }
 }

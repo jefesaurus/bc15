@@ -6,6 +6,8 @@ import ghetto_v2.SupplyDistribution;
 import ghetto_v2.Util;
 import ghetto_v2.RobotPlayer.BaseBot;
 import ghetto_v2.RobotPlayer.MovingBot;
+import ghetto_v2.RobotPlayer.MovingBot.AttackMode;
+
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -15,28 +17,42 @@ import battlecode.common.RobotInfo;
 import battlecode.common.RobotType;
 
 public class HQ extends BaseBot {
-  private MapLocation[] enemyTowers;
+  public HighLevelStrat strat;
+  public AttackMode currentFleetMode;
+  public MapLocation currentRallyPoint = new MapLocation(0,0);
+  public MapLocation currentTargetTower = new MapLocation(0,0);
   private int towersLeft = 6;
-  private SupplyDistribution supply;
   
   public HQ(RobotController rc) {
     super(rc);
-    this.supply = new SupplyDistribution(this);
   }
   
   public void setup() throws GameActionException {
-    MapLocation rallyPoint = this.myHQ;
-    Messaging.setRallyPoint(rallyPoint);
+    SupplyDistribution.init(this);
+    buildForces();
   }
+  
+  public enum HighLevelStrat {
+    BUILDING_FORCES,
+    SWARMING,
+    APPROACHING_TOWER,
+    TOWER_DIVING,
+    TOWER_DEFENDING
+  };
+  
+  public static final int FLEET_COUNT_ATTACK_THRESHOLD = 15;
 
   public void execute() throws GameActionException {
     int numBeavers = rc.readBroadcast(Messaging.NUM_BEAVERS);
-    supply.setBatteryMode();
+    SupplyDistribution.setBatteryMode();
     if (Clock.getRoundNum() > 300) {
-      supply.manageSupply();
+      SupplyDistribution.manageSupply();
     }
     // This checks which enemy towers are still alive and broadcasts it to save bytecode across the fleet
     Messaging.setSurvivingEnemyTowers(Cache.getEnemyTowerLocationsDirect());
+    MapLocation fleetCentroid = Messaging.getFleetCentroid();
+    int fleetCount = Messaging.getFleetCount();
+    Messaging.resetFleetCentroid();
     
     // Attack enemies if possible.
     RobotInfo[] enemies = getEnemiesInAttackingRange();
@@ -55,26 +71,108 @@ public class HQ extends BaseBot {
         Messaging.queueMiners(10);
       }
     }
-
-    if (Clock.getRoundNum() >= 600 && towersLeft > 0) {
-      MapLocation[] enemyTowers = Cache.getEnemyTowerLocationsDirect();
-      Messaging.setSoldierMode(MovingBot.AttackMode.TOWER_DIVE);
-      towersLeft = enemyTowers.length;
-      targetNearestEnemyTower(enemyTowers);
-    } else {
-      Messaging.setSoldierMode(MovingBot.AttackMode.DEFEND_TOWERS);
-      Messaging.setRallyPoint(myHQ);
+    
+    switch (strat) {
+    case BUILDING_FORCES:
+      if (Clock.getRoundNum() >= 600 && fleetCount > FLEET_COUNT_ATTACK_THRESHOLD) {
+        if (weHaveMoreTowers()) {
+          defendTowers();
+        } else {
+          approachTower(getNearestEnemyTower(Cache.getEnemyTowerLocationsDirect()));
+        }
+      }
+      break;
+    case SWARMING:
+      // Set rally point anywhere
+      setFleetMode(MovingBot.AttackMode.OFFENSIVE_SWARM);
+      break;
+    case APPROACHING_TOWER:
+      // Set rally point to just in front of nearest tower.
+      // Wait until ally centroid is epsilon close, then switch to tower diving
+      if (fleetCentroid.distanceSquaredTo(currentTargetTower) < 50 && !weHaveMoreTowers()) {
+        diveTower(currentTargetTower);
+      }
+      break;
+    case TOWER_DIVING:
+      // If we're winning in tower count, switch to TOWER_DEFENDING
+      if (weHaveMoreTowers()) {
+        defendTowers();
+        
+      // Retreat
+      } else if (fleetCount < FLEET_COUNT_ATTACK_THRESHOLD/3) {
+        buildForces();
+      }
+      break;
+    case TOWER_DEFENDING:
+      // Switch to tower diving if they have equal to or more towers
+      if (!weHaveMoreTowers()) {
+        buildForces();
+      }
+      break;
     }
     
     rc.yield();
   }
   
+  public void approachTower(MapLocation towerLoc) throws GameActionException {
+    System.out.println("Approaching");
+
+    System.out.println(towerLoc.toString());
+    strat = HighLevelStrat.APPROACHING_TOWER;
+    currentTargetTower = towerLoc;
+    setRallyPoint(currentTargetTower);
+    System.out.println(Messaging.readRallyPoint());
+    setFleetMode(MovingBot.AttackMode.OFFENSIVE_SWARM);
+  }
+  
+  public void diveTower(MapLocation towerLoc) throws GameActionException {
+    System.out.println("Diving");
+
+    strat = HighLevelStrat.TOWER_DIVING;
+    setRallyPoint(towerLoc);
+    setFleetMode(MovingBot.AttackMode.TOWER_DIVE);
+  }
+  
+  public void defendTowers() throws GameActionException {
+    System.out.println("Defending");
+
+    strat = HighLevelStrat.TOWER_DEFENDING;
+    setFleetMode(MovingBot.AttackMode.DEFEND_TOWERS);
+    setRallyPoint(myHQ);
+  }
+  
+  public void buildForces() throws GameActionException {
+    strat = HighLevelStrat.BUILDING_FORCES;
+    setFleetMode(MovingBot.AttackMode.OFFENSIVE_SWARM);
+    setRallyPoint(myHQ);
+  }
+  
+  
+  // Messaging wrappers to save bytecode on redundant messages
+  public void setFleetMode(AttackMode newMode) throws GameActionException {
+    if (currentFleetMode != newMode) {
+      Messaging.setFleetMode(newMode);
+      currentFleetMode = newMode;
+    }
+  }
+  
+  public void setRallyPoint(MapLocation rallyPoint) throws GameActionException {
+    if (rallyPoint.x != currentRallyPoint.x || rallyPoint.y != currentRallyPoint.y) {
+      Messaging.setRallyPoint(rallyPoint);
+      currentRallyPoint = rallyPoint;
+    }
+  }
+  
+  public boolean weHaveMoreTowers() throws GameActionException {
+    return rc.senseTowerLocations().length > Cache.getEnemyTowerLocationsDirect().length;
+  }
+  
   /*
    * Senses enemy towers and sets the soldier rally point to the nearest one
    */
-  private void targetNearestEnemyTower(MapLocation[] enemyTowers) throws GameActionException {
+  private MapLocation getNearestEnemyTower(MapLocation[] enemyTowers) throws GameActionException {
     if (towersLeft <= 0) {
-      return;
+      return null;
     }
     double tempDist;
 
@@ -87,6 +185,6 @@ public class HQ extends BaseBot {
         closestIndex = i;
       }
     }
-    Messaging.setRallyPoint(enemyTowers[closestIndex]);
+    return enemyTowers[closestIndex];
   }
 }
