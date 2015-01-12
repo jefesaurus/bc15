@@ -210,7 +210,8 @@ public class RobotPlayer {
 	    OFFENSIVE_SWARM,
 	    DEFENSIVE_SWARM,
 	    CONCAVE,
-	    TOWER_DIVE
+	    TOWER_DIVE,
+	    DEFEND_TOWERS
     }
 		  
     protected RobotInfo[] currentEnemies;

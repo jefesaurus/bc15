@@ -61,10 +61,10 @@ public class HQ extends BaseBot {
       towersLeft = enemyTowers.length;
       targetNearestEnemyTower(enemyTowers);
     } else {
-      Messaging.setSoldierMode(MovingBot.AttackMode.DEFENSIVE_SWARM);
+      Messaging.setSoldierMode(MovingBot.AttackMode.DEFEND_TOWERS);
       Messaging.setRallyPoint(myHQ);
     }
-
+    
     rc.yield();
   }
   

@@ -47,6 +47,11 @@ public class Drone extends MovingBot {
         }
       }
       break;
+    case DEFEND_TOWERS:
+      MapLocation[] ourTowers = rc.senseTowerLocations();
+      int numTowers = ourTowers.length;
+      Nav.goTo(ourTowers[rc.getID()%numTowers], Engage.NONE);
+      break;
     default:
       if (currentEnemies.length > 0) {
         if (rc.isWeaponReady()) {
