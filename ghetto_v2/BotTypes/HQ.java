@@ -55,40 +55,38 @@ public class HQ extends BaseBot {
     if (Clock.getRoundNum() >= 570 && Clock.getRoundNum() <600) {
       supply.distributeBatteryHQ();
     }
-    if (Clock.getRoundNum() >= 600) {
+    
+    if (Clock.getRoundNum() >= 600 && towersLeft > 0) {
+      MapLocation[] enemyTowers = Cache.getEnemyTowerLocationsDirect();
       Messaging.setSoldierMode(MovingBot.AttackMode.TOWER_DIVE);
-      targetNearestEnemyTower();
-      
+      towersLeft = enemyTowers.length;
+      targetNearestEnemyTower(enemyTowers);
+    } else {
+      Messaging.setSoldierMode(MovingBot.AttackMode.DEFENSIVE_SWARM);
+      Messaging.setRallyPoint(myHQ);
     }
+
     rc.yield();
   }
   
   /*
    * Senses enemy towers and sets the soldier rally point to the nearest one
    */
-  private void targetNearestEnemyTower() throws GameActionException {
+  private void targetNearestEnemyTower(MapLocation[] enemyTowers) throws GameActionException {
     if (towersLeft <= 0) {
       return;
     }
-    enemyTowers = Cache.getEnemyTowerLocationsDirect();
-    towersLeft = enemyTowers.length;
-    
-    if (towersLeft > 0) {
-      double tempDist;
+    double tempDist;
 
-      double closestDist = myHQ.distanceSquaredTo(enemyTowers[0]);
-      int closestIndex = 0;
-      for (int i = 1; i < towersLeft; i++) {
-        tempDist = myHQ.distanceSquaredTo(enemyTowers[i]);
-        if (tempDist < closestDist) {
-          closestDist = tempDist;
-          closestIndex = i;
-        }
+    double closestDist = myHQ.distanceSquaredTo(enemyTowers[0]);
+    int closestIndex = 0;
+    for (int i = 1; i < towersLeft; i++) {
+      tempDist = myHQ.distanceSquaredTo(enemyTowers[i]);
+      if (tempDist < closestDist) {
+        closestDist = tempDist;
+        closestIndex = i;
       }
-      Messaging.setRallyPoint(enemyTowers[closestIndex]);
-    } else {
-      Messaging.setRallyPoint(enemyHQ);
-
     }
+    Messaging.setRallyPoint(enemyTowers[closestIndex]);
   }
 }

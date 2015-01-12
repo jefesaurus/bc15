@@ -201,7 +201,6 @@ public class Nav {
       }
     }
 
-
     // If that failed, or if bugging, bug
     if (bugState == BugState.BUG) {
       // Debug.indicateAppend("nav", 1, "bugging; ");
@@ -296,11 +295,11 @@ public class Nav {
         if (closestEngageable == null) {
           return rc.canMove(dir);
         }
-
         
         double allyScore = Util.getDangerScore(rc.senseNearbyRobots(closestEngageable.location, allyIncludeRadius, br.myTeam));
         double enemyScore = Util.getDangerScore(rc.senseNearbyRobots(closestEngageable.location, enemyIncludeRadius, br.theirTeam));
-
+        rc.setIndicatorString(1, Double.toString(enemyScore));
+        rc.setIndicatorString(0, Double.toString(allyScore));
         fightIsWinningDecision = (allyScore > enemyScore);
         fightDecisionIsCached = true;
         
@@ -308,6 +307,7 @@ public class Nav {
       }
       return false;
     case TOWERS:
+      return rc.canMove(dir);
     case HQ:
       return true;
     }

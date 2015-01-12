@@ -43,7 +43,7 @@ public class Drone extends MovingBot {
         }
       } else if (rc.isCoreReady()) {
         if (rallyPoint != null) {
-          Nav.goTo(rallyPoint, Engage.UNITS);
+          Nav.goTo(rallyPoint, Engage.TOWERS);
         }
       }
       break;
@@ -54,7 +54,7 @@ public class Drone extends MovingBot {
         }
       } else if (rc.isCoreReady()) {
         if (rallyPoint != null) {
-          Nav.goTo(rallyPoint, Engage.NONE);
+          Nav.goTo(rallyPoint, Engage.UNITS);
         }
       }
       break;
