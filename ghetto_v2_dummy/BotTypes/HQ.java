@@ -1,11 +1,11 @@
-package ghetto_v2.BotTypes;
+package ghetto_v2_dummy.BotTypes;
 
-import ghetto_v2.Cache;
-import ghetto_v2.Messaging;
-import ghetto_v2.SupplyDistribution;
-import ghetto_v2.Util;
-import ghetto_v2.RobotPlayer.BaseBot;
-import ghetto_v2.RobotPlayer.MovingBot;
+import ghetto_v2_dummy.Cache;
+import ghetto_v2_dummy.Messaging;
+import ghetto_v2_dummy.SupplyDistribution;
+import ghetto_v2_dummy.Util;
+import ghetto_v2_dummy.RobotPlayer.BaseBot;
+import ghetto_v2_dummy.RobotPlayer.MovingBot;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -31,7 +31,7 @@ public class HQ extends BaseBot {
 
   public void execute() throws GameActionException {
     int numBeavers = rc.readBroadcast(Messaging.NUM_BEAVERS);
-    supply.setBatteryMode();
+    
     supply.manageSupply();
     
     // This checks which enemy towers are still alive and broadcasts it to save bytecode across the fleet
@@ -51,41 +51,47 @@ public class HQ extends BaseBot {
       if (newDir != null) {
         rc.spawn(newDir, RobotType.BEAVER);
         rc.broadcast(Messaging.NUM_BEAVERS, numBeavers + 1);
-        Messaging.queueMiners(10);
+        Messaging.queueMiners(5);
       }
     }
 
-    if (Clock.getRoundNum() >= 600 && towersLeft > 0) {
-      MapLocation[] enemyTowers = Cache.getEnemyTowerLocationsDirect();
-      Messaging.setSoldierMode(MovingBot.AttackMode.TOWER_DIVE);
-      towersLeft = enemyTowers.length;
-      targetNearestEnemyTower(enemyTowers);
-    } else {
-      Messaging.setSoldierMode(MovingBot.AttackMode.DEFENSIVE_SWARM);
-      Messaging.setRallyPoint(myHQ);
+    if (Clock.getRoundNum() >= 300 && Clock.getRoundNum() <600) {
+      supply.setBatteryMode();
     }
-
+    if (Clock.getRoundNum() >= 600) {
+      Messaging.setSoldierMode(MovingBot.AttackMode.TOWER_DIVE);
+      targetNearestEnemyTower();
+      
+    }
     rc.yield();
   }
   
   /*
    * Senses enemy towers and sets the soldier rally point to the nearest one
    */
-  private void targetNearestEnemyTower(MapLocation[] enemyTowers) throws GameActionException {
+  private void targetNearestEnemyTower() throws GameActionException {
     if (towersLeft <= 0) {
       return;
     }
-    double tempDist;
+    enemyTowers = Cache.getEnemyTowerLocationsDirect();
+    towersLeft = enemyTowers.length;
+    
+    if (towersLeft > 0) {
+      double tempDist;
 
-    double closestDist = myHQ.distanceSquaredTo(enemyTowers[0]);
-    int closestIndex = 0;
-    for (int i = 1; i < towersLeft; i++) {
-      tempDist = myHQ.distanceSquaredTo(enemyTowers[i]);
-      if (tempDist < closestDist) {
-        closestDist = tempDist;
-        closestIndex = i;
+      double closestDist = myHQ.distanceSquaredTo(enemyTowers[0]);
+      int closestIndex = 0;
+      for (int i = 1; i < towersLeft; i++) {
+        tempDist = myHQ.distanceSquaredTo(enemyTowers[i]);
+        if (tempDist < closestDist) {
+          closestDist = tempDist;
+          closestIndex = i;
+        }
       }
+      Messaging.setRallyPoint(enemyTowers[closestIndex]);
+    } else {
+      Messaging.setRallyPoint(enemyHQ);
+
     }
-    Messaging.setRallyPoint(enemyTowers[closestIndex]);
   }
 }
