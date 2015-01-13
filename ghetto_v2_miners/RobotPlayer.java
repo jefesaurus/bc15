@@ -1,16 +1,16 @@
-package ghetto_v2;
+package ghetto_v2_miners;
 
 import battlecode.common.*;
-import ghetto_v2.Nav;
-import ghetto_v2.BotTypes.Barracks;
-import ghetto_v2.BotTypes.Beaver;
-import ghetto_v2.BotTypes.Drone;
-import ghetto_v2.BotTypes.HQ;
-import ghetto_v2.BotTypes.Helipad;
-import ghetto_v2.BotTypes.Miner;
-import ghetto_v2.BotTypes.MinerFactory;
-import ghetto_v2.BotTypes.Soldier;
-import ghetto_v2.BotTypes.Tower;
+import ghetto_v2_miners.Nav;
+import ghetto_v2_miners.BotTypes.Barracks;
+import ghetto_v2_miners.BotTypes.Beaver;
+import ghetto_v2_miners.BotTypes.Drone;
+import ghetto_v2_miners.BotTypes.HQ;
+import ghetto_v2_miners.BotTypes.Helipad;
+import ghetto_v2_miners.BotTypes.Miner;
+import ghetto_v2_miners.BotTypes.MinerFactory;
+import ghetto_v2_miners.BotTypes.Soldier;
+import ghetto_v2_miners.BotTypes.Tower;
 
 import java.util.*;
 
@@ -150,15 +150,6 @@ public class RobotPlayer {
 
     public RobotInfo[] getEnemiesInAttackingRange() {
       RobotInfo[] enemies = rc.senseNearbyRobots(rc.getType().attackRadiusSquared, theirTeam);
-      return enemies;
-    }
-    
-    public RobotInfo[] getEnemiesInAttackingRangeHQ() {
-      int range = RobotType.HQ.attackRadiusSquared;
-      if (rc.senseTowerLocations().length >= 2) {
-        range = 35;
-      }
-      RobotInfo[] enemies = rc.senseNearbyRobots(range, theirTeam);
       return enemies;
     }
     
@@ -374,17 +365,12 @@ public class RobotPlayer {
     
     protected int[] calculateAttackingHQDirs() throws GameActionException {
       if (cachedAttackingHQDirs == null) {
-        int range = RobotType.HQ.attackRadiusSquared;
-        int numEnemyTowers = Cache.getEnemyTowerLocationsDirect().length;
-        if (numEnemyTowers >= 2) {
-          range = 35;
-        }
         cachedAttackingHQDirs = new int[9];
         int xdiff, ydiff;
-        
+
         xdiff = this.enemyHQ.x - curLoc.x;
         ydiff = this.enemyHQ.y - curLoc.y;
-        if (this.curLoc.distanceSquaredTo(enemyHQ) <= range) {
+        if (xdiff <= 5 && xdiff >= -5 && ydiff <= 5 && ydiff >= -5) {
           int[] attackedDirs = Util.ATTACK_NOTES[Util.RANGE_TYPE_MAP[RobotType.HQ.ordinal()]][5 + xdiff][5 + ydiff];
           for (int j = attackedDirs.length; j-- > 0;) {
             cachedAttackingHQDirs[attackedDirs[j]]++;

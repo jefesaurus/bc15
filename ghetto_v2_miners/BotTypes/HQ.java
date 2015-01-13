@@ -1,13 +1,12 @@
-package ghetto_v2.BotTypes;
+package ghetto_v2_miners.BotTypes;
 
-import ghetto_v2.Cache;
-import ghetto_v2.Messaging;
-import ghetto_v2.SupplyDistribution;
-import ghetto_v2.Util;
-import ghetto_v2.RobotPlayer.BaseBot;
-import ghetto_v2.RobotPlayer.MovingBot;
-import ghetto_v2.RobotPlayer.MovingBot.AttackMode;
-
+import ghetto_v2_miners.Cache;
+import ghetto_v2_miners.Messaging;
+import ghetto_v2_miners.SupplyDistribution;
+import ghetto_v2_miners.Util;
+import ghetto_v2_miners.RobotPlayer.BaseBot;
+import ghetto_v2_miners.RobotPlayer.MovingBot;
+import ghetto_v2_miners.RobotPlayer.MovingBot.AttackMode;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -29,12 +28,6 @@ public class HQ extends BaseBot {
   public void setup() throws GameActionException {
     SupplyDistribution.init(this);
     strat = HighLevelStrat.HARASS;
-  }
-  
-  public enum BaseState {
-    UNDER_ATTACK,
-    HARASSED,
-    FINE
   }
   
   public enum HighLevelStrat {
@@ -75,7 +68,7 @@ public class HQ extends BaseBot {
       if (newDir != null) {
         rc.spawn(newDir, RobotType.BEAVER);
         rc.broadcast(Messaging.NUM_BEAVERS, numBeavers + 1);
-        Messaging.queueMiners(20);
+        Messaging.queueMiners(10);
       }
     }
     
