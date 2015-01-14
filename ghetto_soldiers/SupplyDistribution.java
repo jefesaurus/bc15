@@ -1,6 +1,6 @@
 package ghetto_soldiers;
 
-import ghetto_v2.RobotPlayer.BaseBot;
+import ghetto_soldiers.RobotPlayer.BaseBot;
 import battlecode.common.GameActionException;
 import battlecode.common.GameConstants;
 import battlecode.common.RobotController;
