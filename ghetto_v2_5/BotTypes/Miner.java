@@ -1,5 +1,6 @@
 package ghetto_v2_5.BotTypes;
 
+import ghetto_v2_5.Messaging;
 import ghetto_v2_5.Nav;
 import ghetto_v2_5.Util;
 import ghetto_v2_5.Nav.Engage;
@@ -23,6 +24,7 @@ public class Miner extends MovingBot {
   }
 
   public void execute() throws GameActionException {
+    Messaging.announceMiner();
     mineMicro(this.curLoc);
     rc.yield();
   }
