@@ -19,6 +19,9 @@ public class HQ extends BaseBot {
   public HighLevelStrat strat;
   public AttackMode currentFleetMode;
   public MapLocation currentRallyPoint = new MapLocation(0,0);
+  
+  
+  public boolean isSafeTowerDive = true;
   public MapLocation currentTargetTower = new MapLocation(0,0);
   
   public HQ(RobotController rc) {
@@ -54,7 +57,7 @@ public class HQ extends BaseBot {
       SupplyDistribution.manageSupply();
     }
     // This checks which enemy towers are still alive and broadcasts it to save bytecode across the fleet
-    Messaging.setSurvivingEnemyTowers(Cache.getEnemyTowerLocationsDirect());
+    //Messaging.setSurvivingEnemyTowers(Cache.getEnemyTowerLocationsDirect());
     //MapLocation fleetCentroid = Messaging.getFleetCentroid();
     int fleetCount = Messaging.getFleetCount();
     Messaging.resetFleetCentroid();
@@ -99,8 +102,8 @@ public class HQ extends BaseBot {
       if (Clock.getRoundNum() >= 600 && fleetCount > FLEET_COUNT_ATTACK_THRESHOLD) {
 
         //approachTower(getNearestEnemyTower(Cache.getEnemyTowerLocationsDirect()));
-        approachTower(getMostVulnerableEnemyTower(Cache.getEnemyTowerLocationsDirect()));
-        
+        setCurrentTowerTarget(Cache.getEnemyTowerLocationsDirect());
+        approachTower(currentTargetTower);
       }
       break;
     case SWARMING:
@@ -117,18 +120,10 @@ public class HQ extends BaseBot {
         if (enemyTowers.length == 0) {
           diveTowerUnsafe(currentTargetTower);
         } else {
-          int minDistSquared = Integer.MAX_VALUE;
-          int tempDist;
-          for (int i = enemyTowers.length; i-- > 0;) {
-            tempDist = currentTargetTower.distanceSquaredTo(enemyTowers[i]);
-            if (tempDist > 0 && tempDist < minDistSquared) {
-              minDistSquared = tempDist;
-            }
-          }
-          if (minDistSquared < 9) {
-            diveTowerUnsafe(currentTargetTower);
-          } else {
+          if (isSafeTowerDive) {
             diveTowerSafe(currentTargetTower);
+          } else {
+            diveTowerUnsafe(currentTargetTower);
           }
         }
       }
@@ -136,21 +131,15 @@ public class HQ extends BaseBot {
     case TOWER_DIVING:
       // If we're winning in tower count, switch to TOWER_DEFENDING
       MapLocation[] enemyTowers = Cache.getEnemyTowerLocationsDirect();
-
       if (enemyTowers.length > 0) {
         // Check if our current target is dead yet:
-        boolean targetIsDead = true;
-        for (int i = enemyTowers.length; i-- > 0;) {
-          if (enemyTowers[i].equals(currentTargetTower)) {
-            targetIsDead = false;
-          }
-        }
+        boolean targetIsDead = currentTargetTowerIsDead(enemyTowers);
         
-        if (targetIsDead && weHaveMoreTowers()) {
+        if (targetIsDead) {
           // defendTowers();
-          approachTower(getMostVulnerableEnemyTower(enemyTowers));
+          setCurrentTowerTarget(enemyTowers);
+          approachTower(currentTargetTower);
 
-        // Retreat
         } else if (fleetCount < FLEET_COUNT_ATTACK_THRESHOLD/3) {
           buildForces();
         }
@@ -244,6 +233,73 @@ public class HQ extends BaseBot {
     return enemyTowers[closestIndex];
   }
   
+
+  
+  /*
+   * This sets two class scope variables: the target tower and whether or not to approach the target "safely"
+   * 
+   * It determines the target to be the tower with the Maximum minimum distance to another tower or HQ. That is, the one that is furthest away from the others
+   * The safety metric is basically just to check whether this tower is directly adjacent to another tower, in which case it must ignore danger from untargeted towers.
+   */
+  public void setCurrentTowerTarget(MapLocation[] enemyTowers) throws GameActionException {
+    if (enemyTowers.length <= 0) {
+      currentTargetTower = null;
+    }
+    
+    double maxiMinDist = 0;
+    int chosenIndex = 0;
+    
+    // Keep already computed distances around.
+    int[][] distMat = new int[enemyTowers.length][enemyTowers.length];
+    
+    int tempDist = 0;
+    int minDist;
+    for (int i = enemyTowers.length; i-- > 0;) {
+      minDist = enemyTowers[i].distanceSquaredTo(enemyHQ);
+      for (int j = enemyTowers.length; j-- > i + 1;) {
+        if (distMat[i][j] < minDist) {
+          minDist = distMat[i][j];
+        }
+      }
+      for (int j = i; j-- > 0;) {
+        tempDist = enemyTowers[i].distanceSquaredTo(enemyTowers[j]);
+        distMat[j][i] = tempDist;
+        if (tempDist < minDist) {
+          minDist = tempDist;
+        }
+      }
+
+      if ((minDist - maxiMinDist) < 2 && (minDist - maxiMinDist) > -2) {
+        if (enemyTowers[i].distanceSquaredTo(myHQ) < enemyTowers[chosenIndex].distanceSquaredTo(myHQ)) {
+          maxiMinDist = minDist;
+          chosenIndex = i;
+        }
+      } else if (minDist > maxiMinDist) {
+        maxiMinDist = minDist;
+        chosenIndex = i;
+      }
+    }    
+    
+    isSafeTowerDive = (maxiMinDist > 9);
+    currentTargetTower = enemyTowers[chosenIndex];
+  }
+  
+  public boolean currentTargetTowerIsDead(MapLocation[] enemyTowers) {
+    for (int i = enemyTowers.length; i-- > 0;) {
+      if (enemyTowers[i].equals(currentTargetTower)) {
+        return false;
+      }
+    }
+    return true;
+  }
+  
+  public boolean haveDecentSurround(MapLocation loc) {
+    return (rc.senseNearbyRobots(loc, 63, myTeam).length > 10);
+  }
+  
+  
+  /*
+   * Old code to find a vulnerable tower based on centroid. doesn't work very well.
   private MapLocation getMostVulnerableEnemyTower(MapLocation[] enemyTowers) throws GameActionException {
     if (enemyTowers.length <= 0) {
       return null;
@@ -258,7 +314,6 @@ public class HQ extends BaseBot {
     }
     
     MapLocation towerCenter = new MapLocation(towerX/(1 + enemyTowers.length), towerY/(1 + enemyTowers.length));
-
 
     double tempDist;
     double tempDist2;
@@ -281,11 +336,8 @@ public class HQ extends BaseBot {
         furthestIndex = i;
       }
     }
-    System.out.println("Targeting: " + enemyTowers[furthestIndex]);
+    
     return enemyTowers[furthestIndex];
   }
-  
-  public boolean haveDecentSurround(MapLocation loc) {
-    return (rc.senseNearbyRobots(loc, 63, myTeam).length > FLEET_COUNT_ATTACK_THRESHOLD);
-  }
+  */
 }

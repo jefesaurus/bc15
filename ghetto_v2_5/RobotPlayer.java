@@ -347,44 +347,38 @@ public class RobotPlayer {
         }
       }
       
-      /*
-      String debug = "Danger vals: ";
-      for (int i = 9; i-- > 0;) {
-        debug += Util.REGULAR_DIRECTIONS_WITH_NONE[i].name() + ": " + cachedDangerVals[i] + ", ";
-      }
-      rc.setIndicatorString(2, debug + Clock.getRoundNum());
-  */
       return cachedDangerVals;
     }
     
     protected int[] calculateNumAttackingTowerDirs(MapLocation ignoreTower) throws GameActionException {
       if (cachedNumAttackingTowerDirs == null) {
         cachedNumAttackingTowerDirs = new int[9];
-        MapLocation[] enemyTowers = Cache.getEnemyTowerLocations();
+        MapLocation[] enemyTowers = Cache.getEnemyTowerLocationsDirect();
 
         int xdiff;
         int ydiff;
         for (int i = enemyTowers.length; i-- > 0;) {
-          if (enemyTowers[i] == null || (ignoreTower != null && enemyTowers[i].x == ignoreTower.x && enemyTowers[i].y == ignoreTower.y)) {
-            continue;
-          }
-
           xdiff = enemyTowers[i].x - curLoc.x;
           ydiff = enemyTowers[i].y - curLoc.y;
           if (xdiff <= 5 && xdiff >= -5 && ydiff <= 5 && ydiff >= -5) {
+            if (ignoreTower != null && enemyTowers[i].equals(ignoreTower)) {
+              continue;
+            }
             int[] attackedDirs = Util.ATTACK_NOTES[Util.RANGE_TYPE_MAP[RobotType.TOWER.ordinal()]][5 + xdiff][5 + ydiff];
             for (int j = attackedDirs.length; j-- > 0;) {
               cachedNumAttackingTowerDirs[attackedDirs[j]]++;
             }
           }
         }
+        //rc.setIndicatorString(2, "Tower found: " + Arrays.toString(enemyTowers));
+
       }
       return cachedNumAttackingTowerDirs;
     }
     
     protected int[] calculateAttackingHQDirs() throws GameActionException {
       if (cachedAttackingHQDirs == null) {
-        int range = (Messaging.getNumSurvivingEnemyTowers() >= 2) ? 35 : RobotType.HQ.attackRadiusSquared;
+        int range = (Cache.getEnemyTowerLocationsDirect().length >= 2) ? 35 : RobotType.HQ.attackRadiusSquared;
   
         cachedAttackingHQDirs = new int[9];
         int xdiff, ydiff;
