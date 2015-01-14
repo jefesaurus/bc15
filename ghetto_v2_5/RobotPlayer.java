@@ -1,8 +1,8 @@
 package ghetto_v2_5;
 
 import battlecode.common.*;
-import ghetto_v2.Cache;
-import ghetto_v2.Util;
+import ghetto_v2_5.Cache;
+import ghetto_v2_5.Util;
 import ghetto_v2_5.Nav;
 import ghetto_v2_5.BotTypes.Barracks;
 import ghetto_v2_5.BotTypes.Beaver;
