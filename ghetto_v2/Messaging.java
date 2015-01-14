@@ -12,7 +12,7 @@ public class Messaging {
   public final static int ENEMY_TOWERS = 1;
   public final static int OUR_HQ = 13;
   public final static int ENEMY_HQ = 14;
-  public final static int NUM_MINERS = 15;
+  public final static int QUEUED_MINERS = 15;
   public final static int RALLY_POINT_X = 16;
   public final static int RALLY_POINT_Y = 17;
 
@@ -28,6 +28,8 @@ public class Messaging {
   public final static int VULNERABLE_TOWER_COMPUTATION = 24;
   public final static int VULNERABLE_TOWER_LIST = 25;
   
+  public final static int NUM_MINERS = 26;
+  
 
   public static RobotController rc;
   public static BaseBot br;
@@ -36,6 +38,17 @@ public class Messaging {
   public static void init(BaseBot brIn) throws GameActionException {
     rc = brIn.rc;
     br = brIn;
+  }
+  
+  public static int checkNumMiners() throws GameActionException {
+    int x = rc.readBroadcast(NUM_MINERS);
+    rc.broadcast(NUM_MINERS, 0);
+    return x;
+  }
+  
+  public static void announceMiner() throws GameActionException {
+    int x = rc.readBroadcast(NUM_MINERS);
+    rc.broadcast(NUM_MINERS, ++x);
   }
   
   public static boolean queueVulnerableTowerComputation() throws GameActionException {
@@ -49,17 +62,22 @@ public class Messaging {
   }
 
   public static void queueMiners(int quantity) throws GameActionException {
-    rc.broadcast(NUM_MINERS, quantity);
+    int x = rc.readBroadcast(QUEUED_MINERS);
+    rc.broadcast(QUEUED_MINERS, quantity + x);
   }
   
   public static boolean dequeueMiner() throws GameActionException {
-    int numQueuedMiners = rc.readBroadcast(NUM_MINERS);
+    int numQueuedMiners = rc.readBroadcast(QUEUED_MINERS);
     if (numQueuedMiners > 0) {
-      rc.broadcast(NUM_MINERS, numQueuedMiners - 1);
+      rc.broadcast(QUEUED_MINERS, numQueuedMiners - 1);
       return true;
     } else {
       return false;
     }
+  }
+  
+  public static int peekQueuedMiners() throws GameActionException {
+    return rc.readBroadcast(QUEUED_MINERS);
   }
   
   public static int announceBeaver() throws GameActionException {

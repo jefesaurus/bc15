@@ -71,7 +71,7 @@ public class SupplyDistribution {
   public static void distributeBatteryHQ() throws GameActionException {
     RobotInfo[] robots = rc.senseNearbyRobots(GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED, rc.getTeam());
     for (int i=robots.length; i-- > 0;) {
-      if (Clock.getBytecodesLeft() < 500) {
+      if (Clock.getBytecodesLeft() < 550) {
         return;
       }
       RobotInfo info = robots[i];
