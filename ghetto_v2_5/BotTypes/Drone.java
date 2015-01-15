@@ -16,9 +16,11 @@ import battlecode.common.RobotInfo;
 public class Drone extends MovingBot {  
 
   private SupplyDistribution supply;
+  
   private final int HIBERNATE_DISTANCE = 25;
   private boolean TRYING_TO_HIBERNATE = false;
   private int HIBERNATE_COUNT_DOWN = 5;
+  
   public Drone(RobotController rc) {
     super(rc);
     SupplyDistribution.init(this);
@@ -43,13 +45,11 @@ public class Drone extends MovingBot {
         Nav.goTo(loc, Engage.UNITS);
       }
 
-    // If we can't move, but we can attack, do so only if we aren't in danger.
+    // If we can't move, then attack
     } else if (rc.isWeaponReady()) {
       double[] dangerVals = this.getAllDangerVals();
       // If the center square is in danger, retreat
-      if (dangerVals[8] <= 0) {
-        attackLeastHealthEnemy(currentEnemies);
-      }
+      attackLeastHealthEnemy(currentEnemies);
     }
   }
 
