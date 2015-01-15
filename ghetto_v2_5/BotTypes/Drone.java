@@ -13,10 +13,7 @@ import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotInfo;
 
-public class Drone extends MovingBot {  
-
-  private SupplyDistribution supply;
-  
+public class Drone extends MovingBot {    
   private final int HIBERNATE_DISTANCE = 25;
   private boolean TRYING_TO_HIBERNATE = false;
   private int HIBERNATE_COUNT_DOWN = 5;
@@ -36,20 +33,16 @@ public class Drone extends MovingBot {
       double[] dangerVals = this.getAllDangerVals();
       // If the center square is in danger, retreat
       if (dangerVals[8] > 0) {
-        Nav.retreat(dangerVals);
-      } else if (currentEnemies.length > 0 && rc.isWeaponReady()){
+        if (Nav.moveToSafetyIfPossible(dangerVals)) {
+          return;
+        } else if (currentEnemies.length > 0 && rc.isWeaponReady()) {
+          attackLeastHealthEnemy(currentEnemies);
+        }
+      } else if (currentEnemies.length > 0 && rc.isWeaponReady()) {
         attackLeastHealthEnemy(currentEnemies);
-        
-      // Can move, not in danger, can't attack: Advance
       } else {
         Nav.goTo(loc, Engage.UNITS);
       }
-
-    // If we can't move, then attack
-    } else if (rc.isWeaponReady()) {
-      double[] dangerVals = this.getAllDangerVals();
-      // If the center square is in danger, retreat
-      attackLeastHealthEnemy(currentEnemies);
     }
   }
 
@@ -156,27 +149,8 @@ public class Drone extends MovingBot {
       break;
       
     case OFFENSIVE_SWARM:
-      if (rc.isCoreReady()) {
-        double[] dangerVals = this.getAllDangerVals();
-        // If the center square is in danger, retreat
-        if (dangerVals[8] > 0) {
-          Nav.retreat(dangerVals);
-        } else if (currentEnemies.length > 0 && rc.isWeaponReady()){
-          attackLeastHealthEnemy(currentEnemies);
-          
-        // Can move, not in danger, can't attack: Advance
-        } else {
-          Nav.goTo(rallyPoint, Engage.NONE);
-        }
-
-      // If we can't move, but we can attack, do so only if we aren't in danger.
-      } else if (rc.isWeaponReady()) {
-        double[] dangerVals = this.getAllDangerVals();
-        // If the center square is in danger, retreat
-        if (dangerVals[8] <= 0) {
-          attackLeastHealthEnemy(currentEnemies);
-        }
-      }
+      // Potentially change to engage none.
+      attackMicro(rallyPoint);
       break;
     default:
       if (currentEnemies.length > 0) {

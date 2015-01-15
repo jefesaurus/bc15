@@ -49,11 +49,14 @@ public class Messaging {
     return type.ordinal() + CHECK_OFFSET;
   }
   
-  public static int checkNumUnits(RobotType type) throws GameActionException {
+  public static void resetUnitCount(RobotType type) throws GameActionException {
     int chan = getChannel(type);
     int x = rc.readBroadcast(chan);
     rc.broadcast(chan, x & 0xFF00);
-    return x % 256;
+  }
+  
+  public static int checkNumUnits(RobotType type) throws GameActionException {
+    return rc.readBroadcast(getChannel(type)) & 0x00FF;
   }
   
   public static void announceUnit(RobotType type) throws GameActionException {
@@ -76,13 +79,13 @@ public class Messaging {
   public static int checkTotalNumUnits(RobotType type) throws GameActionException {
     int chan = getChannel(type);
     int x = rc.readBroadcast(chan);
-    return (x % 256) + (x >> 8);
+    return (x & 0x00FF) + (x >> 8);
   }
   
   public static boolean dequeueUnit(RobotType type) throws GameActionException {
     int chan = getChannel(type);
     int x = rc.readBroadcast(chan);
-    int numQueuedUnits = x >> 256;
+    int numQueuedUnits = x >> 8;
     if (numQueuedUnits > 0) {
       rc.broadcast(chan, x - (1 << 8));
       return true;

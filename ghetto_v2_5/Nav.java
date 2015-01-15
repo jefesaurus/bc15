@@ -332,6 +332,16 @@ public class Nav {
     return false;
   }
   
+  public static boolean moveToSafetyIfPossible(double[] dangerVals) throws GameActionException {
+    for (int i = 8; i-- > 0;) {
+      if (dangerVals[i] == 0 && rc.canMove(Util.REGULAR_DIRECTIONS[i])) {
+        rc.move(Util.REGULAR_DIRECTIONS[i]);
+        return true;
+      }
+    }
+    return false;
+  }
+  
   public static boolean retreat(double[] dangerVals) throws GameActionException {
     boolean[] canMove = new boolean[8];
     for (int i = 8; i-- > 0;) {

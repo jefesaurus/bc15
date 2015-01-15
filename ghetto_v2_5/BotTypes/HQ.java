@@ -366,6 +366,7 @@ public class HQ extends BaseBot {
     }
    */
   
+  /*
   public static final int NUM_BEAVERS = 1;
   public void maintainUnitComposition() {
     if (rc.isCoreReady() && rc.hasSpawnRequirements(RobotType.BEAVER)) {
@@ -375,6 +376,7 @@ public class HQ extends BaseBot {
       }
     }
   }
+  */
   
   
   /*
