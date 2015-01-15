@@ -354,6 +354,28 @@ public class HQ extends BaseBot {
     return (rc.senseNearbyRobots(loc, 63, myTeam).length > 10);
   }
   
+  /*
+   *     // Spawn if possible
+    if (Clock.getRoundNum() < 100 && numBeavers < 1 && rc.isCoreReady() && rc.hasSpawnRequirements(RobotType.BEAVER)) {
+      Direction newDir = getOffensiveSpawnDirection(RobotType.BEAVER);
+      if (newDir != null) {
+        rc.spawn(newDir, RobotType.BEAVER);
+        rc.broadcast(Messaging.NUM_BEAVERS, numBeavers + 1);
+        Messaging.queueMiners(MAX_MINERS);
+      }
+    }
+   */
+  
+  public static final int NUM_BEAVERS = 1;
+  public void maintainUnitComposition() {
+    if (rc.isCoreReady() && rc.hasSpawnRequirements(RobotType.BEAVER)) {
+      Direction newDir = getOffensiveSpawnDirection(RobotType.BEAVER);
+      if (Messaging.getUnitCount(RobotType.BEAVER) < NUM_BEAVERS) {
+        rc.spawn(newDir, RobotType.BEAVER);
+      }
+    }
+  }
+  
   
   /*
    * Old code to find a vulnerable tower based on centroid. doesn't work very well.
