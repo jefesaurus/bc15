@@ -51,6 +51,8 @@ public class Util {
       Direction.SOUTH_EAST, Direction.SOUTH, Direction.SOUTH_WEST,
       Direction.WEST, Direction.NORTH_WEST, Direction.NONE };
   
+  public static final int[] DIR_DX = {0, 1, 1, 1, 0, -1, -1, -1, 0};
+  public static final int[] DIR_DY = {-1, -1, 0, 1, 1, 1, 0, -1, 0};
   
   public static final double UNSUPPLIED_COEFF = .5; // How much less dangerous is an unsupplied unit?
   

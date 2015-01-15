@@ -241,7 +241,7 @@ public class RobotPlayer {
     protected int[] cachedNumAttackingEnemyDirs;
     protected double[] cachedEnemyDangerValsDirs;
     protected int[] cachedNumAttackingTowerDirs;
-    protected int[] cachedAttackingHQDirs;
+    protected boolean[] cachedAttackingHQDirs;
     protected double[] cachedDangerVals;
     
     public MovingBot(RobotController rc) {
@@ -342,10 +342,12 @@ public class RobotPlayer {
 
         // Do HQ
         dangerVal = Util.DANGER_VALUE_MAP[RobotType.HQ.ordinal()];
-        int[] attackingHQDirs = calculateAttackingHQDirs();
+        boolean[] attackingHQDirs = calculateAttackingHQDirs();
         //rc.setIndicatorString(0, "HQ Dirs: " + Arrays.toString(attackingHQDirs));
         for (int i = attackingHQDirs.length; i-- > 0;) {
-          cachedDangerVals[i] += attackingHQDirs[i]*dangerVal;
+          if (attackingHQDirs[i]) {
+            cachedDangerVals[i] += dangerVal;
+          }
         }
       }
       
@@ -378,25 +380,46 @@ public class RobotPlayer {
       return cachedNumAttackingTowerDirs;
     }
     
-    protected int[] calculateAttackingHQDirs() throws GameActionException {
+    protected boolean[] calculateAttackingHQDirs() throws GameActionException {
       if (cachedAttackingHQDirs == null) {
-        int range = RobotType.HQ.attackRadiusSquared;
+        int curDist = curLoc.distanceSquaredTo(enemyHQ);
         int numEnemyTowers = Cache.getEnemyTowerLocationsDirect().length;
+        cachedAttackingHQDirs = new boolean[9];
         if (numEnemyTowers >= 5) {
-          range = 81;
+          
+          if (curDist < 81) {
+            int xdiff = curLoc.x - this.enemyHQ.x;
+            int ydiff = curLoc.y - this.enemyHQ.y;
+            int dx, dy;
+            String dbug = "";
+            for (int i = 9; i-- > 0;) {
+              dx = xdiff + Util.DIR_DX[i];
+              dy = ydiff + Util.DIR_DY[i];
+              dx = (dx > 0) ? dx : -dx;
+              dy = (dy > 0) ? dy : -dy;
+              cachedAttackingHQDirs[i] = (dx <= 6 && dy <= 6 && dx + dy <= 10);
+              dbug += Util.REGULAR_DIRECTIONS_WITH_NONE[i].name() + ": (" + dx + ", " + dy + ")," + cachedAttackingHQDirs[i] + ", ";
+            }
+            rc.setIndicatorString(2, dbug + "... Round: " + Clock.getRoundNum());
+
+          }
         } else if (numEnemyTowers >= 2) {
-          range = 35;
-        }
-        
-        cachedAttackingHQDirs = new int[9];
-        int xdiff, ydiff;
-        
-        xdiff = this.enemyHQ.x - curLoc.x;
-        ydiff = this.enemyHQ.y - curLoc.y;
-        if (this.curLoc.distanceSquaredTo(enemyHQ) <= range) {
-          int[] attackedDirs = Util.ATTACK_NOTES[Util.RANGE_TYPE_MAP[RobotType.HQ.ordinal()]][5 + xdiff][5 + ydiff];
-          for (int j = attackedDirs.length; j-- > 0;) {
-            cachedAttackingHQDirs[attackedDirs[j]]++;
+          if (curDist < 49) {
+            if (curDist <= 35) {
+              cachedAttackingHQDirs[8] = true;
+            }
+            for (int i = 8; i-- > 0;) {
+              cachedAttackingHQDirs[i] = curLoc.add(Util.REGULAR_DIRECTIONS[i]).distanceSquaredTo(enemyHQ) < 35;
+            }
+          }
+        } else {
+          if (curDist < 36) {
+            if (curDist <= 24) {
+              cachedAttackingHQDirs[8] = true;
+            }
+            for (int i = 8; i-- > 0;) {
+              cachedAttackingHQDirs[i] = curLoc.add(Util.REGULAR_DIRECTIONS[i]).distanceSquaredTo(enemyHQ) < 24;
+            }
           }
         }
       }

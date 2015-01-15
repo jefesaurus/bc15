@@ -250,7 +250,8 @@ public class Nav {
   }
   
   private static boolean moveIsHQSafe(Direction dir) throws GameActionException {
-    return br.curLoc.add(dir).distanceSquaredTo(br.enemyHQ) > 24;
+    boolean[] attackingHQDirs = br.calculateAttackingHQDirs();
+    return !attackingHQDirs[dir.ordinal()];
   }
   
   private static boolean completeSafeMoveCheck(Direction dir) throws GameActionException {
