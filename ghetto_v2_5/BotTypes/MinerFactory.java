@@ -11,21 +11,31 @@ import battlecode.common.RobotType;
 
 public class MinerFactory extends BaseBot {
   public static int targetNumMiners;
-  
+  public static RobotType[] types = {RobotType.MINER};
   public MinerFactory(RobotController rc) {
     super(rc);
   }
 
   public void execute() throws GameActionException {
-    if (Messaging.dequeueMiner()) {
-      while (!rc.isCoreReady() || !rc.hasSpawnRequirements(RobotType.MINER)) {
-        rc.yield();
-      };
-      Direction newDir = getOffensiveSpawnDirection(RobotType.MINER);
-      if (newDir != null) {
-        rc.spawn(newDir, RobotType.MINER);
+    int unitToProduce = Messaging.getUnitToProduce();
+    if (unitToProduce != -1 || unitToProduce != RobotType.DRONE.ordinal()) {
+      return;
+    }
+    
+    //Build units if queued
+    for (int i=types.length; i-- > 0;) {
+      RobotType curType = types[i];
+      if (Messaging.dequeueUnit(curType)) {
+        while (!rc.isCoreReady() && !rc.hasBuildRequirements(curType)) {rc.yield();};
+        Direction spawnDir = getDefensiveSpawnDirection(curType);
+        if (spawnDir != null) {
+          rc.spawn(spawnDir, curType);
+        } else {
+          System.out.println("WRITE CODE HERE, NEED TO FIND PLACE TO BUILD (HELIPAD)");
+        }
       }
     }
+    
     rc.yield();
   }
 }

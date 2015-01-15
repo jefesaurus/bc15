@@ -86,7 +86,6 @@ public class HQ extends BaseBot {
       if (newDir != null) {
         rc.spawn(newDir, RobotType.BEAVER);
         rc.broadcast(Messaging.NUM_BEAVERS, numBeavers + 1);
-        Messaging.queueMiners(MAX_MINERS);
       }
     }
     
