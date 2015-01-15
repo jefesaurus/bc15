@@ -4,6 +4,7 @@ import battlecode.common.Clock;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
+import battlecode.common.RobotType;
 import ghetto_v2_5.RobotPlayer.BaseBot;
 import ghetto_v2_5.RobotPlayer.MovingBot;
 
@@ -31,13 +32,63 @@ public class Messaging {
   
   public final static int NUM_MINERS = 26;
 
+  public final static int CHECK_OFFSET = 100;
+  
   public static RobotController rc;
   public static BaseBot br;
+  
+  
   
   // init needs to get called once at the beginning to set up some stuff.
   public static void init(BaseBot brIn) throws GameActionException {
     rc = brIn.rc;
     br = brIn;
+  }
+  
+  public static int getChannel(RobotType type) {
+    return type.ordinal() + CHECK_OFFSET;
+  }
+  
+  public static int checkNumUnits(RobotType type) throws GameActionException {
+    int chan = getChannel(type);
+    int x = rc.readBroadcast(chan);
+    rc.broadcast(chan, x & 0xFF00);
+    return x % 256;
+  }
+  
+  public static void announceUnit(RobotType type) throws GameActionException {
+    int chan = getChannel(type);
+    int x = rc.readBroadcast(chan);
+    rc.broadcast(chan, x + 1);
+  }
+  
+  public static void queueUnits(RobotType type, int quantity) throws GameActionException {
+    int chan = getChannel(type);
+    int x = rc.readBroadcast(chan);
+    rc.broadcast(chan, x + (quantity << 8));
+  }
+  
+  public static int peekQueueUnits(RobotType type) throws GameActionException {
+    int chan = getChannel(type);
+    return rc.readBroadcast(chan) >> 8;
+  }
+  
+  public static int checkTotalNumUnits(RobotType type) throws GameActionException {
+    int chan = getChannel(type);
+    int x = rc.readBroadcast(chan);
+    return (x % 256) + (x >> 8);
+  }
+  
+  public static boolean dequeueUnit(RobotType type) throws GameActionException {
+    int chan = getChannel(type);
+    int x = rc.readBroadcast(chan);
+    int numQueuedUnits = x >> 256;
+    if (numQueuedUnits > 0) {
+      rc.broadcast(chan, x - (1 << 8));
+      return true;
+    } else {
+      return false;
+    }
   }
   
   public static int checkNumMiners() throws GameActionException {
