@@ -31,6 +31,8 @@ public class Messaging {
   public final static int VULNERABLE_TOWER_LIST = 25;
   
   public final static int NUM_MINERS = 26;
+  
+  public final static int UNIT_TO_PRODUCE = 27;
 
   public final static int CHECK_OFFSET = 100;
   
@@ -266,5 +268,17 @@ public class Messaging {
       val >>= 1;
     }
     return closest;
+  }
+  
+  public static void setUnitToProduce(RobotType type) throws GameActionException {
+    if (type == null) {
+      rc.broadcast(UNIT_TO_PRODUCE, -1);
+    } else {
+      rc.broadcast(UNIT_TO_PRODUCE, type.ordinal());
+    }
+  }
+  
+  public static int getUnitToProduce() throws GameActionException {
+    return rc.readBroadcast(UNIT_TO_PRODUCE);
   }
 }

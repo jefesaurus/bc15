@@ -367,14 +367,22 @@ public class HQ extends BaseBot {
    */
   
   /*
+  
   public static final int NUM_BEAVERS = 1;
-  public void maintainUnitComposition() {
+  public static final int NUM_BEAVERS = 1;
+
+  public void maintainUnitComposition() throws GameActionException {
+    if (Messaging.checkNumUnits(RobotType.BEAVER) < NUM_BEAVERS) {
+      Messaging.setUnitToProduce(RobotType.BEAVER);       
+    } else if (Messaging.checkNumUnits(RobotType.MINERFACTORY) < NUM_BEAVERS)
+    return;
+  }
+  
+  public void rUnits() {
     if (rc.isCoreReady() && rc.hasSpawnRequirements(RobotType.BEAVER)) {
-      Direction newDir = getOffensiveSpawnDirection(RobotType.BEAVER);
-      if (Messaging.getUnitCount(RobotType.BEAVER) < NUM_BEAVERS) {
-        rc.spawn(newDir, RobotType.BEAVER);
-      }
+      if 
     }
+
   }
   */
   
