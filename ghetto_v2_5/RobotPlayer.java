@@ -101,7 +101,7 @@ public class RobotPlayer {
       Direction toDest = rc.getLocation().directionTo(dest);
       Direction[] dirs = { toDest, toDest.rotateLeft(), toDest.rotateRight(),
           toDest.rotateLeft().rotateLeft(), toDest.rotateRight().rotateRight() };
-
+      
       return dirs;
     }
 
@@ -382,11 +382,12 @@ public class RobotPlayer {
       if (cachedAttackingHQDirs == null) {
         int range = RobotType.HQ.attackRadiusSquared;
         int numEnemyTowers = Cache.getEnemyTowerLocationsDirect().length;
-        if (numEnemyTowers >= 2) {
+        if (numEnemyTowers >= 5) {
+          range = 81;
+        } else if (numEnemyTowers >= 2) {
           range = 35;
-        } else if (numEnemyTowers >= 5) {
-          range = 48;
         }
+        
         cachedAttackingHQDirs = new int[9];
         int xdiff, ydiff;
         
