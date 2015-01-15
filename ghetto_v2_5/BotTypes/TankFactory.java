@@ -29,7 +29,7 @@ public class TankFactory extends BaseBot {
         if (spawnDir != null) {
           rc.spawn(spawnDir, curType);
         } else {
-          System.out.println("WRITE CODE HERE, NEED TO FIND PLACE TO BUILD (HELIPAD)");
+          System.out.println("WRITE CODE HERE, NEED TO FIND PLACE TO BUILD (TANKFACTORY)");
         }
       }
     }
