@@ -23,7 +23,7 @@ public class HQ extends BaseBot {
   
   public boolean isSafeTowerDive = true;
   public MapLocation currentTargetTower = new MapLocation(0,0);
-  private int MAX_MINERS = 30;
+  private int MAX_MINERS = 20;
   
   public HQ(RobotController rc) {
     super(rc);
@@ -81,7 +81,7 @@ public class HQ extends BaseBot {
     }
     
     // Spawn if possible
-    if (Clock.getRoundNum() < 100 && numBeavers < 1 && rc.isCoreReady() && rc.hasSpawnRequirements(RobotType.BEAVER)) {
+    if (numBeavers < 1 && rc.isCoreReady() && rc.hasSpawnRequirements(RobotType.BEAVER)) {
       Direction newDir = getOffensiveSpawnDirection(RobotType.BEAVER);
       if (newDir != null) {
         rc.spawn(newDir, RobotType.BEAVER);
