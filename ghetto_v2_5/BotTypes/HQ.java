@@ -64,7 +64,7 @@ public class HQ extends BaseBot {
     Messaging.resetFleetCentroid();
     Messaging.resetTowersUnderAttack();
     
-    int range_squared = 25;
+    int range_squared = 24;
     int numTowers = rc.senseTowerLocations().length;
     if (numTowers >= 5) {
       range_squared = 51;
@@ -177,25 +177,45 @@ public class HQ extends BaseBot {
 
     double minEnergon = Double.MAX_VALUE;
     MapLocation toAttack = null;
+    MapLocation toAttackInRange = null;
+    boolean attackable = true;
+    
     for (int i = enemies.length; i-- > 0;) {
       if (enemies[i].health < minEnergon) {
         toAttack = enemies[i].location;
         minEnergon = enemies[i].health;
+        if (range_squared > 35 && enemies[i].location.distanceSquaredTo(this.myHQ) <= 35) {
+          toAttackInRange = enemies[i].location;
+        }
       }
     }
     
     if (rc.getLocation().distanceSquaredTo(toAttack) > 35) {
+      attackable = false;
       Direction[] dirs = Direction.values();
       for (Direction d : dirs) {
         MapLocation trialToAttack = toAttack.add(d);
         if (trialToAttack.distanceSquaredTo(this.myHQ) <= 35) {
           toAttack = trialToAttack;
+          attackable = true;
+          break;
         }
       }
     }
     
-    rc.attackLocation(toAttack);
- 
+    if (range_squared == 25) {
+      System.out.println(rc.getLocation().distanceSquaredTo(toAttack));
+    }
+    
+    if (attackable) {
+      rc.attackLocation(toAttack);
+    } else {
+      if (toAttackInRange == null) {
+        return;
+      } else {
+        rc.attackLocation(toAttackInRange);
+      }
+    }
   }
   
   public void approachTower(MapLocation towerLoc) throws GameActionException {
