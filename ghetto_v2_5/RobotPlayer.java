@@ -386,6 +386,7 @@ public class RobotPlayer {
         int numEnemyTowers = Cache.getEnemyTowerLocationsDirect().length;
         cachedAttackingHQDirs = new boolean[9];
         if (numEnemyTowers >= 5) {
+          
           if (curDist < 81) {
             int xdiff = curLoc.x - this.enemyHQ.x;
             int ydiff = curLoc.y - this.enemyHQ.y;

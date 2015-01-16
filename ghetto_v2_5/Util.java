@@ -179,7 +179,7 @@ public class Util {
                                                    Util.BASHER_DANGER, Util.MINER_DANGER, Util.DRONE_DANGER, Util.TANK_DANGER, Util.COMMANDER_DANGER, 0, Util.MISSILE_DANGER};
   
   // 
-  public final static int[] RANGE_TYPE_MAP = {5,5,0,0,0,0,0,0,0,0,0,2,0,2,1,2,3,4,3,0,1};
+  public final static int[] RANGE_TYPE_MAP = {5,5,0,0,0,0,0,0,0,0,0,2,0,2,1,2,3,4,3,0,1,};
   
   // [unit type ordinal][x][y][dir]
   public final static int[][][][] ATTACK_NOTES = {
