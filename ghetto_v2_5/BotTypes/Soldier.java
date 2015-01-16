@@ -26,6 +26,7 @@ public class Soldier extends MovingBot {
   protected MovingBot.AttackMode mode = MovingBot.AttackMode.OFFENSIVE_SWARM;
 
   public void execute() throws GameActionException {
+    Messaging.announceUnit(rc.getType());
     currentEnemies = getEnemiesInAttackingRange();
 
     rc.setIndicatorString(0, Integer.toString(Clock.getBytecodeNum()));

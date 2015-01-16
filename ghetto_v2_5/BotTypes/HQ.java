@@ -25,6 +25,13 @@ public class HQ extends BaseBot {
   public MapLocation currentTargetTower = new MapLocation(0,0);
   private int MAX_MINERS = 20;
   
+  public int curNumHelipads = 0;
+  public int curNumBarracks = 0;
+  public int curNumTankFactories = 0;
+  public int curNumMiners = 0;
+  public int curNumBeavers = 0;
+  public int curNumMinerFactories = 0;
+  
   public HQ(RobotController rc) {
     super(rc);
   }
@@ -53,8 +60,15 @@ public class HQ extends BaseBot {
   public static final int FLEET_COUNT_ATTACK_THRESHOLD = 15;
 
   public void execute() throws GameActionException {
-    int numMiners = Messaging.checkNumMiners();
-    int numBeavers = rc.readBroadcast(Messaging.NUM_BEAVERS);
+    Messaging.setUnitToProduce(null);
+    curNumHelipads = Messaging.checkTotalNumUnits(RobotType.HELIPAD);
+    curNumBarracks = Messaging.checkTotalNumUnits(RobotType.BARRACKS);
+    curNumTankFactories = Messaging.checkTotalNumUnits(RobotType.TANKFACTORY);
+    curNumBeavers = Messaging.checkTotalNumUnits(RobotType.BEAVER);
+    curNumMiners = Messaging.checkTotalNumUnits(RobotType.MINER);
+    curNumMinerFactories = Messaging.checkTotalNumUnits(RobotType.MINERFACTORY);
+    //System.out.println("curNumBeavers: " + curNumBeavers);
+    
     SupplyDistribution.manageSupply();
     
     // This checks which enemy towers are still alive and broadcasts it to save bytecode across the fleet
@@ -375,25 +389,40 @@ public class HQ extends BaseBot {
   public static final int NUM_BEAVERS = 1;
   public static final int NUM_MINER_FACTORIES = 1;
   public static final int NUM_BARRACKS = 1;
-  public static final int NUM_TANK_FACTORIES = 1;
+  public static final int NUM_TANK_FACTORIES = 3;
+  public static final int NUM_HELIPADS = 1;
   
 
   public void maintainUnitComposition() throws GameActionException {
     if (maintainConstantUnits()) {
       maintainOreProduction();
+      doBuildOrder();
     }
     return;
   }
   
+  public void doBuildOrder() throws GameActionException {
+    if (curNumHelipads < NUM_HELIPADS) {
+      Messaging.queueUnits(RobotType.HELIPAD, NUM_HELIPADS - curNumHelipads);
+    }
+    
+    if (curNumBarracks < NUM_BARRACKS) {
+      Messaging.queueUnits(RobotType.BARRACKS, NUM_BARRACKS - curNumBarracks);
+    }
+    
+    if (curNumTankFactories < NUM_TANK_FACTORIES) {
+      Messaging.queueUnits(RobotType.TANKFACTORY, NUM_TANK_FACTORIES - curNumTankFactories);
+    }
+  }
+  
   // Returns true if constant requirements are met.
   public boolean maintainConstantUnits() throws GameActionException {
-    if (Messaging.checkTotalNumUnits(RobotType.BEAVER) < NUM_BEAVERS) {
-      Messaging.setUnitToProduce(RobotType.BEAVER);
+    if (curNumBeavers < NUM_BEAVERS) {
+      //Messaging.setUnitToProduce(RobotType.BEAVER);
       Messaging.queueUnits(RobotType.BEAVER, 1);
-      System.out.println("building beaver");
       return false;
-    } else if (Messaging.checkTotalNumUnits(RobotType.MINERFACTORY) < NUM_MINER_FACTORIES) {
-      Messaging.setUnitToProduce(RobotType.MINERFACTORY);
+    } else if (curNumMinerFactories < NUM_MINER_FACTORIES) {
+      //Messaging.setUnitToProduce(RobotType.MINERFACTORY);
       Messaging.queueUnits(RobotType.MINERFACTORY, 1);
       return false;
     }
@@ -403,9 +432,8 @@ public class HQ extends BaseBot {
   static final int MAX_NUM_MINERS = 20;
   // Get estimated ore production and compare it to the value required by our current unit output and/or desired future unit output.
   public boolean maintainOreProduction() throws GameActionException {
-    int numMiners = Messaging.checkTotalNumUnits(RobotType.MINER);
-    int minersNeeded = 20 - numMiners;
-    if (numMiners < MAX_NUM_MINERS) {
+    int minersNeeded = 20 - curNumMiners;
+    if (curNumMiners < MAX_NUM_MINERS) {
       Messaging.setUnitToProduce(null);
       Messaging.queueUnits(RobotType.MINER, minersNeeded);
     }

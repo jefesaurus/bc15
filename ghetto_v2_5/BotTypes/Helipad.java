@@ -16,19 +16,25 @@ public class Helipad extends BaseBot {
   }
 
   public void execute() throws GameActionException {
+    Messaging.announceUnit(rc.getType());
     int unitToProduce = Messaging.getUnitToProduce();
-    if (unitToProduce != -1 || unitToProduce != RobotType.DRONE.ordinal()) {
+    if (unitToProduce != -1 && unitToProduce != RobotType.DRONE.ordinal()) {
       return;
     }
     
     //Build units if queued
     for (int i=types.length; i-- > 0;) {
       RobotType curType = types[i];
-      if (Messaging.dequeueUnit(curType)) {
-        while (!rc.isCoreReady() && !rc.hasBuildRequirements(curType)) {rc.yield();};
+      if (rc.isCoreReady() && rc.hasSpawnRequirements(curType) && Messaging.dequeueUnit(curType)) {
         Direction spawnDir = getDefensiveSpawnDirection(curType);
         if (spawnDir != null) {
+          Messaging.announceBuilding(rc.getType());
           rc.spawn(spawnDir, curType);
+          Messaging.announceDoneBuilding(rc.getType());
+          Messaging.announceDoneBuilding(curType);
+          Messaging.announceUnit(rc.getType());
+          //Have to announce it for that unit because of spawn sickness
+          Messaging.announceUnit(curType);
         } else {
           System.out.println("WRITE CODE HERE, NEED TO FIND PLACE TO BUILD (HELIPAD)");
         }

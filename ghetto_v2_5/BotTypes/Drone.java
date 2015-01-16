@@ -51,6 +51,7 @@ public class Drone extends MovingBot {
   public MapLocation towerToHelp = null;
 
   public void execute() throws GameActionException {
+    Messaging.announceUnit(rc.getType());
     currentEnemies = getEnemiesInAttackingRange();
     rallyPoint = Messaging.readRallyPoint();
     mode = Messaging.getFleetMode();
