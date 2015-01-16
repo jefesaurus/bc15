@@ -24,7 +24,7 @@ public class Barracks extends BaseBot {
         return;
       }
       if (Messaging.dequeueUnit(curType)) {
-        while (!rc.isCoreReady() && !rc.hasBuildRequirements(curType)) {rc.yield();};
+        while (!rc.isCoreReady() && !rc.hasSpawnRequirements(curType)) {rc.yield();};
         Direction spawnDir = getDefensiveSpawnDirection(curType);
         if (spawnDir != null) {
           rc.spawn(spawnDir, curType);

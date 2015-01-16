@@ -25,7 +25,7 @@ public class Helipad extends BaseBot {
     for (int i=types.length; i-- > 0;) {
       RobotType curType = types[i];
       if (Messaging.dequeueUnit(curType)) {
-        while (!rc.isCoreReady() && !rc.hasBuildRequirements(curType)) {rc.yield();};
+        while (!rc.isCoreReady() && !rc.hasSpawnRequirements(curType)) {rc.yield();};
         Direction spawnDir = getDefensiveSpawnDirection(curType);
         if (spawnDir != null) {
           rc.spawn(spawnDir, curType);
