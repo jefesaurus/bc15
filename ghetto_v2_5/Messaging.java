@@ -55,7 +55,7 @@ public class Messaging {
   public static void resetUnitCount(RobotType type) throws GameActionException {
     int chan = getChannel(type);
     int x = rc.readBroadcast(chan);
-    rc.broadcast(chan, x & 0xFF00);
+    rc.broadcast(chan, x & 0xFFFF00);
   }
   
   public static int checkNumUnits(RobotType type) throws GameActionException {
@@ -119,31 +119,6 @@ public class Messaging {
       rc.broadcast(VULNERABLE_TOWER_COMPUTATION, 1);
       return true;
     }
-  }
-
-  public static void queueMiners(int quantity) throws GameActionException {
-    int x = rc.readBroadcast(QUEUED_MINERS);
-    rc.broadcast(QUEUED_MINERS, quantity + x);
-  }
-  
-  public static boolean dequeueMiner() throws GameActionException {
-    int numQueuedMiners = rc.readBroadcast(QUEUED_MINERS);
-    if (numQueuedMiners > 0) {
-      rc.broadcast(QUEUED_MINERS, numQueuedMiners - 1);
-      return true;
-    } else {
-      return false;
-    }
-  }
-  
-  public static int peekQueuedMiners() throws GameActionException {
-    return rc.readBroadcast(QUEUED_MINERS);
-  }
-  
-  public static int announceBeaver() throws GameActionException {
-    int numBeavers = rc.readBroadcast(NUM_BEAVERS);
-    rc.broadcast(NUM_BEAVERS, numBeavers + 1);
-    return numBeavers;
   }
   
   public static MapLocation readRallyPoint() throws GameActionException {
@@ -280,6 +255,7 @@ public class Messaging {
     } else {
       rc.broadcast(UNIT_TO_PRODUCE, type.ordinal());
     }
+    System.out.println("Unit to produce " + rc.readBroadcast(UNIT_TO_PRODUCE));
   }
   
   public static int getUnitToProduce() throws GameActionException {

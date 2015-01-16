@@ -20,14 +20,10 @@ public class Barracks extends BaseBot {
     for (int i=types.length; i-- > 0;) {
       RobotType curType = types[i];
       int unitToProduce = Messaging.getUnitToProduce();
-      if (unitToProduce != -1 || unitToProduce != curType.ordinal()) {
+      if (unitToProduce != -1 && unitToProduce != curType.ordinal()) {
         return;
       }
-      if (Messaging.dequeueUnit(curType)) {
-        while (!rc.isCoreReady() && !rc.hasSpawnRequirements(curType)) {
-          rc.yield();
-          Messaging.announceUnit(rc.getType());
-        };
+      if (rc.isCoreReady() && rc.hasSpawnRequirements(curType) && Messaging.dequeueUnit(curType)) {
         Direction spawnDir = getDefensiveSpawnDirection(curType);
         if (spawnDir != null) {
           Messaging.announceBuilding(rc.getType());

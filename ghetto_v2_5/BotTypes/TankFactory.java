@@ -17,18 +17,14 @@ public class TankFactory extends BaseBot {
   public void execute() throws GameActionException {
     Messaging.announceUnit(rc.getType());
     int unitToProduce = Messaging.getUnitToProduce();
-    if (unitToProduce != -1 || unitToProduce != RobotType.TANK.ordinal()) {
+    if (unitToProduce != -1 && unitToProduce != RobotType.TANK.ordinal()) {
       return;
     }
     
     //Build units if queued
     for (int i=types.length; i-- > 0;) {
       RobotType curType = types[i];
-      if (Messaging.dequeueUnit(curType)) {
-        while (!rc.isCoreReady() && !rc.hasSpawnRequirements(curType)) {
-          rc.yield();
-          Messaging.announceUnit(rc.getType());
-        };
+      if (rc.isCoreReady() && rc.hasSpawnRequirements(curType) && Messaging.dequeueUnit(curType)) {
         Direction spawnDir = getDefensiveSpawnDirection(curType);
         if (spawnDir != null) {
           Messaging.announceBuilding(rc.getType());

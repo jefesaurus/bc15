@@ -27,8 +27,11 @@ public class Beaver extends MovingBot {
     //Build structures if queued
     for (int i = types.length; i-- > 0;) {
       RobotType curType = types[i];
-      if (Messaging.dequeueUnit(curType)) {
-        if (unitToProduce == -1 || unitToProduce == curType.ordinal()) {
+      if (unitToProduce != -1 && unitToProduce != curType.ordinal()) {
+        System.out.println("Locked out of producing " + curType);
+        continue;
+      }
+      if (rc.isCoreReady() && rc.hasBuildRequirements(curType) && Messaging.dequeueUnit(curType)) {
           System.out.println("producing: " + curType);
           while (!rc.isCoreReady() && !rc.hasBuildRequirements(curType)) {
             rc.yield();
@@ -50,7 +53,7 @@ public class Beaver extends MovingBot {
           }
         }
       }
-    }
+    
     
     //Otherwise mine where you are
     if (rc.isCoreReady()) {

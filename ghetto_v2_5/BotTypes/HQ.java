@@ -60,13 +60,14 @@ public class HQ extends BaseBot {
   public static final int FLEET_COUNT_ATTACK_THRESHOLD = 15;
 
   public void execute() throws GameActionException {
+    Messaging.setUnitToProduce(null);
     curNumHelipads = Messaging.checkTotalNumUnits(RobotType.HELIPAD);
     curNumBarracks = Messaging.checkTotalNumUnits(RobotType.BARRACKS);
     curNumTankFactories = Messaging.checkTotalNumUnits(RobotType.TANKFACTORY);
     curNumBeavers = Messaging.checkTotalNumUnits(RobotType.BEAVER);
     curNumMiners = Messaging.checkTotalNumUnits(RobotType.MINER);
     curNumMinerFactories = Messaging.checkTotalNumUnits(RobotType.MINERFACTORY);
-    System.out.println("curNumBeavers: " + curNumBeavers);
+    //System.out.println("curNumBeavers: " + curNumBeavers);
     
     SupplyDistribution.manageSupply();
     
@@ -417,11 +418,11 @@ public class HQ extends BaseBot {
   // Returns true if constant requirements are met.
   public boolean maintainConstantUnits() throws GameActionException {
     if (curNumBeavers < NUM_BEAVERS) {
-      Messaging.setUnitToProduce(RobotType.BEAVER);
+      //Messaging.setUnitToProduce(RobotType.BEAVER);
       Messaging.queueUnits(RobotType.BEAVER, 1);
       return false;
     } else if (curNumMinerFactories < NUM_MINER_FACTORIES) {
-      Messaging.setUnitToProduce(RobotType.MINERFACTORY);
+      //Messaging.setUnitToProduce(RobotType.MINERFACTORY);
       Messaging.queueUnits(RobotType.MINERFACTORY, 1);
       return false;
     }
