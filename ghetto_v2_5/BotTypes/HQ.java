@@ -80,6 +80,7 @@ public class HQ extends BaseBot {
       }
     }
     
+    /*
     // Spawn if possible
     if (numBeavers < 1 && rc.isCoreReady() && rc.hasSpawnRequirements(RobotType.BEAVER)) {
       Direction newDir = getOffensiveSpawnDirection(RobotType.BEAVER);
@@ -88,6 +89,10 @@ public class HQ extends BaseBot {
         rc.broadcast(Messaging.NUM_BEAVERS, numBeavers + 1);
       }
     }
+    */
+    
+    maintainUnitComposition();
+    produceUnits();
     
     // If we are currently winning in towers, and we are under attack, pull back and defend.
     boolean haveMoreTowers = weHaveMoreTowers();
@@ -352,9 +357,9 @@ public class HQ extends BaseBot {
   public boolean haveDecentSurround(MapLocation loc) {
     return (rc.senseNearbyRobots(loc, 63, myTeam).length > 10);
   }
+
   
-  /*
-   *     // Spawn if possible
+   /*     // Spawn if possible
     if (Clock.getRoundNum() < 100 && numBeavers < 1 && rc.isCoreReady() && rc.hasSpawnRequirements(RobotType.BEAVER)) {
       Direction newDir = getOffensiveSpawnDirection(RobotType.BEAVER);
       if (newDir != null) {
@@ -363,28 +368,75 @@ public class HQ extends BaseBot {
         Messaging.queueMiners(MAX_MINERS);
       }
     }
-   */
+    */
   
-  /*
+   
+   
+  public static final int NUM_BEAVERS = 1;
+  public static final int NUM_MINER_FACTORIES = 1;
+  public static final int NUM_BARRACKS = 1;
+  public static final int NUM_TANK_FACTORIES = 1;
   
-  public static final int NUM_BEAVERS = 1;
-  public static final int NUM_BEAVERS = 1;
 
   public void maintainUnitComposition() throws GameActionException {
-    if (Messaging.checkNumUnits(RobotType.BEAVER) < NUM_BEAVERS) {
-      Messaging.setUnitToProduce(RobotType.BEAVER);       
-    } else if (Messaging.checkNumUnits(RobotType.MINERFACTORY) < NUM_BEAVERS)
+    if (maintainConstantUnits()) {
+      maintainOreProduction();
+    }
     return;
   }
   
-  public void rUnits() {
-    if (rc.isCoreReady() && rc.hasSpawnRequirements(RobotType.BEAVER)) {
-      if 
+  // Returns true if constant requirements are met.
+  public boolean maintainConstantUnits() throws GameActionException {
+    if (Messaging.checkTotalNumUnits(RobotType.BEAVER) < NUM_BEAVERS) {
+      Messaging.setUnitToProduce(RobotType.BEAVER);
+      Messaging.queueUnits(RobotType.BEAVER, 1);
+      System.out.println("building beaver");
+      return false;
+    } else if (Messaging.checkTotalNumUnits(RobotType.MINERFACTORY) < NUM_MINER_FACTORIES) {
+      Messaging.setUnitToProduce(RobotType.MINERFACTORY);
+      Messaging.queueUnits(RobotType.MINERFACTORY, 1);
+      return false;
     }
-
+    return true;
+  }
+  
+  static final int MAX_NUM_MINERS = 20;
+  // Get estimated ore production and compare it to the value required by our current unit output and/or desired future unit output.
+  public boolean maintainOreProduction() throws GameActionException {
+    int numMiners = Messaging.checkTotalNumUnits(RobotType.MINER);
+    int minersNeeded = 20 - numMiners;
+    if (numMiners < MAX_NUM_MINERS) {
+      Messaging.setUnitToProduce(null);
+      Messaging.queueUnits(RobotType.MINER, minersNeeded);
+    }
+    return true;
+  }
+  /*
+  
+  // Get estimated unit production and compare it to 
+  public boolean maintainUnitProduction() {
+    return true;
   }
   */
   
+  // HQ Only produces beavers.
+  public void produceUnits() throws GameActionException {
+    if (rc.isCoreReady()) {
+      int unitToProduce = Messaging.getUnitToProduce();
+      // System.out.println("Requested Unit: " + unitToProduce);
+      if (unitToProduce == -1 || RobotType.BEAVER.ordinal() == unitToProduce) {
+        if (rc.hasSpawnRequirements(RobotType.BEAVER) && Messaging.dequeueUnit(RobotType.BEAVER)) {
+          Direction spawnDir = getOffensiveSpawnDirection(RobotType.BEAVER);
+          if (spawnDir != null) {
+            rc.spawn(spawnDir, RobotType.BEAVER);
+          } else {
+            // System.out.println("WRITE CODE HERE, NEED TO FIND PLACE TO BUILD");
+          }
+        }
+      }
+    }
+  }
+ 
   
   /*
    * Old code to find a vulnerable tower based on centroid. doesn't work very well.

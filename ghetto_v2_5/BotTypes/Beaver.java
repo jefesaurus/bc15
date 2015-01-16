@@ -24,24 +24,46 @@ public class Beaver extends MovingBot {
     int unitToProduce = Messaging.getUnitToProduce();
     
     //Build structures if queued
-    for (int i=types.length; i-- > 0;) {
+    for (int i = types.length; i-- > 0;) {
       RobotType curType = types[i];
       if (Messaging.dequeueUnit(curType)) {
-        if (unitToProduce != -1 || unitToProduce != curType.ordinal()) {
-          continue;
-        }
-        while (!rc.isCoreReady() && !rc.hasBuildRequirements(curType)) {rc.yield();};
-        Direction buildDir = getBuildDirection(curType);
-        if (buildDir != null) {
-          rc.build(buildDir, curType);
-        } else {
-          System.out.println("WRITE CODE HERE, NEED TO FIND PLACE TO BUILD (BEAVER)");
+        if (unitToProduce == -1 || unitToProduce == curType.ordinal()) {
+          System.out.println("producing: " + curType);
+          while (!rc.isCoreReady() && !rc.hasBuildRequirements(curType)) {rc.yield();};
+          Direction buildDir = getBuildDirection(curType);
+          if (buildDir != null) {
+            rc.build(buildDir, curType);
+            break;
+          } else {
+            System.out.println("WRITE CODE HERE, NEED TO FIND PLACE TO BUILD (BEAVER)");
+          }
         }
       }
     }
     
     //Otherwise mine where you are
-    rc.mine();
+    if (rc.isCoreReady()) {
+      rc.mine();
+    }
     rc.yield();
   }
+  /*
+  public MapLocation getBuildLocation() {
+    MapLocation[] candidates = MapLocation.getAllMapLocationsWithinRadiusSq(this.myHQ, 15);
+    int size = 1;
+    while (true) {
+      // Top side
+      for (int i = -size; i++ < size;) {
+        
+      }
+    }
+
+    for (int x = width; x-- > 0)
+    for (int i = candidates.length; i-- > 0;) {
+      if () {
+        
+      }
+    }
+  }
+  */
 }
