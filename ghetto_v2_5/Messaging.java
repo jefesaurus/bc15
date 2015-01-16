@@ -39,6 +39,7 @@ public class Messaging {
   public static RobotController rc;
   public static BaseBot br;
   
+  public final static int mask = 0x00FF;
   
   
   // init needs to get called once at the beginning to set up some stuff.
@@ -58,7 +59,19 @@ public class Messaging {
   }
   
   public static int checkNumUnits(RobotType type) throws GameActionException {
-    return rc.readBroadcast(getChannel(type)) & 0x00FF;
+    return rc.readBroadcast(getChannel(type)) & mask;
+  }
+  
+  public static void announceDoneBuilding(RobotType type) throws GameActionException {
+    int chan = getChannel(type);
+    int x = rc.readBroadcast(chan);
+    rc.broadcast(chan, x - (1 << 16));
+  }
+  
+  public static void announceBuilding(RobotType type) throws GameActionException {
+    int chan = getChannel(type);
+    int x = rc.readBroadcast(chan);
+    rc.broadcast(chan, x + (1 << 16));
   }
   
   public static void announceUnit(RobotType type) throws GameActionException {
@@ -75,21 +88,22 @@ public class Messaging {
   
   public static int peekQueueUnits(RobotType type) throws GameActionException {
     int chan = getChannel(type);
-    return rc.readBroadcast(chan) >> 8;
+    return (rc.readBroadcast(chan) >> 8) & mask;
   }
   
   public static int checkTotalNumUnits(RobotType type) throws GameActionException {
     int chan = getChannel(type);
     int x = rc.readBroadcast(chan);
-    return (x & 0x00FF) + (x >> 8);
+    rc.broadcast(chan, x & 0xFFFF00);
+    return (x & mask) + ((x >> 8) & mask) + ((x >> 16) & mask);
   }
   
   public static boolean dequeueUnit(RobotType type) throws GameActionException {
     int chan = getChannel(type);
     int x = rc.readBroadcast(chan);
-    int numQueuedUnits = x >> 8;
+    int numQueuedUnits = (x >> 8) & mask;
     if (numQueuedUnits > 0) {
-      rc.broadcast(chan, x - (1 << 8));
+      rc.broadcast(chan, x - (1 << 8) + (1 << 16));
       return true;
     } else {
       return false;

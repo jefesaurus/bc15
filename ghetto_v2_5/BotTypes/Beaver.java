@@ -36,7 +36,14 @@ public class Beaver extends MovingBot {
           };
           Direction buildDir = getBuildDirection(curType);
           if (buildDir != null) {
+            System.out.println("Building " + curType);
+            Messaging.announceBuilding(rc.getType());
             rc.build(buildDir, curType);
+            Messaging.announceDoneBuilding(rc.getType());
+            Messaging.announceDoneBuilding(curType);
+            Messaging.announceUnit(rc.getType());
+            //Have to announce it for that unit because of spawn sickness
+            Messaging.announceUnit(curType);
             break;
           } else {
             System.out.println("WRITE CODE HERE, NEED TO FIND PLACE TO BUILD (BEAVER)");
