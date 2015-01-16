@@ -1,5 +1,6 @@
 package ghetto_v2_5.BotTypes;
 
+import ghetto_v2_5.BuildOrder;
 import ghetto_v2_5.Cache;
 import ghetto_v2_5.Messaging;
 import ghetto_v2_5.SupplyDistribution;
@@ -27,6 +28,7 @@ public class HQ extends BaseBot {
   
   public HQ(RobotController rc) {
     super(rc);
+    maintainUnitComposition();
   }
   
   public void setup() throws GameActionException {
@@ -80,6 +82,7 @@ public class HQ extends BaseBot {
       }
     }
     
+    /*
     // Spawn if possible
     if (numBeavers < 1 && rc.isCoreReady() && rc.hasSpawnRequirements(RobotType.BEAVER)) {
       Direction newDir = getOffensiveSpawnDirection(RobotType.BEAVER);
@@ -89,6 +92,8 @@ public class HQ extends BaseBot {
         Messaging.queueMiners(MAX_MINERS);
       }
     }
+    */
+    maintainUnitComposition();
     
     // If we are currently winning in towers, and we are under attack, pull back and defend.
     boolean haveMoreTowers = weHaveMoreTowers();
@@ -353,9 +358,9 @@ public class HQ extends BaseBot {
   public boolean haveDecentSurround(MapLocation loc) {
     return (rc.senseNearbyRobots(loc, 63, myTeam).length > 10);
   }
+
   
-  /*
-   *     // Spawn if possible
+   /*     // Spawn if possible
     if (Clock.getRoundNum() < 100 && numBeavers < 1 && rc.isCoreReady() && rc.hasSpawnRequirements(RobotType.BEAVER)) {
       Direction newDir = getOffensiveSpawnDirection(RobotType.BEAVER);
       if (newDir != null) {
@@ -364,28 +369,60 @@ public class HQ extends BaseBot {
         Messaging.queueMiners(MAX_MINERS);
       }
     }
-   */
+    */
   
-  /*
+   
+   
+  public static final int NUM_BEAVERS = 1;
+  public static final int NUM_MINER_FACTORIES = 1;
+  public static final int NUM_BARRACKS = 1;
+  public static final int NUM_TANK_FACTORIES = 1;
   
-  public static final int NUM_BEAVERS = 1;
-  public static final int NUM_BEAVERS = 1;
 
   public void maintainUnitComposition() throws GameActionException {
-    if (Messaging.checkNumUnits(RobotType.BEAVER) < NUM_BEAVERS) {
-      Messaging.setUnitToProduce(RobotType.BEAVER);       
-    } else if (Messaging.checkNumUnits(RobotType.MINERFACTORY) < NUM_BEAVERS)
+    if (maintainConstantUnits()) {
+      maintainOreProduction();
+    }
     return;
   }
   
-  public void rUnits() {
-    if (rc.isCoreReady() && rc.hasSpawnRequirements(RobotType.BEAVER)) {
-      if 
+  // Returns true if constant requirements are met.
+  public boolean maintainConstantUnits() {
+    if (Messaging.checkTotalNumUnits(RobotType.BEAVER) < NUM_BEAVERS) {
+      Messaging.setUnitToProduce(RobotType.BEAVER);
+      Messaging.queueUnits(RobotType.BEAVER, 1);
+      return false;
+    } else if (Messaging.checkTotalNumUnits(RobotType.MINERFACTORY) < NUM_MINER_FACTORIES) {
+      Messaging.setUnitToProduce(RobotType.MINERFACTORY);
+      Messaging.queueUnits(RobotType.MINERFACTORY, 1);
+      return false;
     }
-
+    return true;
+  }
+  
+  static final int MAX_NUM_MINERS = 20;
+  // Get estimated ore production and compare it to the value required by our current unit output and/or desired future unit output.
+  public boolean maintainOreProduction() {
+    int numMiners = Messaging.checkTotalNumUnits(RobotType.MINER);
+    int minersNeeded = 20 - numMiners;
+    if (numMiners < MAX_NUM_MINERS) {
+      Messaging.setUnitToProduce(null);
+      Messaging.queueUnits(RobotType.MINER, minersNeeded);
+    }
+    return true;
+  }
+  /*
+  
+  // Get estimated unit production and compare it to 
+  public boolean maintainUnitProduction() {
+    return true;
   }
   */
   
+  public boolean produceUnits() {
+    return true;
+  }
+ 
   
   /*
    * Old code to find a vulnerable tower based on centroid. doesn't work very well.
