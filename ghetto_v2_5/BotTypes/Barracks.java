@@ -26,9 +26,7 @@ public class Barracks extends BaseBot {
       if (rc.isCoreReady() && rc.hasSpawnRequirements(curType) && Messaging.dequeueUnit(curType)) {
         Direction spawnDir = getDefensiveSpawnDirection(curType);
         if (spawnDir != null) {
-          Messaging.announceBuilding(rc.getType());
           rc.spawn(spawnDir, curType);
-          Messaging.announceDoneBuilding(rc.getType());
           Messaging.announceDoneBuilding(curType);
           Messaging.announceUnit(rc.getType());
           //Have to announce it for that unit because of spawn sickness

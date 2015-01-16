@@ -68,6 +68,12 @@ public class Messaging {
     rc.broadcast(chan, x - (1 << 16));
   }
   
+  public static int peekBuildingUnits(RobotType type) throws GameActionException {
+    int chan = getChannel(type);
+    int x = rc.readBroadcast(chan);
+    return x >> 16;
+  }
+  
   public static void announceBuilding(RobotType type) throws GameActionException {
     int chan = getChannel(type);
     int x = rc.readBroadcast(chan);
@@ -255,7 +261,6 @@ public class Messaging {
     } else {
       rc.broadcast(UNIT_TO_PRODUCE, type.ordinal());
     }
-    System.out.println("Unit to produce " + rc.readBroadcast(UNIT_TO_PRODUCE));
   }
   
   public static int getUnitToProduce() throws GameActionException {

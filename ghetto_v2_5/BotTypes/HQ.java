@@ -402,6 +402,7 @@ public class HQ extends BaseBot {
   }
   
   public void doBuildOrder() throws GameActionException {
+    
     if (curNumHelipads < NUM_HELIPADS) {
       Messaging.queueUnits(RobotType.HELIPAD, NUM_HELIPADS - curNumHelipads);
     }
@@ -418,12 +419,22 @@ public class HQ extends BaseBot {
   // Returns true if constant requirements are met.
   public boolean maintainConstantUnits() throws GameActionException {
     if (curNumBeavers < NUM_BEAVERS) {
-      //Messaging.setUnitToProduce(RobotType.BEAVER);
+      Messaging.setUnitToProduce(RobotType.BEAVER);
       Messaging.queueUnits(RobotType.BEAVER, 1);
       return false;
     } else if (curNumMinerFactories < NUM_MINER_FACTORIES) {
-      //Messaging.setUnitToProduce(RobotType.MINERFACTORY);
+      Messaging.setUnitToProduce(RobotType.MINERFACTORY);
       Messaging.queueUnits(RobotType.MINERFACTORY, 1);
+      return false;
+    }
+    
+    //This is assuming num_beavers == 1
+    if (curNumBeavers == NUM_BEAVERS && !(Messaging.peekBuildingUnits(RobotType.BEAVER) == 1)) {
+      Messaging.setUnitToProduce(RobotType.BEAVER);
+      return false;
+    }
+    if (curNumMinerFactories == NUM_MINER_FACTORIES && !(Messaging.peekBuildingUnits(RobotType.MINERFACTORY) == 1)) {
+      Messaging.setUnitToProduce(RobotType.MINERFACTORY);
       return false;
     }
     return true;
