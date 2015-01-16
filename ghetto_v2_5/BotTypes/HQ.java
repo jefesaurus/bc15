@@ -210,8 +210,8 @@ public class HQ extends BaseBot {
     if (rc.getLocation().distanceSquaredTo(toAttack) > 35) {
       attackable = false;
       Direction[] dirs = Direction.values();
-      for (Direction d : dirs) {
-        MapLocation trialToAttack = toAttack.add(d);
+      for (int i=7; i--> 0;) {
+        MapLocation trialToAttack = toAttack.add(dirs[i]);
         if (trialToAttack.distanceSquaredTo(this.myHQ) <= 35) {
           toAttack = trialToAttack;
           attackable = true;
