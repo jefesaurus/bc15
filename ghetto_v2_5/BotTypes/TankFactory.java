@@ -7,17 +7,16 @@ import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
 
-
-public class Helipad extends BaseBot {
-  public static final RobotType[] types = {RobotType.DRONE};
-
-  public Helipad(RobotController rc) {
-	  super(rc);
+public class TankFactory extends BaseBot {
+  public static final RobotType[] types = {RobotType.TANK};
+  
+  public TankFactory(RobotController rc) {
+    super(rc);
   }
 
   public void execute() throws GameActionException {
     int unitToProduce = Messaging.getUnitToProduce();
-    if (unitToProduce != -1 || unitToProduce != RobotType.DRONE.ordinal()) {
+    if (unitToProduce != -1 || unitToProduce != RobotType.TANK.ordinal()) {
       return;
     }
     
@@ -30,7 +29,7 @@ public class Helipad extends BaseBot {
         if (spawnDir != null) {
           rc.spawn(spawnDir, curType);
         } else {
-          System.out.println("WRITE CODE HERE, NEED TO FIND PLACE TO BUILD (HELIPAD)");
+          System.out.println("WRITE CODE HERE, NEED TO FIND PLACE TO BUILD (TANKFACTORY)");
         }
       }
     }
