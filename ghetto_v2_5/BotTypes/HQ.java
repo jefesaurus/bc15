@@ -1,6 +1,5 @@
 package ghetto_v2_5.BotTypes;
 
-import ghetto_v2_5.BuildOrder;
 import ghetto_v2_5.Cache;
 import ghetto_v2_5.Messaging;
 import ghetto_v2_5.SupplyDistribution;
@@ -28,7 +27,6 @@ public class HQ extends BaseBot {
   
   public HQ(RobotController rc) {
     super(rc);
-    maintainUnitComposition();
   }
   
   public void setup() throws GameActionException {
@@ -92,7 +90,9 @@ public class HQ extends BaseBot {
       }
     }
     */
+    
     maintainUnitComposition();
+    produceUnits();
     
     // If we are currently winning in towers, and we are under attack, pull back and defend.
     boolean haveMoreTowers = weHaveMoreTowers();
@@ -386,10 +386,11 @@ public class HQ extends BaseBot {
   }
   
   // Returns true if constant requirements are met.
-  public boolean maintainConstantUnits() {
+  public boolean maintainConstantUnits() throws GameActionException {
     if (Messaging.checkTotalNumUnits(RobotType.BEAVER) < NUM_BEAVERS) {
       Messaging.setUnitToProduce(RobotType.BEAVER);
       Messaging.queueUnits(RobotType.BEAVER, 1);
+      System.out.println("building beaver");
       return false;
     } else if (Messaging.checkTotalNumUnits(RobotType.MINERFACTORY) < NUM_MINER_FACTORIES) {
       Messaging.setUnitToProduce(RobotType.MINERFACTORY);
@@ -401,7 +402,7 @@ public class HQ extends BaseBot {
   
   static final int MAX_NUM_MINERS = 20;
   // Get estimated ore production and compare it to the value required by our current unit output and/or desired future unit output.
-  public boolean maintainOreProduction() {
+  public boolean maintainOreProduction() throws GameActionException {
     int numMiners = Messaging.checkTotalNumUnits(RobotType.MINER);
     int minersNeeded = 20 - numMiners;
     if (numMiners < MAX_NUM_MINERS) {
@@ -418,8 +419,22 @@ public class HQ extends BaseBot {
   }
   */
   
-  public boolean produceUnits() {
-    return true;
+  // HQ Only produces beavers.
+  public void produceUnits() throws GameActionException {
+    if (rc.isCoreReady()) {
+      int unitToProduce = Messaging.getUnitToProduce();
+      // System.out.println("Requested Unit: " + unitToProduce);
+      if (unitToProduce == -1 || RobotType.BEAVER.ordinal() == unitToProduce) {
+        if (rc.hasSpawnRequirements(RobotType.BEAVER) && Messaging.dequeueUnit(RobotType.BEAVER)) {
+          Direction spawnDir = getOffensiveSpawnDirection(RobotType.BEAVER);
+          if (spawnDir != null) {
+            rc.spawn(spawnDir, RobotType.BEAVER);
+          } else {
+            // System.out.println("WRITE CODE HERE, NEED TO FIND PLACE TO BUILD");
+          }
+        }
+      }
+    }
   }
  
   
