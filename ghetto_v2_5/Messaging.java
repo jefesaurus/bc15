@@ -95,17 +95,7 @@ public class Messaging {
       return false;
     }
   }
-  
-  public static int checkNumMiners() throws GameActionException {
-    int x = rc.readBroadcast(NUM_MINERS);
-    rc.broadcast(NUM_MINERS, 0);
-    return x;
-  }
-  
-  public static void announceMiner() throws GameActionException {
-    int x = rc.readBroadcast(NUM_MINERS);
-    rc.broadcast(NUM_MINERS, ++x);
-  }
+ 
   
   public static boolean queueVulnerableTowerComputation() throws GameActionException {
     int x = rc.readBroadcast(VULNERABLE_TOWER_COMPUTATION);

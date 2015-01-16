@@ -21,6 +21,7 @@ public class Beaver extends MovingBot {
   }
 
   public void execute() throws GameActionException {
+    Messaging.announceUnit(rc.getType());
     int unitToProduce = Messaging.getUnitToProduce();
     
     //Build structures if queued
@@ -29,7 +30,10 @@ public class Beaver extends MovingBot {
       if (Messaging.dequeueUnit(curType)) {
         if (unitToProduce == -1 || unitToProduce == curType.ordinal()) {
           System.out.println("producing: " + curType);
-          while (!rc.isCoreReady() && !rc.hasBuildRequirements(curType)) {rc.yield();};
+          while (!rc.isCoreReady() && !rc.hasBuildRequirements(curType)) {
+            rc.yield();
+            Messaging.announceUnit(rc.getType());
+          };
           Direction buildDir = getBuildDirection(curType);
           if (buildDir != null) {
             rc.build(buildDir, curType);

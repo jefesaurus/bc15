@@ -53,8 +53,6 @@ public class HQ extends BaseBot {
   public static final int FLEET_COUNT_ATTACK_THRESHOLD = 15;
 
   public void execute() throws GameActionException {
-    int numMiners = Messaging.checkNumMiners();
-    int numBeavers = rc.readBroadcast(Messaging.NUM_BEAVERS);
     SupplyDistribution.manageSupply();
     
     // This checks which enemy towers are still alive and broadcasts it to save bytecode across the fleet

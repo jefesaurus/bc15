@@ -24,7 +24,7 @@ public class Miner extends MovingBot {
   }
 
   public void execute() throws GameActionException {
-    Messaging.announceMiner();
+    Messaging.announceUnit(rc.getType());
     mineMicro(this.curLoc);
     rc.yield();
   }
