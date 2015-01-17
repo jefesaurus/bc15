@@ -67,7 +67,7 @@ public class HQ extends BaseBot {
     curNumBeavers = Messaging.checkTotalNumUnits(RobotType.BEAVER);
     curNumMiners = Messaging.checkTotalNumUnits(RobotType.MINER);
     curNumMinerFactories = Messaging.checkTotalNumUnits(RobotType.MINERFACTORY);
-    //System.out.println("curNumBeavers: " + curNumBeavers);
+    System.out.println("curNumBeavers: " + curNumBeavers + ", " + curNumMinerFactories + ", " + curNumHelipads + ", " + curNumBarracks);
     
     SupplyDistribution.manageSupply();
     
@@ -402,15 +402,16 @@ public class HQ extends BaseBot {
   }
   
   public void doBuildOrder() throws GameActionException {
+    
     if (curNumHelipads < NUM_HELIPADS) {
       Messaging.queueUnits(RobotType.HELIPAD, NUM_HELIPADS - curNumHelipads);
     }
     
-    if (curNumBarracks < NUM_BARRACKS) {
+    if (curNumBarracks < NUM_BARRACKS && Messaging.checkNumUnits(RobotType.HELIPAD) >= 1) {
       Messaging.queueUnits(RobotType.BARRACKS, NUM_BARRACKS - curNumBarracks);
     }
     
-    if (curNumTankFactories < NUM_TANK_FACTORIES) {
+    if (curNumTankFactories < NUM_TANK_FACTORIES && Messaging.checkNumUnits(RobotType.BARRACKS) >= 1) {
       Messaging.queueUnits(RobotType.TANKFACTORY, NUM_TANK_FACTORIES - curNumTankFactories);
     }
   }
@@ -418,12 +419,22 @@ public class HQ extends BaseBot {
   // Returns true if constant requirements are met.
   public boolean maintainConstantUnits() throws GameActionException {
     if (curNumBeavers < NUM_BEAVERS) {
-      //Messaging.setUnitToProduce(RobotType.BEAVER);
+      Messaging.setUnitToProduce(RobotType.BEAVER);
       Messaging.queueUnits(RobotType.BEAVER, 1);
       return false;
     } else if (curNumMinerFactories < NUM_MINER_FACTORIES) {
-      //Messaging.setUnitToProduce(RobotType.MINERFACTORY);
+      Messaging.setUnitToProduce(RobotType.MINERFACTORY);
       Messaging.queueUnits(RobotType.MINERFACTORY, 1);
+      return false;
+    }
+    
+    //This is assuming num_beavers == 1
+    if (curNumBeavers == NUM_BEAVERS && !(Messaging.peekBuildingUnits(RobotType.BEAVER) > 0)) {
+      Messaging.setUnitToProduce(RobotType.BEAVER);
+      return false;
+    }
+    if (Messaging.checkNumUnits(RobotType.MINERFACTORY) < 1 && Messaging.peekBuildingUnits(RobotType.MINERFACTORY) == 0) {
+      Messaging.setUnitToProduce(RobotType.MINERFACTORY);
       return false;
     }
     return true;

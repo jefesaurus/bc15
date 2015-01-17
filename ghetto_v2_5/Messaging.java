@@ -59,13 +59,21 @@ public class Messaging {
   }
   
   public static int checkNumUnits(RobotType type) throws GameActionException {
-    return rc.readBroadcast(getChannel(type)) & mask;
+    int val = rc.readBroadcast(getChannel(type)) & mask;
+    //System.out.println("" + type + ": " + val);
+    return val;
   }
   
   public static void announceDoneBuilding(RobotType type) throws GameActionException {
     int chan = getChannel(type);
     int x = rc.readBroadcast(chan);
     rc.broadcast(chan, x - (1 << 16));
+  }
+  
+  public static int peekBuildingUnits(RobotType type) throws GameActionException {
+    int chan = getChannel(type);
+    int x = rc.readBroadcast(chan);
+    return x >> 16;
   }
   
   public static void announceBuilding(RobotType type) throws GameActionException {
@@ -95,6 +103,8 @@ public class Messaging {
     int chan = getChannel(type);
     int x = rc.readBroadcast(chan);
     rc.broadcast(chan, x & 0xFFFF00);
+    System.out.println("" + type + ": " + x);
+
     return (x & mask) + ((x >> 8) & mask) + ((x >> 16) & mask);
   }
   
@@ -255,7 +265,6 @@ public class Messaging {
     } else {
       rc.broadcast(UNIT_TO_PRODUCE, type.ordinal());
     }
-    System.out.println("Unit to produce " + rc.readBroadcast(UNIT_TO_PRODUCE));
   }
   
   public static int getUnitToProduce() throws GameActionException {

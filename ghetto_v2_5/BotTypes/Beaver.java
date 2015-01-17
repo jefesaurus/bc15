@@ -16,12 +16,15 @@ import battlecode.common.TerrainTile;
 
 public class Beaver extends MovingBot {
   public static final RobotType[] types = {RobotType.MINERFACTORY, RobotType.HELIPAD, RobotType.BARRACKS, RobotType.TANKFACTORY};
+  public static boolean wasBuildingSomething = false;
+  public static RobotType wasBuilding = null;
+  
   public Beaver(RobotController rc) throws GameActionException {
     super(rc);
   }
   
   public enum BuildingStage {
-    IDLE, MOVING_TO_LOCATION, BUILDING
+    IDLE, MOVING_TO_LOCATION, BUILDING, WAITING_TO_FINISH_BUILDING
   };
   
   MapLocation targetBuildSpot;
@@ -33,46 +36,50 @@ public class Beaver extends MovingBot {
   public void setup() throws GameActionException {
     isMovingToBuildSpot = false;
     buildingStage = BuildingStage.IDLE;
+    super.setup();
   }
 
   public void execute() throws GameActionException {
-    if (!rc.isBuildingSomething()) {
-      switch (buildingStage) {
-      case IDLE:
-        System.out.println("Idle");
+    switch (buildingStage) {
+    case IDLE:
+      System.out.println("Idle");
 
-        robotToBuild = dequeueBuildJob();
-        System.out.println("robot to build: " + robotToBuild);
+      robotToBuild = dequeueBuildJob();
+      System.out.println("robot to build: " + robotToBuild);
 
-        if (robotToBuild != null) {
+      if (robotToBuild != null) {
 
-          buildingStage = BuildingStage.MOVING_TO_LOCATION;
-          System.out.println("Moving to: " + targetBuildSpot);
-
-          continueMoveToBuildLocation();
-        } else if (rc.isCoreReady()) {
-          System.out.println("mining");
-
-          rc.mine();
-        }
-        break;
-      case MOVING_TO_LOCATION:
+        buildingStage = BuildingStage.MOVING_TO_LOCATION;
         System.out.println("Moving to: " + targetBuildSpot);
 
-        if (continueMoveToBuildLocation()) {
-          buildingStage = BuildingStage.BUILDING;
-        }
-        break;
-      case BUILDING:
-        System.out.println("build");
-        if (rc.isCoreReady() && rc.hasBuildRequirements(robotToBuild)) {
-          rc.build(curLoc.directionTo(targetBuildSpot), robotToBuild);
-          buildingStage = BuildingStage.IDLE;
-        }
-        break;
+        continueMoveToBuildLocation();
+      } else if (rc.isCoreReady()) {
+        System.out.println("mining");
+
+        rc.mine();
       }
-    } else {
-      targetBuildSpot = getBuildLocation();
+      break;
+    case MOVING_TO_LOCATION:
+      System.out.println("Moving to: " + targetBuildSpot);
+
+      if (continueMoveToBuildLocation()) {
+        buildingStage = BuildingStage.BUILDING;
+      }
+      break;
+    case BUILDING:
+      if (rc.isCoreReady() && rc.hasBuildRequirements(robotToBuild)) {
+        rc.build(curLoc.directionTo(targetBuildSpot), robotToBuild);
+        
+        buildingStage = BuildingStage.WAITING_TO_FINISH_BUILDING;
+      }
+      break;
+    case WAITING_TO_FINISH_BUILDING:
+      if (!rc.isBuildingSomething()) {
+        buildingStage = BuildingStage.IDLE;
+      } else {
+        targetBuildSpot = getBuildLocation();
+      }
+      break;
     }
 
     rc.yield();
@@ -85,7 +92,6 @@ public class Beaver extends MovingBot {
     } else if (curLoc.isAdjacentTo(targetBuildSpot)) {
       return true;
     } else {
-      System.out.println("Actually moving");
       Nav.goTo(targetBuildSpot, Engage.NONE);
     }
     return false;
@@ -104,16 +110,6 @@ public class Beaver extends MovingBot {
       }
     }
     return null;
-          /*
-            System.out.println("Building " + curType);
-            Messaging.announceBuilding(rc.getType());
-            rc.build(buildDir, curType);
-            Messaging.announceDoneBuilding(rc.getType());
-            Messaging.announceDoneBuilding(curType);
-            Messaging.announceUnit(rc.getType());
-            //Have to announce it for that unit because of spawn sickness
-            Messaging.announceUnit(curType);
-            */
   }
   
 

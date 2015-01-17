@@ -161,8 +161,7 @@ public class Miner extends MovingBot {
         
       }
     }
-    
-    
+
     /////OLD////
     
 //      double curAmount = getOreAmount(this.curLoc, MINING_HORIZON);

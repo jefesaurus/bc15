@@ -23,10 +23,7 @@ public class Drone extends MovingBot {
     SupplyDistribution.init(this);
     SupplyDistribution.setBatteryMode();
   }
-  
-  public void setup() {
-    
-  }
+
   
   private void attackMicro(MapLocation loc) throws GameActionException {
     if (rc.isCoreReady()) {

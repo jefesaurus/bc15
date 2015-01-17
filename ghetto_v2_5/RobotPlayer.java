@@ -189,10 +189,13 @@ public class RobotPlayer {
     // Override this in subclasses to do class specific setups procedures(only called once).
     // This is different from init, which sets up Nav and Messaging type stuff.
     public void setup() throws GameActionException {
+      System.out.println("Done building; " +rc.getType() );
+      Messaging.announceDoneBuilding(rc.getType());
     }
     
-    public void beginningOfTurn() {
+    public void beginningOfTurn() throws GameActionException {
       updateRoundVariables();
+      Messaging.announceUnit(rc.getType());
     }
 
     public void endOfTurn() {
@@ -255,8 +258,8 @@ public class RobotPlayer {
       int[] i = Util.ATTACK_NOTES[0][0][0];
       super.init();
     }
-    
-    public void beginningOfTurn() {
+        
+    public void beginningOfTurn() throws GameActionException {
       // Moving enemies only
       cachedNumAttackingEnemyDirs = null;
       cachedEnemyDangerValsDirs = null;
