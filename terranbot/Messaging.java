@@ -1,12 +1,12 @@
 package terranbot;
 
-import terranbot.RobotPlayer.BaseBot;
-import terranbot.RobotPlayer.MovingBot;
 import battlecode.common.Clock;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
+import terranbot.RobotPlayer.BaseBot;
+import terranbot.RobotPlayer.MovingBot;
 
 
 public class Messaging {
@@ -34,13 +34,19 @@ public class Messaging {
   
   public final static int UNIT_TO_PRODUCE = 27;
 
-  public final static int CHECK_OFFSET = 100;
+  public final static int COUNT_OFFSET = 100;
+  public final static int KILLED_OFFSET = 1000;
+  
+  public final static int BATTLE_OFFSET = 2000;
+  public final static int NUM_BATTLE_CHANNELS = 5;
+
   
   public static RobotController rc;
   public static BaseBot br;
   
   public final static int mask = 0x00FF;
-  
+  public final static int BATTLE_RANGE_SQUARED = 25;
+  public final static int FRESHNESS_TOLERANCE = 2;
   
   // init needs to get called once at the beginning to set up some stuff.
   public static void init(BaseBot brIn) throws GameActionException {
@@ -48,66 +54,111 @@ public class Messaging {
     br = brIn;
   }
   
-  public static int getChannel(RobotType type) {
-    return type.ordinal() + CHECK_OFFSET;
+  public static int getCountChannel(RobotType type) {
+    return type.ordinal() + COUNT_OFFSET;
+  }
+  
+  public static int getKilledChannel(RobotType type) {
+    return type.ordinal() + KILLED_OFFSET;
+  }
+  
+  public static void setBattleFront(MapLocation loc) throws GameActionException {
+    for (int i=NUM_BATTLE_CHANNELS; i-- > 0;) {
+      int chan = BATTLE_OFFSET + i;
+      if (rc.readBroadcast(chan) == 0) {
+        writeLocation(chan, loc, Clock.getRoundNum());
+      } else {
+        MapLocation curLoc = readLocation(chan);
+        if (curLoc.distanceSquaredTo(loc) <= BATTLE_RANGE_SQUARED) {
+          if (isFresh(chan)) {
+            MapLocation newLoc = new MapLocation((curLoc.x + loc.x) / 2, (curLoc.y + loc.y) / 2);
+            writeLocation(chan, newLoc, Clock.getRoundNum());
+            return;
+          }
+        }
+        
+        if (!isFresh(chan)) {
+          writeLocation(chan, loc, Clock.getRoundNum());
+        }
+      }
+    }
+  }
+  
+  //Returns null if no battlefront
+  public static MapLocation getClosestBattleFront(MapLocation loc) throws GameActionException {
+    MapLocation closest = null;
+    for (int i=NUM_BATTLE_CHANNELS; i-- > 0;) {
+      int chan = BATTLE_OFFSET + i;
+      if (isFresh(chan) && rc.readBroadcast(chan) != 0) {
+        MapLocation trialLoc = readLocation(chan);
+        if (closest == null) {
+          closest = trialLoc;
+        } else {
+          if (loc.distanceSquaredTo(trialLoc) < loc.distanceSquaredTo(closest)) {
+            closest = trialLoc;
+          }
+        }
+      }
+    }
+    return closest;
   }
   
   public static void resetUnitCount(RobotType type) throws GameActionException {
-    int chan = getChannel(type);
+    int chan = getCountChannel(type);
     int x = rc.readBroadcast(chan);
     rc.broadcast(chan, x & 0xFFFF00);
   }
   
   public static int checkNumUnits(RobotType type) throws GameActionException {
-    int val = rc.readBroadcast(getChannel(type)) & mask;
+    int val = rc.readBroadcast(getCountChannel(type)) & mask;
     //System.out.println("" + type + ": " + val);
     return val;
   }
   
   public static void announceDoneBuilding(RobotType type) throws GameActionException {
-    int chan = getChannel(type);
+    int chan = getCountChannel(type);
     int x = rc.readBroadcast(chan);
     rc.broadcast(chan, x - (1 << 16));
   }
   
   public static int peekBuildingUnits(RobotType type) throws GameActionException {
-    int chan = getChannel(type);
+    int chan = getCountChannel(type);
     int x = rc.readBroadcast(chan);
     return x >> 16;
   }
   
   public static void announceBuilding(RobotType type) throws GameActionException {
-    int chan = getChannel(type);
+    int chan = getCountChannel(type);
     int x = rc.readBroadcast(chan);
     rc.broadcast(chan, x + (1 << 16));
   }
   
   public static void announceUnit(RobotType type) throws GameActionException {
-    int chan = getChannel(type);
+    int chan = getCountChannel(type);
     int x = rc.readBroadcast(chan);
     rc.broadcast(chan, x + 1);
   }
   
   public static void queueUnits(RobotType type, int quantity) throws GameActionException {
-    int chan = getChannel(type);
+    int chan = getCountChannel(type);
     int x = rc.readBroadcast(chan);
     rc.broadcast(chan, x + (quantity << 8));
   }
   
   public static int peekQueueUnits(RobotType type) throws GameActionException {
-    int chan = getChannel(type);
+    int chan = getCountChannel(type);
     return (rc.readBroadcast(chan) >> 8) & mask;
   }
   
   public static int checkTotalNumUnits(RobotType type) throws GameActionException {
-    int chan = getChannel(type);
+    int chan = getCountChannel(type);
     int x = rc.readBroadcast(chan);
     //System.out.println("" + type + ": " + x);
     return (x & mask) + ((x >> 8) & mask) + ((x >> 16) & mask);
   }
   
   public static boolean dequeueUnit(RobotType type) throws GameActionException {
-    int chan = getChannel(type);
+    int chan = getCountChannel(type);
     int x = rc.readBroadcast(chan);
     int numQueuedUnits = (x >> 8) & mask;
     if (numQueuedUnits > 0) {
@@ -118,6 +169,16 @@ public class Messaging {
     }
   }
  
+  public static void incrementKillCount(RobotType type) throws GameActionException {
+    int chan = getKilledChannel(type);
+    int x = rc.readBroadcast(chan);
+    rc.broadcast(chan, x + 1);
+  }
+  
+  public static int checkKillCount(RobotType type) throws GameActionException {
+    int chan = getKilledChannel(type);
+    return rc.readBroadcast(chan);
+  }
   
   public static boolean queueVulnerableTowerComputation() throws GameActionException {
     int x = rc.readBroadcast(VULNERABLE_TOWER_COMPUTATION);
@@ -140,10 +201,10 @@ public class Messaging {
     rc.broadcast(RALLY_POINT_Y, loc.y);
   }
   
-  public static void writeLocation(int register, MapLocation loc) throws GameActionException {
+  public static void writeLocation(int register, MapLocation loc, int roundNum) throws GameActionException {
     // This math shifts the location by our HQ's vector and then into the positive quadrant by 120
     // This guarantees the coordinates will be small and positive. (0 <= x,y <= 240)
-    int val = (loc.x - br.myHQ.x + 120) << 16 | (loc.y - br.myHQ.y + 120);
+    int val = (roundNum << 20) + (loc.x - br.myHQ.x + 120) << 8 | (loc.y - br.myHQ.y + 120);
     rc.broadcast(register, val);
   }
   
@@ -152,7 +213,12 @@ public class Messaging {
     if (val == 0xFFFFFFFF) {
       return null;
     }
-    return new MapLocation((val >> 16) - 120 + br.myHQ.x, (val & 0x0000FFFF) - 120 + br.myHQ.y);
+    return new MapLocation(((val >> 8) & 0x000000FF) - 120 + br.myHQ.x, (val & 0x000000FF) - 120 + br.myHQ.y);
+  }
+  
+  public static boolean isFresh(int register) throws GameActionException {
+    int val = rc.readBroadcast(register);
+    return Clock.getRoundNum() - (val >> 20) <= FRESHNESS_TOLERANCE;
   }
   
   public static void setFleetMode(MovingBot.AttackMode mode) throws GameActionException {
