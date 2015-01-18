@@ -126,13 +126,12 @@ public class MovingBot extends BaseBot {
     }
   }
   
-  // returns {is winning, is lowest health, is alone, enemy centroid x, enemy centroid y}
-  public int[] getBattleMetrics() {
-    RobotInfo[] nearbyEnemies = Cache.getEngagementEnemies();
-    if (nearbyEnemies.length == 0) {
-      return new int[] {1};
-    }
-    
+  /*
+   returns {is winning, ...}
+   if is_winning: {1, battlefront.x, battlefront.y}
+   else: {0, lowesthealth and not alone}
+  */
+  public int[] getBattleMetrics(RobotInfo[] nearbyEnemies) {
     RobotInfo closestEngageable = null;
     double closestDist = Double.MAX_VALUE;
     double tempDist = 0;
@@ -159,9 +158,9 @@ public class MovingBot extends BaseBot {
           closestDist = tempDist;
           closestEngageable = nearbyEnemies[i];
         }
-        enemyCentroidX += nearbyEnemies[i].location.x;
-        enemyCentroidY += nearbyEnemies[i].location.y;
-        numEnemies ++;
+        //enemyCentroidX += nearbyEnemies[i].location.x;
+        //enemyCentroidY += nearbyEnemies[i].location.y;
+        //numEnemies ++;
         break;
       default:
         break;
@@ -169,7 +168,7 @@ public class MovingBot extends BaseBot {
     }
     
     if (closestEngageable == null) {
-      return new int[] {1};
+      return new int[] {1, -1, -1};
     }
     
     RobotInfo[] allies = rc.senseNearbyRobots(closestEngageable.location, ALLY_INLCUDE_RADIUS_SQ, myTeam);
@@ -177,7 +176,7 @@ public class MovingBot extends BaseBot {
     double enemyScore = Util.getDangerScore(rc.senseNearbyRobots(closestEngageable.location, ENEMY_INCLUDE_RADIUS_SQ, theirTeam));
     rc.setIndicatorString(0, "Ally score: " + allyScore + ", Enemy score: " + enemyScore);
     if (allyScore > enemyScore) {
-      return new int[] {1};
+      return new int[] {1, closestEngageable.location.x, closestEngageable.location.y};
     } else {
       // Check if we are definitely going to die.
       double myHealth = rc.getHealth();
@@ -193,7 +192,7 @@ public class MovingBot extends BaseBot {
       }
       // We didn't find any bots with lower health, so we are the lowest.
       // If we are alone, we should retreat anyways...
-      return new int[] {0, 1, (isAlone) ? 1 : 0, enemyCentroidX/numEnemies, enemyCentroidY/numEnemies};
+      return new int[] {0, (isAlone) ? 0 : 1};
     }
   }
   

@@ -7,8 +7,6 @@ import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
-import terranbot.RobotPlayer.BaseBot;
-import terranbot.RobotPlayer.MovingBot;
 
 
 public class Messaging {
@@ -86,7 +84,7 @@ public class Messaging {
     }
   }
   
-  //Returns null if no battlefront
+  // Returns null if no battlefront
   public static MapLocation getClosestBattleFront(MapLocation loc) throws GameActionException {
     MapLocation closest = null;
     for (int i=NUM_BATTLE_CHANNELS; i-- > 0;) {
