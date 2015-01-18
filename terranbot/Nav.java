@@ -2,7 +2,7 @@ package terranbot;
 
 import terranbot.Util;
 import terranbot.RobotPlayer.BaseBot;
-import terranbot.RobotPlayer.MovingBot;
+import terranbot.MovingBot;
 import battlecode.common.*;
 import battlecode.world.Robot;
 
@@ -245,7 +245,7 @@ public class Nav {
   }
 
   private static boolean moveIsUnitSafe(Direction dir) throws GameActionException {
-    double[] numAttackingEnemyDirs = br.calculateEnemyDangerValsDirs();
+    int[] numAttackingEnemyDirs = br.calculateNumAttackingEnemyDirs();
     return numAttackingEnemyDirs[dir.ordinal()] <= numAttackingEnemyDirs[8];
   }
   
@@ -271,7 +271,8 @@ public class Nav {
     case NONE:
       return moveIsTowerSafe(dir, null) && moveIsUnitSafe(dir) && moveIsHQSafe(dir);
     case UNITS:
-      if (moveIsTowerSafe(dir, null) && moveIsHQSafe(dir)) {
+      return moveIsTowerSafe(dir, null) && moveIsHQSafe(dir);
+        /*
         if (fightDecisionIsCached) {
           return fightIsWinningDecision;
         }
@@ -317,10 +318,9 @@ public class Nav {
         double enemyScore = Util.getDangerScore(rc.senseNearbyRobots(closestEngageable.location, enemyIncludeRadius, br.theirTeam));
         fightIsWinningDecision = (allyScore > enemyScore);
         fightDecisionIsCached = true;
-        
+ 
         return fightIsWinningDecision;
-      }
-      return false;
+               */
     case ONE_TOWER:
       // Filter out the tower we are diving.
       return moveIsTowerSafe(dir, dest) && moveIsHQSafe(dir);
@@ -342,11 +342,11 @@ public class Nav {
     return false;
   }
   
-  public static boolean retreat(double[] dangerVals) throws GameActionException {
+  public static boolean retreat(int[] attackingEnemyDirs) throws GameActionException {
     boolean[] canMove = new boolean[8];
     for (int i = 8; i-- > 0;) {
       if (rc.canMove(Util.REGULAR_DIRECTIONS[i])) {
-        if (dangerVals[i] == 0) {
+        if (attackingEnemyDirs[i] == 0) {
           rc.move(Util.REGULAR_DIRECTIONS[i]);
           return true;
         }

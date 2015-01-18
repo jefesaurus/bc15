@@ -5,7 +5,7 @@ import terranbot.Nav;
 import terranbot.Util;
 import terranbot.Nav.Engage;
 import terranbot.RobotPlayer.BaseBot;
-import terranbot.RobotPlayer.MovingBot;
+import terranbot.MovingBot;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -30,10 +30,10 @@ public class Miner extends MovingBot {
   
   private void mineMicro(MapLocation loc) throws GameActionException {
     if (rc.isCoreReady()) {
-      double[] dangerVals = this.getAllDangerVals();
+      int[] attackingEnemyDirs = this.calculateNumAttackingEnemyDirs();
       // If the center square is in danger, retreat
-      if (dangerVals[8] > 0) {
-        Nav.retreat(dangerVals);
+      if (attackingEnemyDirs[8] > 0) {
+        Nav.retreat(attackingEnemyDirs);
       } else {
         // mine
         mineMethod();

@@ -4,7 +4,7 @@ import terranbot.Messaging;
 import terranbot.Nav;
 import terranbot.Nav.Engage;
 import terranbot.RobotPlayer.BaseBot;
-import terranbot.RobotPlayer.MovingBot;
+import terranbot.MovingBot;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;

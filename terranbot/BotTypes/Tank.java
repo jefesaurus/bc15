@@ -6,7 +6,7 @@ import terranbot.Nav;
 import terranbot.SupplyDistribution;
 import terranbot.Nav.Engage;
 import terranbot.RobotPlayer.BaseBot;
-import terranbot.RobotPlayer.MovingBot;
+import terranbot.MovingBot;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -69,7 +69,35 @@ public class Tank extends MovingBot {
           Nav.goTo(rallyPoint, Engage.ALL_TOWERS);
         }
       }
-      
+      break;
+    case OFFENSIVE_SWARM:
+      if (currentEnemies.length > 0) {
+        
+        // returns {is winning, is lowest health and not alone}
+        boolean[] winning = isFightWinning();
+        if (winning[0]) {
+          if (rc.isWeaponReady()) {
+            // TODO If there is no least health enemy, attack enemy closest to us.
+            attackLeastHealthEnemy(currentEnemies);
+          }
+        } else {
+          // "are we definitely going to die?"
+          if (winning[1]) {
+            // SupplyDistribution.setDyingMode();
+            // SupplyDistribution.manageSupply();
+            if (rc.isWeaponReady()) {
+              attackLeastHealthEnemy(currentEnemies);
+            }
+            
+          // Retreat
+          } else {
+            if (rc.isCoreReady()) {
+              int[] attackingEnemyDirs = calculateNumAttackingEnemyDirs();
+              Nav.retreat(attackingEnemyDirs);
+            }
+          }
+        }
+      }
       break;
     default:
       if (currentEnemies.length > 0) {

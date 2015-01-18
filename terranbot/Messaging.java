@@ -1,7 +1,7 @@
 package terranbot;
 
 import terranbot.RobotPlayer.BaseBot;
-import terranbot.RobotPlayer.MovingBot;
+import terranbot.MovingBot;
 import battlecode.common.Clock;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
