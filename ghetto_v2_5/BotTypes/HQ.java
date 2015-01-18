@@ -129,7 +129,8 @@ public class HQ extends BaseBot {
         buildForces();
         break;
       }
-      setFleetMode(MovingBot.AttackMode.HUNT_FOR_MINERS);
+      setFleetMode(MovingBot.AttackMode.RALLYING);
+      Messaging.setRallyPoint(new MapLocation(myHQ.x + (enemyHQ.x / 3), myHQ.y + (enemyHQ.y / 3)));
       break;
     case BUILDING_FORCES:
       if (Clock.getRoundNum() >= 600 && fleetCount > FLEET_COUNT_ATTACK_THRESHOLD) {
@@ -403,7 +404,7 @@ public class HQ extends BaseBot {
   public static final int NUM_BEAVERS = 1;
   public static final int NUM_MINER_FACTORIES = 1;
   public static final int NUM_BARRACKS = 1;
-  public static final int NUM_TANK_FACTORIES = 5;
+  public static final int NUM_TANK_FACTORIES = 10;
   public static final int NUM_HELIPADS = 1;
   
   public void doMacro() throws GameActionException {

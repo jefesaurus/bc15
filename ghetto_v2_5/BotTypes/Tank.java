@@ -3,6 +3,7 @@ package ghetto_v2_5.BotTypes;
 import ghetto_v2_5.HibernateSystem;
 import ghetto_v2_5.Messaging;
 import ghetto_v2_5.Nav;
+import ghetto_v2_5.SupplyDistribution;
 import ghetto_v2_5.Nav.Engage;
 import ghetto_v2_5.RobotPlayer.BaseBot;
 import ghetto_v2_5.RobotPlayer.MovingBot;
@@ -17,6 +18,9 @@ public class Tank extends MovingBot {
   
   public Tank(RobotController rc) {
     super(rc);
+    SupplyDistribution.init(this);
+    SupplyDistribution.setBatteryMode();
+    HibernateSystem.init(rc);
   }
 
   protected MapLocation rallyPoint = null;
@@ -34,6 +38,9 @@ public class Tank extends MovingBot {
       rc.yield();
       return;
     }
+
+    SupplyDistribution.manageSupply();
+
     switch (mode) {
     case SAFE_TOWER_DIVE:
       if (currentEnemies.length > 0) {
