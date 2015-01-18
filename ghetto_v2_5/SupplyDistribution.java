@@ -13,7 +13,7 @@ public class SupplyDistribution {
   private static BaseBot br;
   private static SupplyDistributionMode mode;
   private static final int minSupplyLaunch = 5000;
-  private static final int minSupplyMiner = 5000;
+  private static final int minSupplyMiner = 3000;
   private static final int minSupplyBattle = 500;
   private static enum SupplyDistributionMode {
     //Pool supply at HQ
