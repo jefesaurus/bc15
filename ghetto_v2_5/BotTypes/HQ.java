@@ -78,9 +78,6 @@ public class HQ extends BaseBot {
     
     // This checks which enemy towers are still alive and broadcasts it to save bytecode across the fleet
     //Messaging.setSurvivingEnemyTowers(Cache.getEnemyTowerLocationsDirect());
-    //MapLocation fleetCentroid = Messaging.getFleetCentroid();
-    int fleetCount = Messaging.getFleetCount();
-    Messaging.resetFleetCentroid();
     Messaging.resetTowersUnderAttack();
     
     int range_squared = 24;
@@ -114,6 +111,8 @@ public class HQ extends BaseBot {
     produceUnits();
     doMacro();
     
+    rc.setIndicatorString(0, strat.name());
+    
     // If we are currently winning in towers, and we are under attack, pull back and defend.
     boolean haveMoreTowers = weHaveMoreTowers();
     boolean towersUnderAttack = Messaging.getClosestTowerUnderAttack() != null;
@@ -132,7 +131,7 @@ public class HQ extends BaseBot {
       setFleetMode(MovingBot.AttackMode.HUNT_FOR_MINERS);
       break;
     case BUILDING_FORCES:
-      if (Clock.getRoundNum() >= 600 && fleetCount > FLEET_COUNT_ATTACK_THRESHOLD) {
+      if (Clock.getRoundNum() >= 600 && Messaging.checkNumUnits(RobotType.TANK) > FLEET_COUNT_ATTACK_THRESHOLD) {
 
         //approachTower(getNearestEnemyTower(Cache.getEnemyTowerLocationsDirect()));
         setCurrentTowerTarget(Cache.getEnemyTowerLocationsDirect());
@@ -147,7 +146,7 @@ public class HQ extends BaseBot {
     case APPROACHING_TOWER:
       // Set rally point to just in front of nearest tower.
       // Wait until ally centroid is epsilon close, then switch to tower diving
-      if (haveDecentSurround(currentTargetTower)) {// fleetCentroid.distanceSquaredTo(currentTargetTower) < 50) {
+      if (haveDecentSurround(currentTargetTower)) {
         MapLocation[] enemyTowers = Cache.getEnemyTowerLocationsDirect();
         // If there are no more towers, then we are engaging the HQ
         if (enemyTowers.length == 0) {
@@ -173,7 +172,7 @@ public class HQ extends BaseBot {
           setCurrentTowerTarget(enemyTowers);
           approachTower(currentTargetTower);
 
-        } else if (fleetCount < FLEET_COUNT_ATTACK_THRESHOLD/3) {
+        } else if (Messaging.checkNumUnits(RobotType.TANK) < FLEET_COUNT_ATTACK_THRESHOLD/3) {
           buildForces();
         }
       } else {

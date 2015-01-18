@@ -24,9 +24,6 @@ public class Tank extends MovingBot {
 
   public void execute() throws GameActionException {
     currentEnemies = getEnemiesInAttackingRange();
-
-    rc.setIndicatorString(0, Integer.toString(Clock.getBytecodeNum()));
-
     
     rallyPoint = Messaging.readRallyPoint();
     mode = Messaging.getFleetMode();
@@ -34,6 +31,7 @@ public class Tank extends MovingBot {
       rc.yield();
       return;
     }
+    rc.setIndicatorString(1, mode.name());
     switch (mode) {
     case SAFE_TOWER_DIVE:
       if (currentEnemies.length > 0) {
@@ -83,8 +81,6 @@ public class Tank extends MovingBot {
       }
       break;
     }
-    rc.setIndicatorString(1, Integer.toString(Clock.getBytecodeNum()));
-
     rc.yield();
   }
 }
