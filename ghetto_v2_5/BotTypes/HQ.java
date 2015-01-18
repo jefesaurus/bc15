@@ -118,7 +118,6 @@ public class HQ extends BaseBot {
     boolean towersUnderAttack = Messaging.getClosestTowerUnderAttack() != null;
     if (strat != HighLevelStrat.TOWER_DEFENDING && haveMoreTowers && towersUnderAttack) {
       defendTowers();
-      rc.yield();
       return;
     }
     
@@ -129,7 +128,7 @@ public class HQ extends BaseBot {
         break;
       }
       setFleetMode(MovingBot.AttackMode.RALLYING);
-      Messaging.setRallyPoint(new MapLocation(myHQ.x + (enemyHQ.x / 3), myHQ.y + (enemyHQ.y / 3)));
+      Messaging.setRallyPoint(new MapLocation(myHQ.x + ((enemyHQ.x - myHQ.x) / 3), myHQ.y + ((enemyHQ.y - myHQ.y) / 3)));
       break;
     case BUILDING_FORCES:
       if (Clock.getRoundNum() >= 600 && Messaging.checkNumUnits(RobotType.TANK) > FLEET_COUNT_ATTACK_THRESHOLD) {
@@ -190,7 +189,9 @@ public class HQ extends BaseBot {
       }
       break;
     }
-    
+  }
+  
+  public void endOfTurn() throws GameActionException {
     Messaging.resetUnitCount(RobotType.HELIPAD);
     Messaging.resetUnitCount(RobotType.BARRACKS);
     Messaging.resetUnitCount(RobotType.TANKFACTORY);
@@ -199,7 +200,7 @@ public class HQ extends BaseBot {
     Messaging.resetUnitCount(RobotType.MINERFACTORY);
     Messaging.resetUnitCount(RobotType.TANK);
     Messaging.resetUnitCount(RobotType.DRONE);
-    rc.yield();
+    super.endOfTurn();
   }
   
   public void hqAttack(RobotInfo[] enemies, int range_squared) throws GameActionException {
@@ -236,7 +237,7 @@ public class HQ extends BaseBot {
     }
     
     if (range_squared == 25) {
-      System.out.println(rc.getLocation().distanceSquaredTo(toAttack));
+      // System.out.println(rc.getLocation().distanceSquaredTo(toAttack));
     }
     
     if (attackable) {
@@ -278,7 +279,7 @@ public class HQ extends BaseBot {
   public void buildForces() throws GameActionException {
     strat = HighLevelStrat.BUILDING_FORCES;
     setFleetMode(MovingBot.AttackMode.OFFENSIVE_SWARM);
-    setRallyPoint(myHQ);
+    setRallyPoint(new MapLocation(myHQ.x + ((enemyHQ.x - myHQ.x) / 3), myHQ.y + ((enemyHQ.y - myHQ.y) / 3)));
   }
   
   
@@ -385,19 +386,6 @@ public class HQ extends BaseBot {
   public boolean haveDecentSurround(MapLocation loc) {
     return (rc.senseNearbyRobots(loc, 63, myTeam).length > 10);
   }
-
-  
-   /*     // Spawn if possible
-    if (Clock.getRoundNum() < 100 && numBeavers < 1 && rc.isCoreReady() && rc.hasSpawnRequirements(RobotType.BEAVER)) {
-      Direction newDir = getOffensiveSpawnDirection(RobotType.BEAVER);
-      if (newDir != null) {
-        rc.spawn(newDir, RobotType.BEAVER);
-        rc.broadcast(Messaging.NUM_BEAVERS, numBeavers + 1);
-        Messaging.queueMiners(MAX_MINERS);
-      }
-    }
-    */
-  
    
    
   public static final int NUM_BEAVERS = 1;
@@ -428,11 +416,11 @@ public class HQ extends BaseBot {
   
   public void doBuildOrder() throws GameActionException {
     
-    if (curNumHelipads < NUM_HELIPADS) {
+   /** if (curNumHelipads < NUM_HELIPADS) {
       Messaging.queueUnits(RobotType.HELIPAD, NUM_HELIPADS - curNumHelipads);
-    }
+    }**/
     
-    if (curNumBarracks < NUM_BARRACKS && Messaging.peekBuildingUnits(RobotType.HELIPAD) >= 1) {
+    if (curNumBarracks < NUM_BARRACKS /**&& Messaging.peekBuildingUnits(RobotType.HELIPAD) >= 1**/) {
       Messaging.queueUnits(RobotType.BARRACKS, NUM_BARRACKS - curNumBarracks);
     }
 

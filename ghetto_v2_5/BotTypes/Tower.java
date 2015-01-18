@@ -22,6 +22,5 @@ public class Tower extends BaseBot {
         attackLeastHealthEnemy(attackableEnemies);
       }
     }
-    rc.yield();
   }
 }

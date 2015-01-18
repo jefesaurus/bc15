@@ -32,7 +32,6 @@ public class Tank extends MovingBot {
     rallyPoint = Messaging.readRallyPoint();
     mode = Messaging.getFleetMode();
     if (HibernateSystem.manageHibernation(mode, currentEnemies, rallyPoint)) {
-      rc.yield();
       return;
     }
     rc.setIndicatorString(1, mode.name());
@@ -87,6 +86,5 @@ public class Tank extends MovingBot {
       }
       break;
     }
-    rc.yield();
   }
 }

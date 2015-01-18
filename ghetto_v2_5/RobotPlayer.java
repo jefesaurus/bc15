@@ -206,17 +206,17 @@ public class RobotPlayer {
       Messaging.announceUnit(rc.getType());
     }
 
-    public void endOfTurn() {
+    public void endOfTurn() throws GameActionException {
     }
 
     public void go() throws GameActionException {
       beginningOfTurn();
       execute();
       endOfTurn();
+      rc.yield();
     }
 
     public void execute() throws GameActionException {
-      rc.yield();
     }
 
     public void updateRoundVariables() {
@@ -354,7 +354,6 @@ public class RobotPlayer {
         // Do HQ
         dangerVal = Util.DANGER_VALUE_MAP[RobotType.HQ.ordinal()];
         boolean[] attackingHQDirs = calculateAttackingHQDirs();
-        //rc.setIndicatorString(0, "HQ Dirs: " + Arrays.toString(attackingHQDirs));
         for (int i = attackingHQDirs.length; i-- > 0;) {
           if (attackingHQDirs[i]) {
             cachedDangerVals[i] += dangerVal;
@@ -385,8 +384,6 @@ public class RobotPlayer {
             }
           }
         }
-        //rc.setIndicatorString(2, "Tower found: " + Arrays.toString(enemyTowers));
-
       }
       return cachedNumAttackingTowerDirs;
     }
@@ -402,17 +399,13 @@ public class RobotPlayer {
             int xdiff = curLoc.x - this.enemyHQ.x;
             int ydiff = curLoc.y - this.enemyHQ.y;
             int dx, dy;
-            String dbug = "";
             for (int i = 9; i-- > 0;) {
               dx = xdiff + Util.DIR_DX[i];
               dy = ydiff + Util.DIR_DY[i];
               dx = (dx > 0) ? dx : -dx;
               dy = (dy > 0) ? dy : -dy;
               cachedAttackingHQDirs[i] = (dx <= 6 && dy <= 6 && dx + dy <= 10);
-              dbug += Util.REGULAR_DIRECTIONS_WITH_NONE[i].name() + ": (" + dx + ", " + dy + ")," + cachedAttackingHQDirs[i] + ", ";
             }
-            rc.setIndicatorString(2, dbug + "... Round: " + Clock.getRoundNum());
-
           }
         } else if (numEnemyTowers >= 2) {
           if (curDist < 49) {

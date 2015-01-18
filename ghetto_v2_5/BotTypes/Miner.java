@@ -25,7 +25,6 @@ public class Miner extends MovingBot {
 
   public void execute() throws GameActionException {
     mineMicro(this.curLoc);
-    rc.yield();
   }
   
   
@@ -38,7 +37,6 @@ public class Miner extends MovingBot {
       } else {
         // mine
         mineMethod();
-        
       }
     }
   }

@@ -51,9 +51,9 @@ public class Drone extends MovingBot {
     rallyPoint = Messaging.readRallyPoint();
     mode = Messaging.getFleetMode();
     Messaging.addToFleetCentroid();
+    rc.setIndicatorString(1, rallyPoint.toString());
     
     if (HibernateSystem.manageHibernation(mode, currentEnemies, rallyPoint)) {
-      rc.yield();
       return;
     }
     
@@ -145,7 +145,5 @@ public class Drone extends MovingBot {
       }
       break;
     }
-
-    rc.yield();
   }
 }

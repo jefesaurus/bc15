@@ -82,8 +82,6 @@ public class Beaver extends MovingBot {
       }
       break;
     }
-
-    rc.yield();
   }
   
   // Returns true when it is ready to build (adjacent to target location)
