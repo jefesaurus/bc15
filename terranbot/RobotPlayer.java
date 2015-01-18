@@ -1,22 +1,23 @@
-package ghetto_v2_5;
+package terranbot;
 
 import battlecode.common.*;
-import ghetto_v2_5.Cache;
-import ghetto_v2_5.Util;
-import ghetto_v2_5.Nav;
-import ghetto_v2_5.BotTypes.Barracks;
-import ghetto_v2_5.BotTypes.Beaver;
-import ghetto_v2_5.BotTypes.Drone;
-import ghetto_v2_5.BotTypes.HQ;
-import ghetto_v2_5.BotTypes.Helipad;
-import ghetto_v2_5.BotTypes.Miner;
-import ghetto_v2_5.BotTypes.MinerFactory;
-import ghetto_v2_5.BotTypes.Soldier;
-import ghetto_v2_5.BotTypes.Tank;
-import ghetto_v2_5.BotTypes.TankFactory;
-import ghetto_v2_5.BotTypes.Tower;
 
 import java.util.*;
+
+import terranbot.Cache;
+import terranbot.Nav;
+import terranbot.Util;
+import terranbot.BotTypes.Barracks;
+import terranbot.BotTypes.Beaver;
+import terranbot.BotTypes.Drone;
+import terranbot.BotTypes.HQ;
+import terranbot.BotTypes.Helipad;
+import terranbot.BotTypes.Miner;
+import terranbot.BotTypes.MinerFactory;
+import terranbot.BotTypes.Soldier;
+import terranbot.BotTypes.Tank;
+import terranbot.BotTypes.TankFactory;
+import terranbot.BotTypes.Tower;
 
 public class RobotPlayer {
   public static void run(RobotController rc) throws GameActionException {

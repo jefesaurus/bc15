@@ -19,7 +19,6 @@ public class MinerFactory extends BaseBot {
   public void execute() throws GameActionException {
     int unitToProduce = Messaging.getUnitToProduce();
     if (unitToProduce != -1 && unitToProduce != RobotType.MINER.ordinal()) {
-      rc.yield();
       return;
     }
     
@@ -30,12 +29,8 @@ public class MinerFactory extends BaseBot {
         Direction spawnDir = getDefensiveSpawnDirection(curType);
         if (spawnDir != null) {
           rc.spawn(spawnDir, curType);
-        } else {
-          System.out.println("WRITE CODE HERE, NEED TO FIND PLACE TO BUILD (MINERFACTORY)");
         }
       }
     }
-    
-    rc.yield();
   }
 }

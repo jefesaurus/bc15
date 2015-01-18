@@ -23,9 +23,6 @@ public class Soldier extends MovingBot {
 
   public void execute() throws GameActionException {
     currentEnemies = getEnemiesInAttackingRange();
-
-    rc.setIndicatorString(0, Integer.toString(Clock.getBytecodeNum()));
-
     
     rallyPoint = Messaging.readRallyPoint();
     mode = Messaging.getFleetMode();
@@ -79,8 +76,5 @@ public class Soldier extends MovingBot {
       }
       break;
     }
-    rc.setIndicatorString(1, Integer.toString(Clock.getBytecodeNum()));
-
-    rc.yield();
   }
 }

@@ -1,12 +1,12 @@
-package ghetto_v2_5.BotTypes;
+package terranbot.BotTypes;
 
-import ghetto_v2_5.Cache;
-import ghetto_v2_5.Messaging;
-import ghetto_v2_5.SupplyDistribution;
-import ghetto_v2_5.Util;
-import ghetto_v2_5.RobotPlayer.BaseBot;
-import ghetto_v2_5.RobotPlayer.MovingBot;
-import ghetto_v2_5.RobotPlayer.MovingBot.AttackMode;
+import terranbot.Cache;
+import terranbot.Messaging;
+import terranbot.SupplyDistribution;
+import terranbot.Util;
+import terranbot.RobotPlayer.BaseBot;
+import terranbot.RobotPlayer.MovingBot;
+import terranbot.RobotPlayer.MovingBot.AttackMode;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;

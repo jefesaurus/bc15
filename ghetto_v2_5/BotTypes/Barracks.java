@@ -26,12 +26,8 @@ public class Barracks extends BaseBot {
         Direction spawnDir = getDefensiveSpawnDirection(curType);
         if (spawnDir != null) {
           rc.spawn(spawnDir, curType);
-        } else {
-          System.out.println("WRITE CODE HERE, NEED TO FIND PLACE TO BUILD (BARRACKS)");
         }
       }
-    }
-    
-    rc.yield();
+    }    
   }
 }
