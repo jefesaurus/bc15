@@ -407,7 +407,7 @@ public class HQ extends BaseBot {
       Messaging.queueUnits(RobotType.HELIPAD, NUM_HELIPADS - curNumHelipads);
     }
     
-    if (curNumBarracks < NUM_BARRACKS && Messaging.checkNumUnits(RobotType.HELIPAD) >= 1) {
+    if (curNumBarracks < NUM_BARRACKS && curNumHelipads >= 1) {
       Messaging.queueUnits(RobotType.BARRACKS, NUM_BARRACKS - curNumBarracks);
     }
     
@@ -429,11 +429,11 @@ public class HQ extends BaseBot {
     }
     
     //This is assuming num_beavers == 1
-    if (curNumBeavers == NUM_BEAVERS && !(Messaging.peekBuildingUnits(RobotType.BEAVER) > 0)) {
+    if (Messaging.peekQueueUnits(RobotType.BEAVER) > 0 && !(Messaging.peekBuildingUnits(RobotType.BEAVER) > 0)) {
       Messaging.setUnitToProduce(RobotType.BEAVER);
       return false;
     }
-    if (Messaging.checkNumUnits(RobotType.MINERFACTORY) < 1 && Messaging.peekBuildingUnits(RobotType.MINERFACTORY) == 0) {
+    if (Messaging.peekQueueUnits(RobotType.MINERFACTORY) > 0 && Messaging.peekBuildingUnits(RobotType.MINERFACTORY) == 0) {
       Messaging.setUnitToProduce(RobotType.MINERFACTORY);
       return false;
     }
