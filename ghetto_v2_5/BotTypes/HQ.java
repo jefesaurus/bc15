@@ -407,11 +407,13 @@ public class HQ extends BaseBot {
       Messaging.queueUnits(RobotType.HELIPAD, NUM_HELIPADS - curNumHelipads);
     }
     
-    if (curNumBarracks < NUM_BARRACKS && curNumHelipads >= 1) {
+    if (curNumBarracks < NUM_BARRACKS && Messaging.peekBuildingUnits(RobotType.HELIPAD) >= 1) {
       Messaging.queueUnits(RobotType.BARRACKS, NUM_BARRACKS - curNumBarracks);
     }
     
-    if (curNumTankFactories < NUM_TANK_FACTORIES && Messaging.checkNumUnits(RobotType.BARRACKS) >= 1) {
+    if (curNumTankFactories < NUM_TANK_FACTORIES && rc.hasBuildRequirements(RobotType.TANKFACTORY)) {
+      System.out.println("trying to queue tank factories...");
+
       Messaging.queueUnits(RobotType.TANKFACTORY, NUM_TANK_FACTORIES - curNumTankFactories);
     }
   }
