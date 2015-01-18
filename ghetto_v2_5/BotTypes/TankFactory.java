@@ -19,7 +19,6 @@ public class TankFactory extends BaseBot {
     if (unitToProduce != -1 && unitToProduce != RobotType.TANK.ordinal()) {
       return;
     }
-    System.out.println("we have spawn reqs for tank: " + rc.hasSpawnRequirements(RobotType.TANK));
     //Build units if queued
     for (int i=types.length; i-- > 0;) {
       RobotType curType = types[i];

@@ -1,5 +1,6 @@
 package ghetto_v2_5.BotTypes;
 
+import ghetto_v2_5.HibernateSystem;
 import ghetto_v2_5.Messaging;
 import ghetto_v2_5.Nav;
 import ghetto_v2_5.Nav.Engage;
@@ -29,7 +30,10 @@ public class Tank extends MovingBot {
     
     rallyPoint = Messaging.readRallyPoint();
     mode = Messaging.getFleetMode();
-
+    if (HibernateSystem.manageHibernation(mode, currentEnemies, rallyPoint)) {
+      rc.yield();
+      return;
+    }
     switch (mode) {
     case SAFE_TOWER_DIVE:
       if (currentEnemies.length > 0) {
