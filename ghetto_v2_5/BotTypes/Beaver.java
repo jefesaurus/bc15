@@ -5,6 +5,7 @@ import ghetto_v2_5.Nav;
 import ghetto_v2_5.Nav.Engage;
 import ghetto_v2_5.RobotPlayer.BaseBot;
 import ghetto_v2_5.RobotPlayer.MovingBot;
+import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.GameConstants;
@@ -77,7 +78,7 @@ public class Beaver extends MovingBot {
       if (!rc.isBuildingSomething()) {
         buildingStage = BuildingStage.IDLE;
       } else {
-        targetBuildSpot = getBuildLocation();
+        targetBuildSpot = getBuildLocation(myHQ);
       }
       break;
     }
@@ -88,7 +89,7 @@ public class Beaver extends MovingBot {
   // Returns true when it is ready to build (adjacent to target location)
   public boolean continueMoveToBuildLocation() throws GameActionException {
     if (targetBuildSpot == null) {
-      targetBuildSpot = getBuildLocation();
+      targetBuildSpot = getBuildLocation(myHQ);
     } else if (curLoc.isAdjacentTo(targetBuildSpot)) {
       return true;
     } else {
@@ -113,7 +114,8 @@ public class Beaver extends MovingBot {
   }
   
 
-  public MapLocation getBuildLocation() throws GameActionException {
+  // Get a location to build centered around the provided location, which should be something like and HQ or tower.
+  public MapLocation getBuildLocation(MapLocation center) throws GameActionException {
     int size = 1;
     int lx, rx, ty, by;
     MapLocation current;
@@ -122,13 +124,14 @@ public class Beaver extends MovingBot {
     int numOccupied, numSquares;
     
     while (true) {
-      lx = myHQ.x - size;
-      rx = myHQ.x + size;
-      ty = myHQ.y - size;
-      by = myHQ.y + size;
+      lx = center.x - size;
+      rx = center.x + size;
+      ty = center.y - size;
+      by = center.y + size;
       numOccupied = 0;
       numSquares = 0;
 
+      // Top / bottom
       for (int i = rx + 1; i-- > lx;) {
         current = new MapLocation(i, ty);
 
@@ -151,7 +154,7 @@ public class Beaver extends MovingBot {
         numSquares += 2;
       }
 
-      // Right side
+      // Left and right
       for (int i = by; i-- > ty + 1;) {
         current = new MapLocation(rx, i);
 
