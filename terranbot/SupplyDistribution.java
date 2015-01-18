@@ -23,7 +23,9 @@ public class SupplyDistribution {
     //HQ give supply to reinforcement to eventually distribute
     POOL_REINFORCEMENT,
     //HQ give supply to worker/miner
-    POOL_WORKER
+    POOL_WORKER,
+    //give all supply away
+    DYING
   }
   
   public static void init(BaseBot br) {
@@ -48,6 +50,10 @@ public class SupplyDistribution {
     mode = SupplyDistributionMode.NO_TRANSFER;
   }
   
+  public static void setDyingMode() {
+    mode = SupplyDistributionMode.DYING;
+  }
+  
   public static void manageSupply() throws GameActionException {
     switch (mode) {
     case BATTERY:
@@ -63,9 +69,15 @@ public class SupplyDistribution {
     case POOL_WORKER:
       distributeWorker();
       break;
+    case DYING:
+      distributeDying();
     default:
       break;
     }
+  }
+  
+  public static void distributeDying() throws GameActionException {
+    
   }
   
   public static void distributeBatteryHQ() throws GameActionException {
@@ -96,7 +108,7 @@ public class SupplyDistribution {
         return;
       }
       RobotInfo info = robots[i];
-      if (info.type == RobotType.DRONE && info.supplyLevel < minSupplyBattle*2/3) {
+      if (info.type == RobotType.DRONE || info.type == RobotType.TANK && info.supplyLevel < minSupplyBattle*2/3) {
         int x = (int) Math.min(supplyToTransfer, minSupplyBattle - info.supplyLevel);
         rc.transferSupplies(x, info.location);
         supplyToTransfer -= x;
