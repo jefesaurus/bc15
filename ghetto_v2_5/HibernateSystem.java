@@ -13,6 +13,10 @@ public class HibernateSystem {
   private static int HIBERNATE_COUNT_DOWN = 5;
   private static RobotController rc;
   
+  public static void init(RobotController rc) {
+    HibernateSystem.rc = rc;
+  }
+  
   public static boolean manageHibernation(MovingBot.AttackMode mode, RobotInfo[] currentEnemies, MapLocation rallyPoint) throws GameActionException {
     if (mode == MovingBot.AttackMode.RALLYING || mode == MovingBot.AttackMode.DEFEND_TOWERS) {
       MapLocation towerToHelp = Messaging.getClosestTowerUnderAttack();

@@ -20,6 +20,7 @@ public class Drone extends MovingBot {
     super(rc);
     SupplyDistribution.init(this);
     SupplyDistribution.setBatteryMode();
+    HibernateSystem.init(rc);
   }
 
   
