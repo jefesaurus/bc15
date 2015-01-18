@@ -102,7 +102,7 @@ public class Messaging {
   public static int checkTotalNumUnits(RobotType type) throws GameActionException {
     int chan = getChannel(type);
     int x = rc.readBroadcast(chan);
-    System.out.println("" + type + ": " + x);
+    //System.out.println("" + type + ": " + x);
     return (x & mask) + ((x >> 8) & mask) + ((x >> 16) & mask);
   }
   

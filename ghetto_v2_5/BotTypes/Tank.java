@@ -12,9 +12,9 @@ import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotInfo;
 
-public class Soldier extends MovingBot {  
+public class Tank extends MovingBot {  
   
-  public Soldier(RobotController rc) {
+  public Tank(RobotController rc) {
     super(rc);
   }
 

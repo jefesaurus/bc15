@@ -75,7 +75,7 @@ public class SupplyDistribution {
         return;
       }
       RobotInfo info = robots[i];
-      if (info.type == RobotType.DRONE && info.supplyLevel < minSupplyLaunch*2/3) {
+      if (info.type == RobotType.DRONE || info.type == RobotType.TANK && info.supplyLevel < minSupplyLaunch*2/3) {
         rc.transferSupplies((int) (minSupplyLaunch - info.supplyLevel), info.location);
       } else if (info.type == RobotType.MINER && info.supplyLevel < minSupplyMiner*2/3) {
         rc.transferSupplies((int) (minSupplyMiner - info.supplyLevel), info.location);

@@ -42,25 +42,25 @@ public class Beaver extends MovingBot {
   public void execute() throws GameActionException {
     switch (buildingStage) {
     case IDLE:
-      System.out.println("Idle");
+      //System.out.println("Idle");
 
       robotToBuild = dequeueBuildJob();
-      System.out.println("robot to build: " + robotToBuild);
+      //System.out.println("robot to build: " + robotToBuild);
 
       if (robotToBuild != null) {
 
         buildingStage = BuildingStage.MOVING_TO_LOCATION;
-        System.out.println("Moving to: " + targetBuildSpot);
+        //System.out.println("Moving to: " + targetBuildSpot);
 
         continueMoveToBuildLocation();
       } else if (rc.isCoreReady()) {
-        System.out.println("mining");
+        //System.out.println("mining");
 
         rc.mine();
       }
       break;
     case MOVING_TO_LOCATION:
-      System.out.println("Moving to: " + targetBuildSpot);
+      //System.out.println("Moving to: " + targetBuildSpot);
 
       if (continueMoveToBuildLocation()) {
         buildingStage = BuildingStage.BUILDING;

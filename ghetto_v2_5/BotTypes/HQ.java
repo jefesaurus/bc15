@@ -31,7 +31,8 @@ public class HQ extends BaseBot {
   public int curNumMiners = 0;
   public int curNumBeavers = 0;
   public int curNumMinerFactories = 0;
-  
+  public int curNumDrones = 0;
+  public int curNumTanks = 0;
   public HQ(RobotController rc) {
     super(rc);
   }
@@ -40,6 +41,7 @@ public class HQ extends BaseBot {
     SupplyDistribution.init(this);
     strat = HighLevelStrat.HARASS;
     SupplyDistribution.setBatteryMode();
+    //Harass force
   }
   
   public enum BaseState {
@@ -67,7 +69,10 @@ public class HQ extends BaseBot {
     curNumBeavers = Messaging.checkTotalNumUnits(RobotType.BEAVER);
     curNumMiners = Messaging.checkTotalNumUnits(RobotType.MINER);
     curNumMinerFactories = Messaging.checkTotalNumUnits(RobotType.MINERFACTORY);
-    System.out.println("curNumBeavers: " + curNumBeavers + ", " + curNumMinerFactories + ", " + curNumHelipads + ", " + curNumBarracks);
+    curNumDrones = Messaging.checkTotalNumUnits(RobotType.DRONE);
+    curNumTanks = Messaging.checkTotalNumUnits(RobotType.TANK);
+    //System.out.println("num tanks: " + curNumTanks);
+    //System.out.println("curNumBeavers: " + curNumBeavers + ", " + curNumMinerFactories + ", " + curNumHelipads + ", " + curNumBarracks);
     
     SupplyDistribution.manageSupply();
     
@@ -107,6 +112,7 @@ public class HQ extends BaseBot {
     
     maintainUnitComposition();
     produceUnits();
+    doMacro();
     
     // If we are currently winning in towers, and we are under attack, pull back and defend.
     boolean haveMoreTowers = weHaveMoreTowers();
@@ -191,6 +197,8 @@ public class HQ extends BaseBot {
     Messaging.resetUnitCount(RobotType.BEAVER);
     Messaging.resetUnitCount(RobotType.MINER);
     Messaging.resetUnitCount(RobotType.MINERFACTORY);
+    Messaging.resetUnitCount(RobotType.TANK);
+    Messaging.resetUnitCount(RobotType.DRONE);
     rc.yield();
   }
   
@@ -395,8 +403,19 @@ public class HQ extends BaseBot {
   public static final int NUM_BEAVERS = 1;
   public static final int NUM_MINER_FACTORIES = 1;
   public static final int NUM_BARRACKS = 1;
-  public static final int NUM_TANK_FACTORIES = 3;
+  public static final int NUM_TANK_FACTORIES = 5;
   public static final int NUM_HELIPADS = 1;
+  
+  public void doMacro() throws GameActionException {
+    if (Clock.getRoundNum() <= 1 && Messaging.checkTotalNumUnits(RobotType.DRONE) < 3) {
+      Messaging.queueUnits(RobotType.DRONE, 3);
+    }
+    
+    if (Messaging.peekQueueUnits(RobotType.TANK) < curNumTankFactories) {
+      Messaging.queueUnits(RobotType.TANK, curNumTankFactories);
+    }
+    return;
+  }
   
 
   public void maintainUnitComposition() throws GameActionException {

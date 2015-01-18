@@ -12,6 +12,8 @@ import ghetto_v2_5.BotTypes.Helipad;
 import ghetto_v2_5.BotTypes.Miner;
 import ghetto_v2_5.BotTypes.MinerFactory;
 import ghetto_v2_5.BotTypes.Soldier;
+import ghetto_v2_5.BotTypes.Tank;
+import ghetto_v2_5.BotTypes.TankFactory;
 import ghetto_v2_5.BotTypes.Tower;
 
 import java.util.*;
@@ -48,6 +50,12 @@ public class RobotPlayer {
     case DRONE:
     	myself = new Drone(rc);
     	break;
+    case TANKFACTORY:
+      myself = new TankFactory(rc);
+      break;
+    case TANK:
+      myself = new Tank(rc);
+      break;
     default:
       myself = new BaseBot(rc);
       break;
@@ -189,7 +197,7 @@ public class RobotPlayer {
     // Override this in subclasses to do class specific setups procedures(only called once).
     // This is different from init, which sets up Nav and Messaging type stuff.
     public void setup() throws GameActionException {
-      System.out.println("Done building; " +rc.getType() );
+      //System.out.println("Done building; " +rc.getType() );
       Messaging.announceDoneBuilding(rc.getType());
     }
     
