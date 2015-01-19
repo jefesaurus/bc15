@@ -32,7 +32,7 @@ public class Tank extends MovingBot {
   protected MovingBot.AttackMode mode = MovingBot.AttackMode.OFFENSIVE_SWARM;
 
   public void execute() throws GameActionException {
-    currentEnemies = Cache.getEngagementEnemies();
+    currentEnemies = Cache.getEngagementEnemies();//getEnemiesInAttackingRange();
     
     rallyPoint = Messaging.readRallyPoint();
     mode = Messaging.getFleetMode();
@@ -45,7 +45,7 @@ public class Tank extends MovingBot {
     switch (mode) {
     case SAFE_TOWER_DIVE:
       if (currentEnemies.length > 0) {
-        RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
+        RobotInfo[] attackableEnemies = getEnemiesInAttackingRange();
         if (attackableEnemies.length > 0) {
           if (rc.isWeaponReady()) {
             if (rc.canAttackLocation(rallyPoint)) {
@@ -67,7 +67,7 @@ public class Tank extends MovingBot {
       break;
     case UNSAFE_TOWER_DIVE:
       if (currentEnemies.length > 0) {
-        RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
+        RobotInfo[] attackableEnemies = getEnemiesInAttackingRange();
         if (attackableEnemies.length > 0) {
           if (rc.isWeaponReady()) {
             if (rc.canAttackLocation(rallyPoint)) {
@@ -89,7 +89,58 @@ public class Tank extends MovingBot {
       break;
     case RALLYING:
     case OFFENSIVE_SWARM:
-      doOffensiveMicro(currentEnemies, rallyPoint);
+      if (currentEnemies.length > 0) {
+        // returns {is winning, is lowest health and not alone}
+        int[] metrics = getBattleMetrics(currentEnemies);
+        rc.setIndicatorString(1, Arrays.toString(metrics));
+        if (metrics[0] > 0) {
+          if (metrics[1] != -1 || metrics[2] != -1) {
+            Messaging.setBattleFront(new MapLocation(metrics[1], metrics[2]));
+          } else {
+            Messaging.setBattleFront(curLoc);
+          }
+          RobotInfo[] attackableEnemies = getEnemiesInAttackingRange();
+          if (attackableEnemies.length > 0) {
+            if (rc.isWeaponReady()) {
+              attackLeastHealthEnemy(attackableEnemies);
+            }
+          } else {
+            if (metrics[1] != -1 || metrics[2] != -1) {
+              Nav.goTo(new MapLocation(metrics[1], metrics[2]), Engage.UNITS);
+            } else {
+              MapLocation nearestBattle = Messaging.getClosestBattleFront(curLoc);
+              if (nearestBattle != null) {
+                Nav.goTo(nearestBattle, Engage.UNITS);
+              }
+            }
+          }
+        } else {
+          // "are we definitely going to die?"
+          if (metrics[1] > 0) {
+            // SupplyDistribution.setDyingMode();
+            // SupplyDistribution.manageSupply();
+            if (rc.isWeaponReady()) {
+              attackLeastHealthEnemy(getEnemiesInAttackingRange());
+            }
+            
+          // Retreat
+          } else {
+            if (rc.isCoreReady()) {
+              int[] attackingEnemyDirs = calculateNumAttackingEnemyDirs();
+              Nav.retreat(attackingEnemyDirs);
+            }
+          }
+        }
+      } else {
+        if (rc.isCoreReady()) {
+          MapLocation nearestBattle = Messaging.getClosestBattleFront(curLoc);
+          if (nearestBattle != null ) {
+            Nav.goTo(nearestBattle, Engage.UNITS);
+          } else if (rallyPoint != null) {
+            Nav.goTo(rallyPoint, Engage.UNITS);
+          }
+        }
+      }
       break;
     default:
       System.out.println("No default behavior");
