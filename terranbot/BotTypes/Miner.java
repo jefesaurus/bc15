@@ -64,7 +64,6 @@ public class Miner extends terranbot.MovingBot {
 //      safeZoneCenter = null;
 //      ventureMineMethod();
 //    }
-    rc.yield();
   }
   
   public void endOfTurn() {
