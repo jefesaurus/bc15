@@ -36,7 +36,7 @@ public class Miner extends terranbot.MovingBot {
 
   public static boolean mineWhileMoveMode = true;
   public static MapLocation safeZoneCenter = null;
-  
+    
   public Miner(RobotController rc) {
     super(rc);
   }
@@ -226,6 +226,14 @@ public class Miner extends terranbot.MovingBot {
     return (rc.senseOre(curLoc) / (GameConstants.MINER_MINE_RATE) * unsuppliedCoeff > GameConstants.MINER_MINE_MAX);
   }
   
+  public boolean currentLocGivesMinOre() {
+    double unsuppliedCoeff = 1;
+    if (rc.getSupplyLevel() < RobotType.MINER.supplyUpkeep) {
+      unsuppliedCoeff = 0.5;
+    }
+    return (rc.senseOre(curLoc) / (GameConstants.MINER_MINE_RATE) * unsuppliedCoeff <= GameConstants.MINIMUM_MINE_AMOUNT);
+  }
+  
   public MapLocation calculateNextLocationUsingGradient(int radius) {
     MapLocation[] locationsInVisionRange = MapLocation.getAllMapLocationsWithinRadiusSq(this.curLoc, radius);
 
@@ -256,6 +264,11 @@ public class Miner extends terranbot.MovingBot {
         rc.mine();
       }
       return;
+    } else if (currentLocGivesMinOre()) {
+      if (rc.isCoreReady()) {
+        minerNavSingleMove(Util.REGULAR_DIRECTIONS[MINER_ID % 7]);
+      }
+      return;
     } else {
       // get all visible squares within range of 15 units squared TODO possibly do every other square
       MapLocation desiredLoc = calculateNextLocationUsingGradient(15);   
@@ -276,6 +289,11 @@ public class Miner extends terranbot.MovingBot {
     if (currentLocGivesMaxOre()) {
       if (rc.isCoreReady()) {
         rc.mine();
+      }
+      return;
+    } else if (currentLocGivesMinOre()) {
+      if (rc.isCoreReady()) {
+        minerNavSingleMove(Util.REGULAR_DIRECTIONS[MINER_ID % 7]);
       }
       return;
     } else {
@@ -319,7 +337,7 @@ public class Miner extends terranbot.MovingBot {
       
       if (bestLoc != this.curLoc && rc.isCoreReady()) {
         this.miningTurns = MINING_HORIZON;
-        rc.move(getMoveDir(bestLoc));
+        minerNavSingleMove(getMoveDir(bestLoc));
       }
     }
   }
