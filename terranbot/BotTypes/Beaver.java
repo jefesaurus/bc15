@@ -16,7 +16,7 @@ import battlecode.common.RobotType;
 import battlecode.common.TerrainTile;
 
 public class Beaver extends MovingBot {
-  public static final RobotType[] types = {RobotType.MINERFACTORY, RobotType.HELIPAD, RobotType.BARRACKS, RobotType.TANKFACTORY};
+  public static final RobotType[] types = {RobotType.MINERFACTORY, RobotType.HELIPAD, RobotType.BARRACKS, RobotType.TANKFACTORY, RobotType.SUPPLYDEPOT};
   public static boolean wasBuildingSomething = false;
   public static RobotType wasBuilding = null;
   

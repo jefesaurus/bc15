@@ -160,33 +160,42 @@ public class Messaging {
     zonesUsed++;
     
     // Add our corner
-    MapLocation corner = findOurCorner();
-    rc.broadcast(SAFE_ZONES + 2, corner.x);
-    rc.broadcast(SAFE_ZONES + 3, corner.y);
+    //MapLocation safeDir = safestDirection();
+    //rc.broadcast(SAFE_ZONES + 2, corner.x);
+    //rc.broadcast(SAFE_ZONES + 3, corner.y);
     
     // Add towers
     for (int i = 0; i < br.myTowers.length && i < safeZones; i++) {
       MapLocation tower = br.myTowers[i];
-      rc.broadcast(SAFE_ZONES + 4 + 2*i, tower.x);
-      rc.broadcast(SAFE_ZONES + 4 + 2*i + 1, tower.y);
+      rc.broadcast(SAFE_ZONES + 2 + 2*i, tower.x);
+      rc.broadcast(SAFE_ZONES + 2 + 2*i + 1, tower.y);
       zonesUsed++;
     }
     
     rc.broadcast(NUM_ACTIVE_SAFEZONES, zonesUsed);
   }
   
-  private static MapLocation findOurCorner() {
-    int corner_x;
-    int corner_y;
-    int maxWidth = 120;
+  private static MapLocation safestDirection() {
+    int dir_x;
+    int dir_y;
     
     // Corner closest to our HQ
-    if (br.myHQ.x >= br.enemyHQ.x) { corner_x = br.myHQ.x + maxWidth; }
-    else { corner_x = br.myHQ.x - maxWidth; }
-    if (br.myHQ.y >= br.enemyHQ.y) { corner_y = br.myHQ.y + maxWidth; }
-    else { corner_y = br.myHQ.y - maxWidth; }
+    if (br.myHQ.x >= br.enemyHQ.x) { 
+      dir_x = 1; 
+     }
+    else { 
+      dir_x = -1; 
+    }
+    if (br.myHQ.y >= br.enemyHQ.y) { 
+      dir_y = 1; 
+    }
+    else { 
+      dir_y = -1; 
+    }
     
-    MapLocation corner = new MapLocation(corner_x, corner_y);
+    System.out.println("safe x: " + dir_x + ", safe y: " + dir_y);
+    
+    MapLocation corner = new MapLocation(dir_x, dir_y);
     return corner;
   }
 

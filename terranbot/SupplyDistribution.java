@@ -13,8 +13,8 @@ public class SupplyDistribution {
   private static BaseBot br;
   private static SupplyDistributionMode mode;
   private static final int minSupplyLaunch = 5000;
-  private static final int minSupplyMiner = 4500;
   private static final int minSupplyBattle = 500;
+  private static int minSupplyMiner = 14000;
   private static enum SupplyDistributionMode {
     //Pool supply at HQ
     NO_TRANSFER,
@@ -76,6 +76,12 @@ public class SupplyDistribution {
     }
   }
   
+  public static int updateMinMinerSupply() {
+    int totalSuppyRounds = 1900;
+    int minMinerSupply = (totalSuppyRounds - Clock.getRoundNum())*RobotType.MINER.supplyUpkeep;
+    return Math.max(minMinerSupply, 0);
+  }
+  
   public static void distributeDying() throws GameActionException {
     int supplyToTransfer = (int) (rc.getSupplyLevel());
     
@@ -106,8 +112,8 @@ public class SupplyDistribution {
       RobotInfo info = robots[i];
       if (info.type == RobotType.DRONE || info.type == RobotType.TANK && info.supplyLevel < minSupplyLaunch*2/3) {
         rc.transferSupplies((int) (minSupplyLaunch - info.supplyLevel), info.location);
-      } else if (info.type == RobotType.MINER && info.supplyLevel < minSupplyMiner*2/3) {
-        rc.transferSupplies((int) (minSupplyMiner - info.supplyLevel), info.location);
+      } else if (info.type == RobotType.MINER && info.supplyLevel < updateMinMinerSupply()) {
+        rc.transferSupplies((int) (updateMinMinerSupply() - info.supplyLevel), info.location);
       }
     }
   }

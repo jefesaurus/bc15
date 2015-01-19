@@ -33,6 +33,7 @@ public class HQ extends BaseBot {
   public int curNumMinerFactories = 0;
   public int curNumDrones = 0;
   public int curNumTanks = 0;
+  public int curNumSupplyDepots = 0;
   public HQ(RobotController rc) {
     super(rc);
   }
@@ -71,6 +72,7 @@ public class HQ extends BaseBot {
     curNumMinerFactories = Messaging.checkTotalNumUnits(RobotType.MINERFACTORY);
     curNumDrones = Messaging.checkTotalNumUnits(RobotType.DRONE);
     curNumTanks = Messaging.checkTotalNumUnits(RobotType.TANK);
+    curNumSupplyDepots = Messaging.checkTotalNumUnits(RobotType.SUPPLYDEPOT);
     //System.out.println("num tanks: " + curNumTanks);
     //System.out.println("curNumBeavers: " + curNumBeavers + ", " + curNumMinerFactories + ", " + curNumHelipads + ", " + curNumBarracks);
     
@@ -199,6 +201,7 @@ public class HQ extends BaseBot {
     Messaging.resetUnitCount(RobotType.MINERFACTORY);
     Messaging.resetUnitCount(RobotType.TANK);
     Messaging.resetUnitCount(RobotType.DRONE);
+    Messaging.resetUnitCount(RobotType.SUPPLYDEPOT);
     Messaging.resetTowersUnderAttack();
     super.endOfTurn();
   }
@@ -402,6 +405,7 @@ public class HQ extends BaseBot {
   public static final int NUM_BARRACKS = 1;
   public static final int NUM_TANK_FACTORIES = 10;
   public static final int NUM_HELIPADS = 1;
+  public static final int NUM_SUPPLY_DEPOTS = 4;
   
   public void doMacro() throws GameActionException {
     if (Clock.getRoundNum() <= 1 && Messaging.checkTotalNumUnits(RobotType.DRONE) < 3) {
@@ -432,10 +436,15 @@ public class HQ extends BaseBot {
     if (curNumBarracks < NUM_BARRACKS /**&& Messaging.peekBuildingUnits(RobotType.HELIPAD) >= 1**/) {
       Messaging.queueUnits(RobotType.BARRACKS, NUM_BARRACKS - curNumBarracks);
     }
+    System.out.println("Depots: " + curNumSupplyDepots);
+    if (curNumSupplyDepots < NUM_SUPPLY_DEPOTS) {
+      Messaging.queueUnits(RobotType.SUPPLYDEPOT, NUM_SUPPLY_DEPOTS - curNumSupplyDepots);
+    }
 
     if (curNumTankFactories < NUM_TANK_FACTORIES && Messaging.checkNumUnits(RobotType.BARRACKS) >= 1) {
       Messaging.queueUnits(RobotType.TANKFACTORY, NUM_TANK_FACTORIES - curNumTankFactories);
     }
+    
   }
   
   // Returns true if constant requirements are met.
