@@ -1,5 +1,6 @@
 package terranbot.BotTypes;
 
+import terranbot.Cache;
 import terranbot.Messaging;
 import terranbot.Nav;
 import terranbot.Util;
@@ -24,6 +25,21 @@ public class Miner extends MovingBot {
   }
 
   public void execute() throws GameActionException {
+    currentEnemies = Cache.getEngagementEnemies();
+    if (currentEnemies.length > 0) {
+      MapLocation closest = null;
+      for (int i=currentEnemies.length; i-->0;) {
+        MapLocation trialLoc = currentEnemies[i].location;
+        if (closest == null) {
+          closest = trialLoc;
+        } else {
+          if (this.curLoc.distanceSquaredTo(trialLoc) < this.curLoc.distanceSquaredTo(closest)) {
+            closest = trialLoc;
+          }
+        }
+      }
+      Messaging.setDefendFront(closest);
+    }
     mineMicro(this.curLoc);
   }
   

@@ -39,6 +39,8 @@ public class Messaging {
   
   public final static int BATTLE_OFFSET = 2000;
   public final static int NUM_BATTLE_CHANNELS = 5;
+  public final static int DEFEND_OFFSET = 3000;
+  public final static int NUM_DEFEND_CHANNELS = 5;
 
   
   public static RobotController rc;
@@ -60,6 +62,47 @@ public class Messaging {
   
   public static int getKilledChannel(RobotType type) {
     return type.ordinal() + KILLED_OFFSET;
+  }
+  
+  public static void setDefendFront(MapLocation loc) throws GameActionException {
+    for (int i=NUM_DEFEND_CHANNELS; i-- > 0;) {
+      int chan = DEFEND_OFFSET + i;
+      if (rc.readBroadcast(chan) == 0) {
+        writeLocation(chan, loc, Clock.getRoundNum());
+      } else {
+        MapLocation curLoc = readLocation(chan);
+        if (curLoc.distanceSquaredTo(loc) <= BATTLE_RANGE_SQUARED) {
+          if (isFresh(chan)) {
+            MapLocation newLoc = new MapLocation((curLoc.x + loc.x) / 2, (curLoc.y + loc.y) / 2);
+            writeLocation(chan, newLoc, Clock.getRoundNum());
+            return;
+          }
+        }
+        
+        if (!isFresh(chan)) {
+          writeLocation(chan, loc, Clock.getRoundNum());
+        }
+      }
+    }
+  }
+  
+  // Returns null if no battlefront
+  public static MapLocation getClosestDefendFront(MapLocation loc) throws GameActionException {
+    MapLocation closest = null;
+    for (int i=NUM_DEFEND_CHANNELS; i-- > 0;) {
+      int chan = DEFEND_OFFSET + i;
+      if (isFresh(chan) && rc.readBroadcast(chan) != 0) {
+        MapLocation trialLoc = readLocation(chan);
+        if (closest == null) {
+          closest = trialLoc;
+        } else {
+          if (loc.distanceSquaredTo(trialLoc) < loc.distanceSquaredTo(closest)) {
+            closest = trialLoc;
+          }
+        }
+      }
+    }
+    return closest;
   }
   
   public static void setBattleFront(MapLocation loc) throws GameActionException {
