@@ -78,7 +78,7 @@ public class HQ extends BaseBot {
     
     // This checks which enemy towers are still alive and broadcasts it to save bytecode across the fleet
     //Messaging.setSurvivingEnemyTowers(Cache.getEnemyTowerLocationsDirect());
-    Messaging.resetTowersUnderAttack();
+    
     
     int range_squared = 24;
     int numTowers = rc.senseTowerLocations().length;
@@ -116,7 +116,7 @@ public class HQ extends BaseBot {
     // If we are currently winning in towers, and we are under attack, pull back and defend.
     boolean haveMoreTowers = weHaveMoreTowers();
     boolean towersUnderAttack = Messaging.getClosestTowerUnderAttack() != null;
-    if (strat != HighLevelStrat.TOWER_DEFENDING && haveMoreTowers && towersUnderAttack) {
+    if (strat != HighLevelStrat.TOWER_DEFENDING && (haveMoreTowers || strat != HighLevelStrat.TOWER_DIVING) && towersUnderAttack) {
       defendTowers();
       return;
     }
@@ -170,9 +170,8 @@ public class HQ extends BaseBot {
         if (targetIsDead) {
           // defendTowers();
           setCurrentTowerTarget(enemyTowers);
-          approachTower(currentTargetTower);
-
-        } else if (Messaging.checkNumUnits(RobotType.TANK) < FLEET_COUNT_ATTACK_THRESHOLD/3) {
+          buildForces();
+        } else if (!haveDecentSurround(currentTargetTower)) {
           buildForces();
         }
       } else {
@@ -184,7 +183,7 @@ public class HQ extends BaseBot {
       break;
     case TOWER_DEFENDING:
       // Switch to tower diving if they have equal to or more towers
-      if (!weHaveMoreTowers()) {
+      if (!towersUnderAttack) {
         buildForces();
       }
       break;
@@ -200,6 +199,7 @@ public class HQ extends BaseBot {
     Messaging.resetUnitCount(RobotType.MINERFACTORY);
     Messaging.resetUnitCount(RobotType.TANK);
     Messaging.resetUnitCount(RobotType.DRONE);
+    Messaging.resetTowersUnderAttack();
     super.endOfTurn();
   }
   
@@ -273,13 +273,13 @@ public class HQ extends BaseBot {
   public void defendTowers() throws GameActionException {
     strat = HighLevelStrat.TOWER_DEFENDING;
     setFleetMode(MovingBot.AttackMode.DEFEND_TOWERS);
-    setRallyPoint(myHQ);
+    setRallyPoint(new MapLocation(myHQ.x + ((enemyHQ.x - myHQ.x) / 4), myHQ.y + ((enemyHQ.y - myHQ.y) / 4)));
   }
   
   public void buildForces() throws GameActionException {
     strat = HighLevelStrat.BUILDING_FORCES;
-    setFleetMode(MovingBot.AttackMode.OFFENSIVE_SWARM);
-    setRallyPoint(new MapLocation(myHQ.x + ((enemyHQ.x - myHQ.x) / 3), myHQ.y + ((enemyHQ.y - myHQ.y) / 3)));
+    setFleetMode(MovingBot.AttackMode.DEFENSIVE_SWARM);
+    setRallyPoint(new MapLocation(myHQ.x + ((enemyHQ.x - myHQ.x) / 4), myHQ.y + ((enemyHQ.y - myHQ.y) / 4)));
   }
   
   

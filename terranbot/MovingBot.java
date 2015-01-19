@@ -404,9 +404,7 @@ public class MovingBot extends BaseBot {
       // rc.setIndicatorString(1, Arrays.toString(metrics));
       if (metrics[0] > 0) {
         if (metrics[1] != -1 || metrics[2] != -1) {
-          Messaging.setBattleFront(new MapLocation(metrics[1], metrics[2]));
-        } else {
-          Messaging.setBattleFront(curLoc);
+          Messaging.setDefendFront(new MapLocation(metrics[1], metrics[2]));
         }
         RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
         if (attackableEnemies.length > 0) {
@@ -417,8 +415,8 @@ public class MovingBot extends BaseBot {
           if (metrics[1] != -1 || metrics[2] != -1) {
             Nav.goTo(new MapLocation(metrics[1], metrics[2]), Engage.UNITS);
           } else {
-            MapLocation nearestBattle = Messaging.getClosestBattleFront(curLoc);
-            if (nearestBattle != null) {
+            MapLocation nearestBattle = Messaging.getClosestDefendFront(curLoc);
+            if (nearestBattle != null && myHQ.distanceSquaredTo(nearestBattle) <= 80) {
               Nav.goTo(nearestBattle, Engage.UNITS);
             }
           }
@@ -442,8 +440,8 @@ public class MovingBot extends BaseBot {
       }
     } else {
       if (rc.isCoreReady()) {
-        MapLocation nearestBattle = Messaging.getClosestBattleFront(curLoc);
-        if (nearestBattle != null ) {
+        MapLocation nearestBattle = Messaging.getClosestDefendFront(curLoc);
+        if (nearestBattle != null && myHQ.distanceSquaredTo(nearestBattle) <= 80) {
           Nav.goTo(nearestBattle, Engage.UNITS);
         } else if (rallyPoint != null) {
           Nav.goTo(rallyPoint, Engage.UNITS);

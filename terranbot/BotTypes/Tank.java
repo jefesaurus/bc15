@@ -39,7 +39,7 @@ public class Tank extends MovingBot {
     if (HibernateSystem.manageHibernation(mode, currentEnemies, rallyPoint)) {
       return;
     }
-    //rc.setIndicatorString(2, mode.name());
+    rc.setIndicatorString(2, "Mode: " + mode.name() + ", Rally point: " + rallyPoint);
     SupplyDistribution.manageSupply();
 
     switch (mode) {
@@ -90,6 +90,10 @@ public class Tank extends MovingBot {
     case RALLYING:
     case OFFENSIVE_SWARM:
       doOffensiveMicro(currentEnemies, rallyPoint);
+      break;
+    case DEFEND_TOWERS:
+    case DEFENSIVE_SWARM:
+      doDefensiveMicro(currentEnemies, rallyPoint);
       break;
     default:
       System.out.println("No default behavior");
