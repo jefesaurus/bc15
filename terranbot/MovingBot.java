@@ -1,5 +1,8 @@
 package terranbot;
 
+import java.util.Arrays;
+
+import terranbot.Nav.Engage;
 import terranbot.RobotPlayer.BaseBot;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -135,9 +138,9 @@ public class MovingBot extends BaseBot {
     RobotInfo closestEngageable = null;
     double closestDist = Double.MAX_VALUE;
     double tempDist = 0;
-    int enemyCentroidX = 0;
-    int enemyCentroidY = 0;
-    int numEnemies = 0;
+    //int enemyCentroidX = 0;
+    //int enemyCentroidY = 0;
+    //int numEnemies = 0;
 
     for (int i = nearbyEnemies.length; i-- > 0;) {
       switch (nearbyEnemies[i].type) {
@@ -337,5 +340,115 @@ public class MovingBot extends BaseBot {
       }
     }
     return cachedAttackingHQDirs;
+  }
+  
+  public void doOffensiveMicro(RobotInfo[] engageableEnemies, MapLocation rallyPoint) throws GameActionException {
+    if (engageableEnemies.length > 0) {
+      // returns {is winning, is lowest health and not alone}
+      int[] metrics = getBattleMetrics(engageableEnemies);
+      rc.setIndicatorString(1, Arrays.toString(metrics));
+      if (metrics[0] > 0) {
+        if (metrics[1] != -1 || metrics[2] != -1) {
+          Messaging.setBattleFront(new MapLocation(metrics[1], metrics[2]));
+        } else {
+          Messaging.setBattleFront(curLoc);
+        }
+        RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
+        if (attackableEnemies.length > 0) {
+          if (rc.isWeaponReady()) {
+            attackLeastHealthEnemy(attackableEnemies);
+          }
+        } else {
+          if (metrics[1] != -1 || metrics[2] != -1) {
+            Nav.goTo(new MapLocation(metrics[1], metrics[2]), Engage.UNITS);
+          } else {
+            MapLocation nearestBattle = Messaging.getClosestBattleFront(curLoc);
+            if (nearestBattle != null) {
+              Nav.goTo(nearestBattle, Engage.UNITS);
+            }
+          }
+        }
+      } else {
+        // "are we definitely going to die?"
+        if (metrics[1] > 0) {
+          // SupplyDistribution.setDyingMode();
+          // SupplyDistribution.manageSupply();
+          if (rc.isWeaponReady()) {
+            attackLeastHealthEnemy(Cache.getAttackableEnemies());
+          }
+          
+        // Retreat
+        } else {
+          if (rc.isCoreReady()) {
+            int[] attackingEnemyDirs = calculateNumAttackingEnemyDirs();
+            Nav.retreat(attackingEnemyDirs);
+          }
+        }
+      }
+    } else {
+      if (rc.isCoreReady()) {
+        MapLocation nearestBattle = Messaging.getClosestBattleFront(curLoc);
+        if (nearestBattle != null ) {
+          Nav.goTo(nearestBattle, Engage.UNITS);
+        } else if (rallyPoint != null) {
+          Nav.goTo(rallyPoint, Engage.UNITS);
+        }
+      }
+    }
+  }
+  
+  public void doDefensiveMicro(RobotInfo[] engageableEnemies, MapLocation rallyPoint) throws GameActionException {
+    if (engageableEnemies.length > 0) {
+      // returns {is winning, is lowest health and not alone}
+      int[] metrics = getBattleMetrics(engageableEnemies);
+      rc.setIndicatorString(1, Arrays.toString(metrics));
+      if (metrics[0] > 0) {
+        if (metrics[1] != -1 || metrics[2] != -1) {
+          Messaging.setBattleFront(new MapLocation(metrics[1], metrics[2]));
+        } else {
+          Messaging.setBattleFront(curLoc);
+        }
+        RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
+        if (attackableEnemies.length > 0) {
+          if (rc.isWeaponReady()) {
+            attackLeastHealthEnemy(attackableEnemies);
+          }
+        } else {
+          if (metrics[1] != -1 || metrics[2] != -1) {
+            Nav.goTo(new MapLocation(metrics[1], metrics[2]), Engage.UNITS);
+          } else {
+            MapLocation nearestBattle = Messaging.getClosestBattleFront(curLoc);
+            if (nearestBattle != null) {
+              Nav.goTo(nearestBattle, Engage.UNITS);
+            }
+          }
+        }
+      } else {
+        // "are we definitely going to die?"
+        if (metrics[1] > 0) {
+          // SupplyDistribution.setDyingMode();
+          // SupplyDistribution.manageSupply();
+          if (rc.isWeaponReady()) {
+            attackLeastHealthEnemy(Cache.getAttackableEnemies());
+          }
+          
+        // Retreat
+        } else {
+          if (rc.isCoreReady()) {
+            int[] attackingEnemyDirs = calculateNumAttackingEnemyDirs();
+            Nav.retreat(attackingEnemyDirs);
+          }
+        }
+      }
+    } else {
+      if (rc.isCoreReady()) {
+        MapLocation nearestBattle = Messaging.getClosestBattleFront(curLoc);
+        if (nearestBattle != null ) {
+          Nav.goTo(nearestBattle, Engage.UNITS);
+        } else if (rallyPoint != null) {
+          Nav.goTo(rallyPoint, Engage.UNITS);
+        }
+      }
+    }
   }
 }
