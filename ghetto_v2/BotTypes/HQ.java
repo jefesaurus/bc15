@@ -104,6 +104,7 @@ public class HQ extends BaseBot {
     case APPROACHING_TOWER:
       // Set rally point to just in front of nearest tower.
       // Wait until ally centroid is epsilon close, then switch to tower diving
+      System.out.println(currentTargetTower);
       if (fleetCentroid.distanceSquaredTo(currentTargetTower) < 50 && !weHaveMoreTowers()) {
         diveTower(currentTargetTower);
       }

@@ -13,7 +13,7 @@ public class Messaging {
   public final static int ENEMY_TOWERS = 1;
   public final static int OUR_HQ = 13;
   public final static int ENEMY_HQ = 14;
-  public final static int NUM_MINERS = 15;
+  public final static int DESIRED_NUM_MINERS = 15;
   public final static int RALLY_POINT_X = 16;
   public final static int RALLY_POINT_Y = 17;
 
@@ -28,7 +28,9 @@ public class Messaging {
   
   public final static int VULNERABLE_TOWER_COMPUTATION = 24;
   public final static int VULNERABLE_TOWER_LIST = 25;
+  public final static int NUM_MINERS = 26;
   
+  public final static int SAFE_ZONES = 27; // channels 27-40
 
   public static RobotController rc;
   public static BaseBot br;
@@ -50,24 +52,50 @@ public class Messaging {
   }
 
   public static void queueMiners(int quantity) throws GameActionException {
-    rc.broadcast(NUM_MINERS, quantity);
+    rc.broadcast(DESIRED_NUM_MINERS, quantity);
   }
   
   public static boolean dequeueMiner() throws GameActionException {
-    int numQueuedMiners = rc.readBroadcast(NUM_MINERS);
+    int numQueuedMiners = rc.readBroadcast(DESIRED_NUM_MINERS);
     if (numQueuedMiners > 0) {
-      rc.broadcast(NUM_MINERS, numQueuedMiners - 1);
+      rc.broadcast(DESIRED_NUM_MINERS, numQueuedMiners - 1);
       return true;
     } else {
       return false;
     }
   }
-  
+
   public static int announceBeaver() throws GameActionException {
     int numBeavers = rc.readBroadcast(NUM_BEAVERS);
     rc.broadcast(NUM_BEAVERS, numBeavers + 1);
     return numBeavers;
   }
+  
+  public static int announceMiner() throws GameActionException {
+    int numMiners = rc.readBroadcast(NUM_MINERS);
+    rc.broadcast(NUM_MINERS, numMiners + 1);
+    return numMiners;
+  }
+  
+  public static void initializeSafeZones() throws GameActionException { // TODO don't choose all towers maybe
+    int safeZones = 7;
+    rc.broadcast(SAFE_ZONES, br.myHQ.x);
+    rc.broadcast(SAFE_ZONES + 1, br.myHQ.y);
+    safeZones = safeZones - 1; // subtract one for HQ
+    for (int i = 0; i < br.myTowers.length; i++) {
+      MapLocation tower = br.myTowers[i];
+      rc.broadcast(SAFE_ZONES + 2 + 2*i, tower.x);
+      rc.broadcast(SAFE_ZONES + 2 + 2*i + 1, tower.y);
+      safeZones = safeZones - 1;
+    }
+//    for (int i=0; i < safeZones; i++) {
+//      rc.broadcast(SAFE_ZONES + 2*(7-safeZones) + 2*i, (Integer) null);
+//      rc.broadcast(SAFE_ZONES + 2*(7-safeZones) + 2*i + 1, (Integer) null);
+//    }
+  }
+//  
+//  public static MapLocation[] getTowersCloserToMyHQ() {
+//  }
   
   public static MapLocation readRallyPoint() throws GameActionException {
     int x = rc.readBroadcast(RALLY_POINT_X);
