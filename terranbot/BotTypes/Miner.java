@@ -12,6 +12,7 @@ import battlecode.common.GameActionException;
 import battlecode.common.GameConstants;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
+import battlecode.common.RobotInfo;
 import battlecode.common.RobotType;
 import battlecode.common.TerrainTile;
   /*
@@ -44,7 +45,12 @@ public class Miner extends terranbot.MovingBot {
 
   public void execute() throws GameActionException {
     //mineMicro(this.curLoc);
-    mineSafely();
+    if (Clock.getRoundNum() < 1000) {
+      mineSafely();
+    } else {
+      safeZoneCenter = null;
+      ventureMineMethod();
+    }
     rc.yield();
   }
   
@@ -94,11 +100,13 @@ public class Miner extends terranbot.MovingBot {
   private void moveToSafeArea(MapLocation loc, int dist) throws GameActionException {
     rc.setIndicatorString(0, "center of safe area: " + loc);
     if (rc.isCoreReady()) {
-      if (mineWhileMoveMode) { // mine while move, alternately TODO: more intelligently
+      if (mineWhileMoveMode) { // mine while move, alternately TODO: more intelligently TODO: buggy
         if (minedOnLastTurn) {
           rc.setIndicatorString(1, "desired dir: " + getMoveDir(loc));
           // TODO this throws an error
-          rc.move(getMoveDir(loc));
+          Nav.goTo(loc, Engage.NONE);
+//          minerNavSingleMove(this.curLoc.directionTo(loc));
+//          rc.move(getMoveDir(loc));
           minedOnLastTurn = false;
         } else {
           rc.mine();
@@ -135,7 +143,7 @@ public class Miner extends terranbot.MovingBot {
     
   }
   
-  private void mineMicro(MapLocation loc) throws GameActionException {
+  private void ventureMineMethod() throws GameActionException {
     if (rc.isCoreReady()) {
       int[] attackingEnemyDirs = this.calculateNumAttackingEnemyDirs();
       // If the center square is in danger, retreat
@@ -150,16 +158,16 @@ public class Miner extends terranbot.MovingBot {
   
   public void mineMethod() throws GameActionException {
     if (rc.isCoreReady()) {
-      // check the number of turns left for this miner to mine on this space      
-      if (miningTurns > 0) {
-          miningTurns--;
-          rc.mine();
-      } else {
-        // no more mining turns left for this location; determine next best course of action
-        
-        determineNewCourse();
-        
-      }
+//      // check the number of turns left for this miner to mine on this space      
+//      if (miningTurns > 0) {
+//          miningTurns--;
+//          rc.mine();
+//      } else {
+//        // no more mining turns left for this location; determine next best course of action
+//        
+        basicMineAlgorithm();
+//        
+//      }
     }
   }
   
@@ -178,10 +186,16 @@ public class Miner extends terranbot.MovingBot {
     }
   }
   
-  public void determineNewCourse() throws GameActionException {
-    // get all visible squares within range of 15 units squared
-    // TODO possibly do every other square 
-    MapLocation[] locationsInVisionRange = MapLocation.getAllMapLocationsWithinRadiusSq(this.curLoc, 15);
+  public boolean currentLocGivesMaxOre() {
+    double unsuppliedCoeff = 1;
+    if (rc.getSupplyLevel() < RobotType.MINER.supplyUpkeep) {
+      unsuppliedCoeff = 0.5;
+    }
+    return (rc.senseOre(curLoc) / (GameConstants.MINER_MINE_RATE) * unsuppliedCoeff > GameConstants.MINER_MINE_MAX);
+  }
+  
+  public MapLocation calculateNextLocationUsingGradient(int radius) {
+    MapLocation[] locationsInVisionRange = MapLocation.getAllMapLocationsWithinRadiusSq(this.curLoc, radius);
 
     // calculate the ore in x- and y- directions, weighted by distance
     double xWeightedOreTotal = 0;
@@ -195,107 +209,125 @@ public class Miner extends terranbot.MovingBot {
         double oreAtLoc = rc.senseOre(locationsInVisionRange[i]);
         xWeightedOreTotal += xUnitCmpt*oreAtLoc;
         yWeightedOreTotal += yUnitCmpt*oreAtLoc; 
-         
     }
 
     // calculate the desired next square to move to
     double mag = Math.sqrt(xWeightedOreTotal*xWeightedOreTotal + yWeightedOreTotal*yWeightedOreTotal);
     MapLocation desiredLoc = new MapLocation( this.curLoc.x + (int) Math.round(xWeightedOreTotal/mag), 
-                                            this.curLoc.y + (int) Math.round(yWeightedOreTotal/mag));    
-    
-    
+                                            this.curLoc.y + (int) Math.round(yWeightedOreTotal/mag)); 
+    return desiredLoc;
+  }
+  
+  public void determineNewCourse() throws GameActionException {
+    if (currentLocGivesMaxOre()) {
+      if (rc.isCoreReady()) {
+        rc.mine();
+      }
+      return;
+    } else {
+      // get all visible squares within range of 15 units squared TODO possibly do every other square
+      MapLocation desiredLoc = calculateNextLocationUsingGradient(15);   
+      
       if (desiredLoc.equals(this.curLoc) && rc.isCoreReady()) {
-        // TODO change because no longer implementing mining+turns
-        this.miningTurns = MINING_HORIZON;
         rc.mine();
       }      
 
-      else if (!this.curLoc.equals(desiredLoc)) { // otherwise need to move to the next best square
-        // TODO change because no longer implementing mining+turns
-        this.miningTurns = MINING_HORIZON;
-
-        boolean[] canMove = new boolean[8];
-        //check that squares aren't occupied
-        for (int i = 8; i-- > 0;) {
-          if (rc.canMove(Util.REGULAR_DIRECTIONS[i])) {
-            canMove[i] = true;
-          } else {
-            canMove[i] = false;
-          }
-        }
-                
-        int bestDir = this.curLoc.directionTo(desiredLoc).ordinal() + 8;
-        
-        int tempDir;
-        for (int i = 0; i < 8; i++) {
-          if (i%2 == 0) {
-            tempDir = (bestDir - i)%8;
-          } else {
-            tempDir = (bestDir + i)%8;
-          }
-          
-          double[] dangerVals = this.getAllDangerVals();
-          
-          // in safe zone, and want to stay in it
-          if (safeZoneCenter != null && inSafeArea(safeZoneCenter, SAFE_RADIUS)) {
-            if (canMove[tempDir] && dangerVals[tempDir] < 0.01 && 
-                this.curLoc.add(Util.REGULAR_DIRECTIONS[tempDir]).distanceSquaredTo(safeZoneCenter) <= SAFE_RADIUS) {
-              if (rc.isCoreReady())
-                rc.move(Util.REGULAR_DIRECTIONS[tempDir]);
-            }
-          } else { // not in safe zone yet, but do have a safe zone center, or no safe zone center at all
-            if (canMove[tempDir] && dangerVals[tempDir] < 0.01) {
-              if (rc.isCoreReady())
-                rc.move(Util.REGULAR_DIRECTIONS[tempDir]);
-            }
-          }
+      else { // otherwise need to move to the next best square
+        Direction dir = this.curLoc.directionTo(desiredLoc);
+        minerNavSingleMove(dir);
       }
-    }
+    }  
   }
   
   // NOTE: Only used for mining in the safe zone
   public void basicMineAlgorithm() throws GameActionException {
-    double[] dangerVals = this.getAllDangerVals();
-    double curAmount = getOreAmount(this.curLoc, MINING_HORIZON);
-    double maxAmount = curAmount;
-    MapLocation bestLoc = this.curLoc;
-    int numMaxes = 1;
-    Direction[] directions = Direction.values();
-    for (int i=0; i<8; i++) {
-      if (rc.canMove(directions[i]) && dangerVals[directions[i].ordinal()] < 0.01 &&
-          safeZoneCenter != null && inSafeArea(safeZoneCenter, SAFE_RADIUS) && // this part is for safe zone mining only
-          this.curLoc.add(directions[i]).distanceSquaredTo(safeZoneCenter) <= SAFE_RADIUS) { // this part is for safe zone mining only
-        MapLocation trialLoc = this.curLoc.add(directions[i]);
-        
-        
-        
-        double adjAmount = getOreAmount(trialLoc, MINING_HORIZON - 1);
-        if (maxAmount < adjAmount) {
-          maxAmount = adjAmount;
-          bestLoc = trialLoc;
-          numMaxes = 1;
-        } else if (maxAmount == adjAmount) {
-          numMaxes += 1;
-          if (Math.random() > 1.0 / numMaxes) {
+    if (currentLocGivesMaxOre()) {
+      if (rc.isCoreReady()) {
+        rc.mine();
+      }
+      return;
+    } else {
+      double[] dangerVals = this.getAllDangerVals();
+      double curAmount = getOreAmount(this.curLoc, MINING_HORIZON);
+      double maxAmount = curAmount;
+      MapLocation bestLoc = this.curLoc;
+      int numMaxes = 1;
+      Direction[] directions = Direction.values();
+      for (int i=0; i<8; i++) {
+        if (rc.canMove(directions[i]) && dangerVals[directions[i].ordinal()] < 0.01 &&
+            ((safeZoneCenter != null && inSafeArea(safeZoneCenter, SAFE_RADIUS) && // this part is for safe zone mining only
+            this.curLoc.add(directions[i]).distanceSquaredTo(safeZoneCenter) <= SAFE_RADIUS) ||
+            safeZoneCenter==null)) { // this part is for safe zone mining only
+          MapLocation trialLoc = this.curLoc.add(directions[i]);
+          
+          
+          
+          double adjAmount = getOreAmount(trialLoc, MINING_HORIZON - 1);
+          if (maxAmount < adjAmount) {
+            maxAmount = adjAmount;
             bestLoc = trialLoc;
+            numMaxes = 1;
+          } else if (maxAmount == adjAmount) {
+            numMaxes += 1;
+            if (Math.random() > 1.0 / numMaxes) {
+              bestLoc = trialLoc;
+            }
           }
         }
       }
+      
+      if (maxAmount == curAmount) {
+        bestLoc = this.curLoc;
+      }
+      
+      if (bestLoc == this.curLoc && rc.isCoreReady()) {
+        this.miningTurns = MINING_HORIZON;
+        rc.mine();
+      }
+      
+      if (bestLoc != this.curLoc && rc.isCoreReady()) {
+        this.miningTurns = MINING_HORIZON;
+        rc.move(getMoveDir(bestLoc));
+      }
     }
+  }
+  
+  private void minerNavSingleMove(Direction dir) throws GameActionException {
+    int bestDir = dir.ordinal() + 8;
 
-    
-    if (maxAmount == curAmount) {
-      bestLoc = this.curLoc;
+    boolean[] canMove = new boolean[8];
+    //check that squares aren't occupied
+    for (int i = 8; i-- > 0;) {
+      if (rc.canMove(Util.REGULAR_DIRECTIONS[i])) {
+        canMove[i] = true;
+      } else {
+        canMove[i] = false;
+      }
     }
-    
-    if (bestLoc == this.curLoc && rc.isCoreReady()) {
-      this.miningTurns = MINING_HORIZON;
-      rc.mine();
-    }
-    
-    if (bestLoc != this.curLoc && rc.isCoreReady()) {
-      this.miningTurns = MINING_HORIZON;
-      rc.move(getMoveDir(bestLoc));
+                
+    int tempDir;
+    for (int i = 0; i < 8; i++) {
+      if (i%2 == 0) {
+        tempDir = (bestDir - i)%8;
+      } else {
+        tempDir = (bestDir + i)%8;
+      }
+      
+      double[] dangerVals = this.getAllDangerVals();
+      
+      // in safe zone, and want to stay in it
+      if (safeZoneCenter != null && inSafeArea(safeZoneCenter, SAFE_RADIUS)) {
+        if (canMove[tempDir] && dangerVals[tempDir] < 0.01 && 
+            this.curLoc.add(Util.REGULAR_DIRECTIONS[tempDir]).distanceSquaredTo(safeZoneCenter) <= SAFE_RADIUS) {
+          if (rc.isCoreReady())
+            rc.move(Util.REGULAR_DIRECTIONS[tempDir]);
+        }
+      } else { // not in safe zone yet, but do have a safe zone center, or no safe zone center at all
+        if (canMove[tempDir] && dangerVals[tempDir] < 0.01) {
+          if (rc.isCoreReady())
+            rc.move(Util.REGULAR_DIRECTIONS[tempDir]);
+        }
+      }
     }
   }
 
