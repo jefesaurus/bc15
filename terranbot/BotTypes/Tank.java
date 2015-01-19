@@ -39,7 +39,7 @@ public class Tank extends MovingBot {
     if (HibernateSystem.manageHibernation(mode, currentEnemies, rallyPoint)) {
       return;
     }
-    rc.setIndicatorString(2, mode.name());
+    //rc.setIndicatorString(2, mode.name());
     SupplyDistribution.manageSupply();
 
     switch (mode) {

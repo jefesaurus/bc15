@@ -69,9 +69,10 @@ public class Beaver extends MovingBot {
       break;
     case BUILDING:
       if (rc.isCoreReady() && rc.hasBuildRequirements(robotToBuild)) {
-        rc.build(curLoc.directionTo(targetBuildSpot), robotToBuild);
-        
-        buildingStage = BuildingStage.WAITING_TO_FINISH_BUILDING;
+        if (rc.canBuild(curLoc.directionTo(targetBuildSpot), robotToBuild)) {
+          rc.build(curLoc.directionTo(targetBuildSpot), robotToBuild);
+          buildingStage = BuildingStage.WAITING_TO_FINISH_BUILDING;
+        }
       }
       break;
     case WAITING_TO_FINISH_BUILDING:

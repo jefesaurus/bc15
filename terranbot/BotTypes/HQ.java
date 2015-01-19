@@ -111,7 +111,7 @@ public class HQ extends BaseBot {
     produceUnits();
     doMacro();
     
-    rc.setIndicatorString(0, strat.name());
+    // rc.setIndicatorString(0, strat.name());
     
     // If we are currently winning in towers, and we are under attack, pull back and defend.
     boolean haveMoreTowers = weHaveMoreTowers();
@@ -386,13 +386,13 @@ public class HQ extends BaseBot {
   public static final int TOWER_DIVE_RADIUS = 49;
   public boolean haveDecentSurround(MapLocation loc) {
     double allyScore = Util.getDangerScore(rc.senseNearbyRobots(loc, TOWER_DIVE_RADIUS, myTeam));
-    if (allyScore > 50.0) {
+    if (allyScore > 40.0) {
       double enemyScore = Util.getDangerScore(rc.senseNearbyRobots(loc, TOWER_DIVE_RADIUS, theirTeam));
-      rc.setIndicatorString(2, "Tower score, Ally: " + allyScore + ", enemy: " + enemyScore);
+      //rc.setIndicatorString(2, "Tower score, Ally: " + allyScore + ", enemy: " + enemyScore);
 
       return allyScore > enemyScore;
     }
-    rc.setIndicatorString(2, "Tower score: no allies");
+    //rc.setIndicatorString(2, "Tower score: no allies");
     return false;
   }
    

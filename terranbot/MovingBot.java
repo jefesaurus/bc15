@@ -107,7 +107,7 @@ public class MovingBot extends BaseBot {
     RobotInfo[] allies = rc.senseNearbyRobots(closestEngageable.location, ALLY_INLCUDE_RADIUS_SQ, myTeam);
     double allyScore = Util.getDangerScore(allies);
     double enemyScore = Util.getDangerScore(rc.senseNearbyRobots(closestEngageable.location, ENEMY_INCLUDE_RADIUS_SQ, theirTeam));
-    rc.setIndicatorString(2, "Ally score: " + allyScore + ", Enemy score: " + enemyScore);
+    // rc.setIndicatorString(2, "Ally score: " + allyScore + ", Enemy score: " + enemyScore);
     if (allyScore > enemyScore) {
       return new boolean[] {true};
     } else {
@@ -177,7 +177,7 @@ public class MovingBot extends BaseBot {
     RobotInfo[] allies = rc.senseNearbyRobots(closestEngageable.location, ALLY_INLCUDE_RADIUS_SQ, myTeam);
     double allyScore = Util.getDangerScore(allies);
     double enemyScore = Util.getDangerScore(rc.senseNearbyRobots(closestEngageable.location, ENEMY_INCLUDE_RADIUS_SQ, theirTeam));
-    rc.setIndicatorString(0, "Ally score: " + allyScore + ", Enemy score: " + enemyScore);
+    // rc.setIndicatorString(0, "Ally score: " + allyScore + ", Enemy score: " + enemyScore);
     if (allyScore > enemyScore) {
       return new int[] {1, closestEngageable.location.x, closestEngageable.location.y};
     } else {
@@ -346,7 +346,7 @@ public class MovingBot extends BaseBot {
     if (engageableEnemies.length > 0) {
       // returns {is winning, is lowest health and not alone}
       int[] metrics = getBattleMetrics(engageableEnemies);
-      rc.setIndicatorString(1, Arrays.toString(metrics));
+      // rc.setIndicatorString(1, Arrays.toString(metrics));
       if (metrics[0] > 0) {
         if (metrics[1] != -1 || metrics[2] != -1) {
           Messaging.setBattleFront(new MapLocation(metrics[1], metrics[2]));
@@ -401,7 +401,7 @@ public class MovingBot extends BaseBot {
     if (engageableEnemies.length > 0) {
       // returns {is winning, is lowest health and not alone}
       int[] metrics = getBattleMetrics(engageableEnemies);
-      rc.setIndicatorString(1, Arrays.toString(metrics));
+      // rc.setIndicatorString(1, Arrays.toString(metrics));
       if (metrics[0] > 0) {
         if (metrics[1] != -1 || metrics[2] != -1) {
           Messaging.setBattleFront(new MapLocation(metrics[1], metrics[2]));
