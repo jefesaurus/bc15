@@ -371,8 +371,8 @@ public class MovingBot extends BaseBot {
       } else {
         // "are we definitely going to die?"
         if (metrics[1] > 0) {
-          // SupplyDistribution.setDyingMode();
-          // SupplyDistribution.manageSupply();
+          SupplyDistribution.setDyingMode();
+          SupplyDistribution.manageSupply();
           if (rc.isWeaponReady()) {
             attackLeastHealthEnemy(Cache.getAttackableEnemies());
           }
@@ -426,8 +426,8 @@ public class MovingBot extends BaseBot {
       } else {
         // "are we definitely going to die?"
         if (metrics[1] > 0) {
-          // SupplyDistribution.setDyingMode();
-          // SupplyDistribution.manageSupply();
+          SupplyDistribution.setDyingMode();
+          SupplyDistribution.manageSupply();
           if (rc.isWeaponReady()) {
             attackLeastHealthEnemy(Cache.getAttackableEnemies());
           }

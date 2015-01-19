@@ -33,12 +33,17 @@ public class Messaging {
   public final static int NUM_MINERS = 26;
   
   public final static int UNIT_TO_PRODUCE = 27;
+  
+  public final static int SAFE_ZONES = 28; // channels 28-41
+  public final static int NUM_ACTIVE_SAFEZONES = 42;
 
   public final static int COUNT_OFFSET = 100;
   public final static int KILLED_OFFSET = 1000;
   
   public final static int BATTLE_OFFSET = 2000;
   public final static int NUM_BATTLE_CHANNELS = 5;
+  public final static int DEFEND_OFFSET = 3000;
+  public final static int NUM_DEFEND_CHANNELS = 5;
 
   
   public static RobotController rc;
@@ -60,6 +65,47 @@ public class Messaging {
   
   public static int getKilledChannel(RobotType type) {
     return type.ordinal() + KILLED_OFFSET;
+  }
+  
+  public static void setDefendFront(MapLocation loc) throws GameActionException {
+    for (int i=NUM_DEFEND_CHANNELS; i-- > 0;) {
+      int chan = DEFEND_OFFSET + i;
+      if (rc.readBroadcast(chan) == 0) {
+        writeLocation(chan, loc, Clock.getRoundNum());
+      } else {
+        MapLocation curLoc = readLocation(chan);
+        if (curLoc.distanceSquaredTo(loc) <= BATTLE_RANGE_SQUARED) {
+          if (isFresh(chan)) {
+            MapLocation newLoc = new MapLocation((curLoc.x + loc.x) / 2, (curLoc.y + loc.y) / 2);
+            writeLocation(chan, newLoc, Clock.getRoundNum());
+            return;
+          }
+        }
+        
+        if (!isFresh(chan)) {
+          writeLocation(chan, loc, Clock.getRoundNum());
+        }
+      }
+    }
+  }
+  
+  // Returns null if no battlefront
+  public static MapLocation getClosestDefendFront(MapLocation loc) throws GameActionException {
+    MapLocation closest = null;
+    for (int i=NUM_DEFEND_CHANNELS; i-- > 0;) {
+      int chan = DEFEND_OFFSET + i;
+      if (isFresh(chan) && rc.readBroadcast(chan) != 0) {
+        MapLocation trialLoc = readLocation(chan);
+        if (closest == null) {
+          closest = trialLoc;
+        } else {
+          if (loc.distanceSquaredTo(trialLoc) < loc.distanceSquaredTo(closest)) {
+            closest = trialLoc;
+          }
+        }
+      }
+    }
+    return closest;
   }
   
   public static void setBattleFront(MapLocation loc) throws GameActionException {
@@ -102,6 +148,50 @@ public class Messaging {
     }
     return closest;
   }
+  
+  public static void initializeSafeZones() throws GameActionException { // TODO don't choose all towers maybe
+    int safeZones = 7;
+    int zonesUsed = 0;
+    
+    // Populate with initial mining locations (currently, HQ and towers)
+    // Add HQ
+    rc.broadcast(SAFE_ZONES, br.myHQ.x);
+    rc.broadcast(SAFE_ZONES + 1, br.myHQ.y);
+    zonesUsed++;
+    
+    // Add our corner
+    MapLocation corner = findOurCorner();
+    rc.broadcast(SAFE_ZONES + 2, corner.x);
+    rc.broadcast(SAFE_ZONES + 3, corner.y);
+    
+    // Add towers
+    for (int i = 0; i < br.myTowers.length && i < safeZones; i++) {
+      MapLocation tower = br.myTowers[i];
+      rc.broadcast(SAFE_ZONES + 4 + 2*i, tower.x);
+      rc.broadcast(SAFE_ZONES + 4 + 2*i + 1, tower.y);
+      zonesUsed++;
+    }
+    
+    rc.broadcast(NUM_ACTIVE_SAFEZONES, zonesUsed);
+  }
+  
+  private static MapLocation findOurCorner() {
+    int corner_x;
+    int corner_y;
+    int maxWidth = 120;
+    
+    // Corner closest to our HQ
+    if (br.myHQ.x >= br.enemyHQ.x) { corner_x = br.myHQ.x + maxWidth; }
+    else { corner_x = br.myHQ.x - maxWidth; }
+    if (br.myHQ.y >= br.enemyHQ.y) { corner_y = br.myHQ.y + maxWidth; }
+    else { corner_y = br.myHQ.y - maxWidth; }
+    
+    MapLocation corner = new MapLocation(corner_x, corner_y);
+    return corner;
+  }
+
+//  public static MapLocation[] getTowersCloserToMyHQ() {
+//  }
   
   public static void resetUnitCount(RobotType type) throws GameActionException {
     int chan = getCountChannel(type);
