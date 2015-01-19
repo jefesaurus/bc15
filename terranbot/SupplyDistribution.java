@@ -77,24 +77,7 @@ public class SupplyDistribution {
   }
   
   public static void distributeDying() throws GameActionException {
-    int supplyToTransfer = (int) (rc.getSupplyLevel());
     
-    if (supplyToTransfer <= 0) {
-      return;
-    }
-    
-    RobotInfo[] robots = rc.senseNearbyRobots(GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED, rc.getTeam());
-    for (int i=robots.length-1; i >= 0 && supplyToTransfer > 0; i--) {
-      if (Clock.getBytecodesLeft() < 550) {
-        return;
-      }
-      RobotInfo info = robots[i];
-      if (info.type == RobotType.DRONE || info.type == RobotType.TANK && info.supplyLevel < minSupplyBattle*2/3) {
-        int x = (int) Math.min(supplyToTransfer, supplyToTransfer);
-        rc.transferSupplies(x, info.location);
-        supplyToTransfer -= x;
-      } 
-    }
   }
   
   public static void distributeBatteryHQ() throws GameActionException {
@@ -121,7 +104,7 @@ public class SupplyDistribution {
     
     RobotInfo[] robots = rc.senseNearbyRobots(GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED, rc.getTeam());
     for (int i=robots.length-1; i >= 0 && supplyToTransfer > 0; i--) {
-      if (Clock.getBytecodesLeft() < 550) {
+      if (Clock.getBytecodesLeft() < 500) {
         return;
       }
       RobotInfo info = robots[i];
