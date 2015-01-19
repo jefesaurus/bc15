@@ -13,7 +13,7 @@ public class SupplyDistribution {
   private static BaseBot br;
   private static SupplyDistributionMode mode;
   private static final int minSupplyLaunch = 5000;
-  private static final int minSupplyMiner = 5000;
+  private static final int minSupplyMiner = 4500;
   private static final int minSupplyBattle = 500;
   private static enum SupplyDistributionMode {
     //Pool supply at HQ
@@ -121,7 +121,7 @@ public class SupplyDistribution {
     
     RobotInfo[] robots = rc.senseNearbyRobots(GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED, rc.getTeam());
     for (int i=robots.length-1; i >= 0 && supplyToTransfer > 0; i--) {
-      if (Clock.getBytecodesLeft() < 550) {
+      if (Clock.getBytecodesLeft() < 500) {
         return;
       }
       RobotInfo info = robots[i];

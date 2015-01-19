@@ -67,47 +67,6 @@ public class Messaging {
     return type.ordinal() + KILLED_OFFSET;
   }
   
-  public static void setBattleFront(MapLocation loc) throws GameActionException {
-    for (int i=NUM_BATTLE_CHANNELS; i-- > 0;) {
-      int chan = BATTLE_OFFSET + i;
-      if (rc.readBroadcast(chan) == 0) {
-        writeLocation(chan, loc, Clock.getRoundNum());
-      } else {
-        MapLocation curLoc = readLocation(chan);
-        if (curLoc.distanceSquaredTo(loc) <= BATTLE_RANGE_SQUARED) {
-          if (isFresh(chan)) {
-            MapLocation newLoc = new MapLocation((curLoc.x + loc.x) / 2, (curLoc.y + loc.y) / 2);
-            writeLocation(chan, newLoc, Clock.getRoundNum());
-            return;
-          }
-        }
-        
-        if (!isFresh(chan)) {
-          writeLocation(chan, loc, Clock.getRoundNum());
-        }
-      }
-    }
-  }
-  
-  // Returns null if no battlefront
-  public static MapLocation getClosestBattleFront(MapLocation loc) throws GameActionException {
-    MapLocation closest = null;
-    for (int i=NUM_BATTLE_CHANNELS; i-- > 0;) {
-      int chan = BATTLE_OFFSET + i;
-      if (isFresh(chan) && rc.readBroadcast(chan) != 0) {
-        MapLocation trialLoc = readLocation(chan);
-        if (closest == null) {
-          closest = trialLoc;
-        } else {
-          if (loc.distanceSquaredTo(trialLoc) < loc.distanceSquaredTo(closest)) {
-            closest = trialLoc;
-          }
-        }
-      }
-    }
-    return closest;
-  }
-  
   public static void setDefendFront(MapLocation loc) throws GameActionException {
     for (int i=NUM_DEFEND_CHANNELS; i-- > 0;) {
       int chan = DEFEND_OFFSET + i;
@@ -135,6 +94,47 @@ public class Messaging {
     MapLocation closest = null;
     for (int i=NUM_DEFEND_CHANNELS; i-- > 0;) {
       int chan = DEFEND_OFFSET + i;
+      if (isFresh(chan) && rc.readBroadcast(chan) != 0) {
+        MapLocation trialLoc = readLocation(chan);
+        if (closest == null) {
+          closest = trialLoc;
+        } else {
+          if (loc.distanceSquaredTo(trialLoc) < loc.distanceSquaredTo(closest)) {
+            closest = trialLoc;
+          }
+        }
+      }
+    }
+    return closest;
+  }
+  
+  public static void setBattleFront(MapLocation loc) throws GameActionException {
+    for (int i=NUM_BATTLE_CHANNELS; i-- > 0;) {
+      int chan = BATTLE_OFFSET + i;
+      if (rc.readBroadcast(chan) == 0) {
+        writeLocation(chan, loc, Clock.getRoundNum());
+      } else {
+        MapLocation curLoc = readLocation(chan);
+        if (curLoc.distanceSquaredTo(loc) <= BATTLE_RANGE_SQUARED) {
+          if (isFresh(chan)) {
+            MapLocation newLoc = new MapLocation((curLoc.x + loc.x) / 2, (curLoc.y + loc.y) / 2);
+            writeLocation(chan, newLoc, Clock.getRoundNum());
+            return;
+          }
+        }
+        
+        if (!isFresh(chan)) {
+          writeLocation(chan, loc, Clock.getRoundNum());
+        }
+      }
+    }
+  }
+  
+  // Returns null if no battlefront
+  public static MapLocation getClosestBattleFront(MapLocation loc) throws GameActionException {
+    MapLocation closest = null;
+    for (int i=NUM_BATTLE_CHANNELS; i-- > 0;) {
+      int chan = BATTLE_OFFSET + i;
       if (isFresh(chan) && rc.readBroadcast(chan) != 0) {
         MapLocation trialLoc = readLocation(chan);
         if (closest == null) {

@@ -25,8 +25,8 @@ public class Cache {
   static RobotInfo[] visibleEnemies;
   static int visibleEnemies_last = -1;
   
-  static RobotInfo[] soldierAttackableEnemies;
-  static int soldierAttackableEnemies_last = -1;
+  static RobotInfo[] attackableEnemies;
+  static int attackableEnemies_last = -1;
   
   static RobotInfo[] engagementEnemies;
   static int engagementEnemies_last = -1;
@@ -42,12 +42,12 @@ public class Cache {
     return visibleEnemies;
   }
   
-  public static RobotInfo[] getSoldierAttackableEnemies() {
-    if (soldierAttackableEnemies_last < br.curRound) {
-      soldierAttackableEnemies = rc.senseNearbyRobots(RobotType.SOLDIER.attackRadiusSquared, br.theirTeam);
-      soldierAttackableEnemies_last = br.curRound;
+  public static RobotInfo[] getAttackableEnemies() {
+    if (attackableEnemies_last < br.curRound) {
+      attackableEnemies = rc.senseNearbyRobots(rc.getType().attackRadiusSquared, br.theirTeam);
+      attackableEnemies_last = br.curRound;
     }
-    return soldierAttackableEnemies;
+    return attackableEnemies;
   }
   
   public static RobotInfo[] getEngagementEnemies() {
