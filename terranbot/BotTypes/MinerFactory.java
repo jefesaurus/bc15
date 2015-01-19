@@ -11,11 +11,24 @@ import battlecode.common.RobotType;
 
 public class MinerFactory extends BaseBot {
   public static int targetNumMiners;
+  public static boolean initializeZones = true;
   public static RobotType[] types = {RobotType.MINER};
+  
   public MinerFactory(RobotController rc) {
     super(rc);
   }
 
+  public void setup() throws GameActionException {
+    initializeSafeZones();
+  }
+  
+  public void initializeSafeZones() throws GameActionException {
+    if (initializeZones) {
+      Messaging.initializeSafeZones();
+      initializeZones = false;
+    }
+  }
+  
   public void execute() throws GameActionException {
     int unitToProduce = Messaging.getUnitToProduce();
     if (unitToProduce != -1 && unitToProduce != RobotType.MINER.ordinal()) {

@@ -33,6 +33,8 @@ public class Messaging {
   public final static int NUM_MINERS = 26;
   
   public final static int UNIT_TO_PRODUCE = 27;
+  
+  public final static int SAFE_ZONES = 28; // channels 28-41
 
   public final static int COUNT_OFFSET = 100;
   public final static int KILLED_OFFSET = 1000;
@@ -146,6 +148,25 @@ public class Messaging {
     return closest;
   }
   
+  public static void initializeSafeZones() throws GameActionException { // TODO don't choose all towers maybe
+    int safeZones = 7;
+    rc.broadcast(SAFE_ZONES, br.myHQ.x);
+    rc.broadcast(SAFE_ZONES + 1, br.myHQ.y);
+    safeZones = safeZones - 1; // subtract one for HQ
+    for (int i = 0; i < br.myTowers.length; i++) {
+      MapLocation tower = br.myTowers[i];
+      rc.broadcast(SAFE_ZONES + 2 + 2*i, tower.x);
+      rc.broadcast(SAFE_ZONES + 2 + 2*i + 1, tower.y);
+      safeZones = safeZones - 1;
+    }
+//    for (int i=0; i < safeZones; i++) {
+//      rc.broadcast(SAFE_ZONES + 2*(7-safeZones) + 2*i, (Integer) null);
+//      rc.broadcast(SAFE_ZONES + 2*(7-safeZones) + 2*i + 1, (Integer) null);
+//    }
+  }
+//  
+//  public static MapLocation[] getTowersCloserToMyHQ() {
+//  }
   
   public static void resetUnitCount(RobotType type) throws GameActionException {
     int chan = getCountChannel(type);

@@ -34,7 +34,7 @@ public class Messaging {
  
   public final static int UNIT_TO_PRODUCE = 27;
 
-  public final static int SAFE_ZONES = 28; // channels 28-4
+  public final static int SAFE_ZONES = 28; // channels 28-41
   
   public final static int COUNT_OFFSET = 100;
   public final static int KILLED_OFFSET = 1000;
