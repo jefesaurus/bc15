@@ -31,6 +31,8 @@ public class Miner extends terranbot.MovingBot {
   public static int miningTurns = 0;
   public static boolean minedOnLastTurn = false;
   public static int MINER_ID = -1;
+  public static boolean disperseMode = true;
+  public static int disperseModeMiningTurns = 5;
 
   public static boolean mineWhileMoveMode = true;
   public static MapLocation safeZoneCenter = null;
@@ -48,17 +50,44 @@ public class Miner extends terranbot.MovingBot {
 
   public void execute() throws GameActionException {
     //mineMicro(this.curLoc);
-    if (Clock.getRoundNum() < 1000) {
-      mineSafely();
+    
+    if (disperseMode) {
+      disperseMine();
     } else {
       safeZoneCenter = null;
       ventureMineMethod();
     }
+    
+//    if (Clock.getRoundNum() < 1000) {
+//      mineSafely();
+//    } else {
+//      safeZoneCenter = null;
+//      ventureMineMethod();
+//    }
     rc.yield();
   }
   
   public void endOfTurn() {
 	  
+  }
+
+  private void disperseMine() throws GameActionException {
+    if (rc.isCoreReady()) {
+      if (disperseModeMiningTurns == 0) {
+        disperseMode = false;
+        return;
+      }
+      if (minedOnLastTurn) {
+        int directionIndex = MINER_ID % 7;
+        Direction dir = Util.REGULAR_DIRECTIONS[directionIndex];
+        minerNavSingleMove(dir);
+        minedOnLastTurn = false;
+      } else {
+        rc.mine();
+        minedOnLastTurn = true;
+        disperseModeMiningTurns-=1;
+      }
+    }
   }
   
   private void mineSafely() throws GameActionException {
