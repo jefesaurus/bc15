@@ -35,6 +35,7 @@ public class Messaging {
   public final static int UNIT_TO_PRODUCE = 27;
   
   public final static int SAFE_ZONES = 28; // channels 28-41
+  public final static int NUM_ACTIVE_SAFEZONES = 42;
 
   public final static int COUNT_OFFSET = 100;
   public final static int KILLED_OFFSET = 1000;
@@ -150,21 +151,45 @@ public class Messaging {
   
   public static void initializeSafeZones() throws GameActionException { // TODO don't choose all towers maybe
     int safeZones = 7;
+    int zonesUsed = 0;
+    
+    // Populate with initial mining locations (currently, HQ and towers)
+    // Add HQ
     rc.broadcast(SAFE_ZONES, br.myHQ.x);
     rc.broadcast(SAFE_ZONES + 1, br.myHQ.y);
-    safeZones = safeZones - 1; // subtract one for HQ
-    for (int i = 0; i < br.myTowers.length; i++) {
+    zonesUsed++;
+    
+    // Add our corner
+    MapLocation corner = findOurCorner();
+    rc.broadcast(SAFE_ZONES + 2, corner.x);
+    rc.broadcast(SAFE_ZONES + 3, corner.y);
+    
+    // Add towers
+    for (int i = 0; i < br.myTowers.length && i < safeZones; i++) {
       MapLocation tower = br.myTowers[i];
-      rc.broadcast(SAFE_ZONES + 2 + 2*i, tower.x);
-      rc.broadcast(SAFE_ZONES + 2 + 2*i + 1, tower.y);
-      safeZones = safeZones - 1;
+      rc.broadcast(SAFE_ZONES + 4 + 2*i, tower.x);
+      rc.broadcast(SAFE_ZONES + 4 + 2*i + 1, tower.y);
+      zonesUsed++;
     }
-//    for (int i=0; i < safeZones; i++) {
-//      rc.broadcast(SAFE_ZONES + 2*(7-safeZones) + 2*i, (Integer) null);
-//      rc.broadcast(SAFE_ZONES + 2*(7-safeZones) + 2*i + 1, (Integer) null);
-//    }
+    
+    rc.broadcast(NUM_ACTIVE_SAFEZONES, zonesUsed);
   }
-//  
+  
+  private static MapLocation findOurCorner() {
+    int corner_x;
+    int corner_y;
+    int maxWidth = 120;
+    
+    // Corner closest to our HQ
+    if (br.myHQ.x >= br.enemyHQ.x) { corner_x = br.myHQ.x + maxWidth; }
+    else { corner_x = br.myHQ.x - maxWidth; }
+    if (br.myHQ.y >= br.enemyHQ.y) { corner_y = br.myHQ.y + maxWidth; }
+    else { corner_y = br.myHQ.y - maxWidth; }
+    
+    MapLocation corner = new MapLocation(corner_x, corner_y);
+    return corner;
+  }
+
 //  public static MapLocation[] getTowersCloserToMyHQ() {
 //  }
   

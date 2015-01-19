@@ -14,6 +14,7 @@ import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
 import battlecode.common.TerrainTile;
+
   /*
    * TODO: 
    * 3. Mid game - supplying, moving from initial safe locations
@@ -23,6 +24,7 @@ import battlecode.common.TerrainTile;
    * KN 3. Venture miners / finding high ore areas (scouting)
    * -- 5. Protection? 
    */
+
 public class Miner extends terranbot.MovingBot {
   public static final int MINING_HORIZON = 5;
   public static final int SAFE_RADIUS = 24;
@@ -38,8 +40,10 @@ public class Miner extends terranbot.MovingBot {
   }
   
   public void setup() throws GameActionException {
-    int chan = Messaging.getCountChannel(RobotType.MINER);
-	MINER_ID = rc.readBroadcast(chan);
+    if (MINER_ID == -1) {
+      int chan = Messaging.getCountChannel(RobotType.MINER);
+      MINER_ID = rc.readBroadcast(chan);
+    }
   }
 
   public void execute() throws GameActionException {
@@ -71,12 +75,13 @@ public class Miner extends terranbot.MovingBot {
   }
   
   private MapLocation pickSafeZone() throws GameActionException {
-    int index = (MINER_ID % (this.myTowers.length + 1)); // towers + HQ
+    // distribute miners to each safe zone
+    int numActiveSafeZones = rc.readBroadcast(Messaging.NUM_ACTIVE_SAFEZONES);
+    int index = (MINER_ID % (numActiveSafeZones)); // towers + HQ
+    
     int x = rc.readBroadcast(Messaging.SAFE_ZONES + 2*index);
     int y = rc.readBroadcast(Messaging.SAFE_ZONES + 2*index + 1);
-    
-    if ((Integer) x==null || (Integer) y==null)    System.out.println("Coordinate was null");
-    
+
     MapLocation mineDest = new MapLocation(x, y);
     return mineDest;
   }
@@ -98,7 +103,8 @@ public class Miner extends terranbot.MovingBot {
         if (minedOnLastTurn) {
           rc.setIndicatorString(1, "desired dir: " + getMoveDir(loc));
           // TODO this throws an error
-          rc.move(getMoveDir(loc));
+          //rc.move(getMoveDir(loc));
+          Nav.goTo(loc, Engage.NONE);
           minedOnLastTurn = false;
         } else {
           rc.mine();

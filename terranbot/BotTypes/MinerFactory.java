@@ -13,6 +13,7 @@ public class MinerFactory extends BaseBot {
   public static int targetNumMiners;
   public static boolean initializeZones = true;
   public static RobotType[] types = {RobotType.MINER};
+  public static int activeSafeZones = 0;
   
   public MinerFactory(RobotController rc) {
     super(rc);
