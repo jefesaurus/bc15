@@ -400,7 +400,7 @@ public class HQ extends BaseBot {
   }
    
    
-  public static final int NUM_BEAVERS = 1;
+  public static final int NUM_BEAVERS = 2;
   public static final int NUM_MINER_FACTORIES = 1;
   public static final int NUM_BARRACKS = 1;
   public static final int NUM_TANK_FACTORIES = 10;
@@ -436,7 +436,7 @@ public class HQ extends BaseBot {
     if (curNumBarracks < NUM_BARRACKS /**&& Messaging.peekBuildingUnits(RobotType.HELIPAD) >= 1**/) {
       Messaging.queueUnits(RobotType.BARRACKS, NUM_BARRACKS - curNumBarracks);
     }
-    System.out.println("Depots: " + curNumSupplyDepots);
+
     if (curNumSupplyDepots < NUM_SUPPLY_DEPOTS) {
       Messaging.queueUnits(RobotType.SUPPLYDEPOT, NUM_SUPPLY_DEPOTS - curNumSupplyDepots);
     }
@@ -449,22 +449,21 @@ public class HQ extends BaseBot {
   
   // Returns true if constant requirements are met.
   public boolean maintainConstantUnits() throws GameActionException {
-    if (curNumBeavers < NUM_BEAVERS) {
+    if (curNumBeavers < NUM_BEAVERS && Clock.getRoundNum() > 21) {
       Messaging.setUnitToProduce(RobotType.BEAVER);
-      Messaging.queueUnits(RobotType.BEAVER, 1);
+      Messaging.queueUnits(RobotType.BEAVER, NUM_BEAVERS - curNumBeavers);
       return false;
     } else if (curNumMinerFactories < NUM_MINER_FACTORIES) {
       Messaging.setUnitToProduce(RobotType.MINERFACTORY);
-      Messaging.queueUnits(RobotType.MINERFACTORY, 1);
+      Messaging.queueUnits(RobotType.MINERFACTORY, NUM_MINER_FACTORIES - curNumMinerFactories);
       return false;
     }
     
-    //This is assuming num_beavers == 1
     if (Messaging.peekQueueUnits(RobotType.BEAVER) > 0 && !(Messaging.peekBuildingUnits(RobotType.BEAVER) > 0)) {
       Messaging.setUnitToProduce(RobotType.BEAVER);
       return false;
     }
-    if (Messaging.peekQueueUnits(RobotType.MINERFACTORY) > 0 && Messaging.peekBuildingUnits(RobotType.MINERFACTORY) == 0) {
+    if (Messaging.peekQueueUnits(RobotType.MINERFACTORY) > 0 && !(Messaging.peekBuildingUnits(RobotType.MINERFACTORY) > 0)) {
       Messaging.setUnitToProduce(RobotType.MINERFACTORY);
       return false;
     }
