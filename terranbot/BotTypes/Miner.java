@@ -1,5 +1,6 @@
 package terranbot.BotTypes;
 
+import terranbot.Cache;
 import terranbot.Messaging;
 import terranbot.Nav;
 import terranbot.Util;

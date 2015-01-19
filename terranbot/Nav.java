@@ -378,7 +378,7 @@ public class Nav {
       } else {
         tempDir = (bestDir + i)%8;
       }
-      if (canMove[tempDir]) {
+      if (canMove[tempDir] && moveIsHQSafe(Util.REGULAR_DIRECTIONS[tempDir]) && moveIsTowerSafe(Util.REGULAR_DIRECTIONS[tempDir], null)) {
         rc.move(Util.REGULAR_DIRECTIONS[tempDir]);
         return true;
       }
