@@ -117,8 +117,8 @@ public class Tank extends MovingBot {
         } else {
           // "are we definitely going to die?"
           if (metrics[1] > 0) {
-            // SupplyDistribution.setDyingMode();
-            // SupplyDistribution.manageSupply();
+            SupplyDistribution.setDyingMode();
+            SupplyDistribution.manageSupply();
             if (rc.isWeaponReady()) {
               attackLeastHealthEnemy(getEnemiesInAttackingRange());
             }
