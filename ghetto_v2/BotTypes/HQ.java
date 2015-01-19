@@ -21,6 +21,7 @@ public class HQ extends BaseBot {
   public AttackMode currentFleetMode;
   public MapLocation currentRallyPoint = new MapLocation(0,0);
   public MapLocation currentTargetTower = new MapLocation(0,0);
+  private int MAX_MINERS = 30;
   
   public HQ(RobotController rc) {
     super(rc);
@@ -28,6 +29,7 @@ public class HQ extends BaseBot {
   
   public void setup() throws GameActionException {
     SupplyDistribution.init(this);
+    SupplyDistribution.setBatteryMode();
     strat = HighLevelStrat.HARASS;
   }
   
@@ -49,11 +51,12 @@ public class HQ extends BaseBot {
   public static final int FLEET_COUNT_ATTACK_THRESHOLD = 15;
 
   public void execute() throws GameActionException {
+    int numMiners = Messaging.checkNumMiners();
     int numBeavers = rc.readBroadcast(Messaging.NUM_BEAVERS);
-    SupplyDistribution.setBatteryMode();
-    if (Clock.getRoundNum() > 300) {
-      SupplyDistribution.manageSupply();
-    }
+    
+    SupplyDistribution.manageSupply();
+    
+    
     // This checks which enemy towers are still alive and broadcasts it to save bytecode across the fleet
     Messaging.setSurvivingEnemyTowers(Cache.getEnemyTowerLocationsDirect());
     MapLocation fleetCentroid = Messaging.getFleetCentroid();
@@ -70,13 +73,18 @@ public class HQ extends BaseBot {
     }
     
     // Spawn if possible
-    if (rc.isCoreReady() && rc.getTeamOre() > 100 && numBeavers < 1) {
+    if (Clock.getRoundNum() < 100 && numBeavers < 1 && rc.isCoreReady() && rc.hasSpawnRequirements(RobotType.BEAVER)) {
       Direction newDir = getOffensiveSpawnDirection(RobotType.BEAVER);
       if (newDir != null) {
         rc.spawn(newDir, RobotType.BEAVER);
         rc.broadcast(Messaging.NUM_BEAVERS, numBeavers + 1);
-        Messaging.queueMiners(20);
+        Messaging.queueMiners(MAX_MINERS);
       }
+    }
+    
+    int totalMiners = Messaging.peekQueuedMiners() + Messaging.checkNumMiners();
+    if (totalMiners < MAX_MINERS) {
+      Messaging.queueMiners(MAX_MINERS - totalMiners);
     }
     
     switch (strat) {
@@ -104,7 +112,6 @@ public class HQ extends BaseBot {
     case APPROACHING_TOWER:
       // Set rally point to just in front of nearest tower.
       // Wait until ally centroid is epsilon close, then switch to tower diving
-      System.out.println(currentTargetTower);
       if (fleetCentroid.distanceSquaredTo(currentTargetTower) < 50 && !weHaveMoreTowers()) {
         diveTower(currentTargetTower);
       }

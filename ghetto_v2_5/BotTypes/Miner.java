@@ -143,7 +143,6 @@ public class Miner extends MovingBot {
       } else {
         // mine
         mineMethod();
-        
       }
     }
   }
@@ -282,6 +281,7 @@ public class Miner extends MovingBot {
         }
       }
     }
+
     
     if (maxAmount == curAmount) {
       bestLoc = this.curLoc;
@@ -297,8 +297,8 @@ public class Miner extends MovingBot {
       rc.move(getMoveDir(bestLoc));
     }
   }
-    
-    /////OLD////
+
+  /////OLD////
     
 //      double curAmount = getOreAmount(this.curLoc, MINING_HORIZON);
 //      double maxAmount = curAmount;

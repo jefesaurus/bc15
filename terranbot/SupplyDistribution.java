@@ -1,6 +1,6 @@
-package ghetto_v2_5;
+package terranbot;
 
-import ghetto_v2_5.RobotPlayer.BaseBot;
+import terranbot.RobotPlayer.BaseBot;
 import battlecode.common.Clock;
 import battlecode.common.GameActionException;
 import battlecode.common.GameConstants;
@@ -13,7 +13,7 @@ public class SupplyDistribution {
   private static BaseBot br;
   private static SupplyDistributionMode mode;
   private static final int minSupplyLaunch = 5000;
-  private static final int minSupplyMiner = 3000;
+  private static final int minSupplyMiner = 5000;
   private static final int minSupplyBattle = 500;
   private static enum SupplyDistributionMode {
     //Pool supply at HQ
@@ -23,7 +23,9 @@ public class SupplyDistribution {
     //HQ give supply to reinforcement to eventually distribute
     POOL_REINFORCEMENT,
     //HQ give supply to worker/miner
-    POOL_WORKER
+    POOL_WORKER,
+    //give all supply away
+    DYING
   }
   
   public static void init(BaseBot br) {
@@ -48,6 +50,10 @@ public class SupplyDistribution {
     mode = SupplyDistributionMode.NO_TRANSFER;
   }
   
+  public static void setDyingMode() {
+    mode = SupplyDistributionMode.DYING;
+  }
+  
   public static void manageSupply() throws GameActionException {
     switch (mode) {
     case BATTERY:
@@ -63,8 +69,31 @@ public class SupplyDistribution {
     case POOL_WORKER:
       distributeWorker();
       break;
+    case DYING:
+      distributeDying();
     default:
       break;
+    }
+  }
+  
+  public static void distributeDying() throws GameActionException {
+    int supplyToTransfer = (int) (rc.getSupplyLevel());
+    
+    if (supplyToTransfer <= 0) {
+      return;
+    }
+    
+    RobotInfo[] robots = rc.senseNearbyRobots(GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED, rc.getTeam());
+    for (int i=robots.length-1; i >= 0 && supplyToTransfer > 0; i--) {
+      if (Clock.getBytecodesLeft() < 550) {
+        return;
+      }
+      RobotInfo info = robots[i];
+      if (info.type == RobotType.DRONE || info.type == RobotType.TANK && info.supplyLevel < minSupplyBattle*2/3) {
+        int x = (int) Math.min(supplyToTransfer, supplyToTransfer);
+        rc.transferSupplies(x, info.location);
+        supplyToTransfer -= x;
+      } 
     }
   }
   
@@ -92,11 +121,11 @@ public class SupplyDistribution {
     
     RobotInfo[] robots = rc.senseNearbyRobots(GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED, rc.getTeam());
     for (int i=robots.length-1; i >= 0 && supplyToTransfer > 0; i--) {
-      if (Clock.getBytecodesLeft() < 500) {
+      if (Clock.getBytecodesLeft() < 550) {
         return;
       }
       RobotInfo info = robots[i];
-      if (info.type == RobotType.DRONE && info.supplyLevel < minSupplyBattle*2/3) {
+      if (info.type == RobotType.DRONE || info.type == RobotType.TANK && info.supplyLevel < minSupplyBattle*2/3) {
         int x = (int) Math.min(supplyToTransfer, minSupplyBattle - info.supplyLevel);
         rc.transferSupplies(x, info.location);
         supplyToTransfer -= x;

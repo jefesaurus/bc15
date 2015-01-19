@@ -12,8 +12,8 @@ import battlecode.common.RobotType;
 public class MinerFactory extends BaseBot {
   public static int targetNumMiners;
   public static boolean initializeZones = true;
-  
-  public MinerFactory(RobotController rc) throws GameActionException {
+  public static RobotType[] types = {RobotType.MINER};
+  public MinerFactory(RobotController rc) {
     super(rc);
   }
  
@@ -29,15 +29,20 @@ public class MinerFactory extends BaseBot {
   }
 
   public void execute() throws GameActionException {
-    if (Messaging.dequeueMiner()) {
-      while (!rc.isCoreReady() || !rc.hasSpawnRequirements(RobotType.MINER)) {
-        rc.yield();
-      };
-      Direction newDir = getOffensiveSpawnDirection(RobotType.MINER);
-      if (newDir != null) {
-        rc.spawn(newDir, RobotType.MINER);
+    int unitToProduce = Messaging.getUnitToProduce();
+    if (unitToProduce != -1 && unitToProduce != RobotType.MINER.ordinal()) {
+      return;
+    }
+    
+    //Build units if queued
+    for (int i=types.length; i-- > 0;) {
+      RobotType curType = types[i];
+      if (rc.isCoreReady() && rc.hasSpawnRequirements(curType) && Messaging.dequeueUnit(curType)) {
+        Direction spawnDir = getDefensiveSpawnDirection(curType);
+        if (spawnDir != null) {
+          rc.spawn(spawnDir, curType);
+        }
       }
     }
-    rc.yield();
   }
 }

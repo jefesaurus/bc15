@@ -1,11 +1,11 @@
-package ghetto_v2.BotTypes;
+package terranbot.BotTypes;
 
-import ghetto_v2.Messaging;
-import ghetto_v2.Nav;
-import ghetto_v2.Util;
-import ghetto_v2.Nav.Engage;
-import ghetto_v2.RobotPlayer.BaseBot;
-import ghetto_v2.RobotPlayer.MovingBot;
+import terranbot.Messaging;
+import terranbot.Nav;
+import terranbot.Util;
+import terranbot.Nav.Engage;
+import terranbot.RobotPlayer.BaseBot;
+import terranbot.MovingBot;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -24,22 +24,33 @@ public class Miner extends MovingBot {
   }
 
   public void execute() throws GameActionException {
-    Messaging.announceMiner();
+    if (currentEnemies.length > 0) {
+      MapLocation closest = null;
+      for (int i=currentEnemies.length; i-->0;) {
+        MapLocation trialLoc = currentEnemies[i].location;
+        if (closest == null) {
+          closest = trialLoc;
+        } else {
+          if (this.curLoc.distanceSquaredTo(trialLoc) < this.curLoc.distanceSquaredTo(closest)) {
+            closest = trialLoc;
+          }
+        }
+      }
+      Messaging.setDefendFront(closest);
+    }
     mineMicro(this.curLoc);
-    rc.yield();
   }
   
   
   private void mineMicro(MapLocation loc) throws GameActionException {
     if (rc.isCoreReady()) {
-      double[] dangerVals = this.getAllDangerVals();
+      int[] attackingEnemyDirs = this.calculateNumAttackingEnemyDirs();
       // If the center square is in danger, retreat
-      if (dangerVals[8] > 0) {
-        Nav.retreat(dangerVals);
+      if (attackingEnemyDirs[8] > 0) {
+        Nav.retreat(attackingEnemyDirs);
       } else {
         // mine
         mineMethod();
-        
       }
     }
   }
@@ -161,8 +172,7 @@ public class Miner extends MovingBot {
         
       }
     }
-    
-    
+
     /////OLD////
     
 //      double curAmount = getOreAmount(this.curLoc, MINING_HORIZON);

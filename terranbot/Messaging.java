@@ -1,12 +1,12 @@
-package ghetto_v2_5;
+package terranbot;
 
+import terranbot.RobotPlayer.BaseBot;
+import terranbot.MovingBot;
 import battlecode.common.Clock;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
-import ghetto_v2_5.RobotPlayer.BaseBot;
-import ghetto_v2_5.RobotPlayer.MovingBot;
 
 
 public class Messaging {
@@ -14,8 +14,7 @@ public class Messaging {
   public final static int ENEMY_TOWERS = 1;
   public final static int OUR_HQ = 13;
   public final static int ENEMY_HQ = 14;
-  public final static int DESIRED_NUM_MINERS = 15;
-
+  public final static int QUEUED_MINERS = 15;
   public final static int RALLY_POINT_X = 16;
   public final static int RALLY_POINT_Y = 17;
 
@@ -30,17 +29,18 @@ public class Messaging {
   
   public final static int VULNERABLE_TOWER_COMPUTATION = 24;
   public final static int VULNERABLE_TOWER_LIST = 25;
+  
   public final static int NUM_MINERS = 26;
- 
+  
   public final static int UNIT_TO_PRODUCE = 27;
 
-  public final static int SAFE_ZONES = 28; // channels 28-4
-  
   public final static int COUNT_OFFSET = 100;
   public final static int KILLED_OFFSET = 1000;
   
   public final static int BATTLE_OFFSET = 2000;
   public final static int NUM_BATTLE_CHANNELS = 5;
+  public final static int DEFEND_OFFSET = 3000;
+  public final static int NUM_DEFEND_CHANNELS = 5;
 
   
   public static RobotController rc;
@@ -86,11 +86,7 @@ public class Messaging {
     }
   }
   
-  public static void queueMiners(int quantity) throws GameActionException {
-    rc.broadcast(DESIRED_NUM_MINERS, quantity);
-  }
-  
-  //Returns null if no battlefront
+  // Returns null if no battlefront
   public static MapLocation getClosestBattleFront(MapLocation loc) throws GameActionException {
     MapLocation closest = null;
     for (int i=NUM_BATTLE_CHANNELS; i-- > 0;) {
@@ -108,6 +104,48 @@ public class Messaging {
     }
     return closest;
   }
+  
+  public static void setDefendFront(MapLocation loc) throws GameActionException {
+    for (int i=NUM_DEFEND_CHANNELS; i-- > 0;) {
+      int chan = DEFEND_OFFSET + i;
+      if (rc.readBroadcast(chan) == 0) {
+        writeLocation(chan, loc, Clock.getRoundNum());
+      } else {
+        MapLocation curLoc = readLocation(chan);
+        if (curLoc.distanceSquaredTo(loc) <= BATTLE_RANGE_SQUARED) {
+          if (isFresh(chan)) {
+            MapLocation newLoc = new MapLocation((curLoc.x + loc.x) / 2, (curLoc.y + loc.y) / 2);
+            writeLocation(chan, newLoc, Clock.getRoundNum());
+            return;
+          }
+        }
+        
+        if (!isFresh(chan)) {
+          writeLocation(chan, loc, Clock.getRoundNum());
+        }
+      }
+    }
+  }
+  
+  // Returns null if no battlefront
+  public static MapLocation getClosestDefendFront(MapLocation loc) throws GameActionException {
+    MapLocation closest = null;
+    for (int i=NUM_DEFEND_CHANNELS; i-- > 0;) {
+      int chan = DEFEND_OFFSET + i;
+      if (isFresh(chan) && rc.readBroadcast(chan) != 0) {
+        MapLocation trialLoc = readLocation(chan);
+        if (closest == null) {
+          closest = trialLoc;
+        } else {
+          if (loc.distanceSquaredTo(trialLoc) < loc.distanceSquaredTo(closest)) {
+            closest = trialLoc;
+          }
+        }
+      }
+    }
+    return closest;
+  }
+  
   
   public static void resetUnitCount(RobotType type) throws GameActionException {
     int chan = getCountChannel(type);
@@ -174,12 +212,6 @@ public class Messaging {
       return false;
     }
   }
-
-  public static int announceBeaver() throws GameActionException {
-    int numBeavers = rc.readBroadcast(NUM_BEAVERS);
-    rc.broadcast(NUM_BEAVERS, numBeavers + 1);
-    return numBeavers;
-  }
  
   public static void incrementKillCount(RobotType type) throws GameActionException {
     int chan = getKilledChannel(type);
@@ -201,32 +233,6 @@ public class Messaging {
       return true;
     }
   }
-  
-  public static int announceMiner() throws GameActionException {
-    int numMiners = rc.readBroadcast(NUM_MINERS);
-    rc.broadcast(NUM_MINERS, numMiners + 1);
-    return numMiners;
-  }
-  
-  public static void initializeSafeZones() throws GameActionException { // TODO don't choose all towers maybe
-    int safeZones = 7;
-    rc.broadcast(SAFE_ZONES, br.myHQ.x);
-    rc.broadcast(SAFE_ZONES + 1, br.myHQ.y);
-    safeZones = safeZones - 1; // subtract one for HQ
-    for (int i = 0; i < br.myTowers.length; i++) {
-      MapLocation tower = br.myTowers[i];
-      rc.broadcast(SAFE_ZONES + 2 + 2*i, tower.x);
-      rc.broadcast(SAFE_ZONES + 2 + 2*i + 1, tower.y);
-      safeZones = safeZones - 1;
-    }
-//    for (int i=0; i < safeZones; i++) {
-//      rc.broadcast(SAFE_ZONES + 2*(7-safeZones) + 2*i, (Integer) null);
-//      rc.broadcast(SAFE_ZONES + 2*(7-safeZones) + 2*i + 1, (Integer) null);
-//    }
-  }
-//  
-//  public static MapLocation[] getTowersCloserToMyHQ() {
-//  }
   
   public static MapLocation readRallyPoint() throws GameActionException {
     int x = rc.readBroadcast(RALLY_POINT_X);

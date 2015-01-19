@@ -1,23 +1,24 @@
-package ghetto_v2_5.BotTypes;
+package terranbot.BotTypes;
 
-import ghetto_v2_5.Messaging;
-import ghetto_v2_5.RobotPlayer.BaseBot;
+import terranbot.Messaging;
+import terranbot.RobotPlayer.BaseBot;
+import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
+import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
 
-
-public class Helipad extends BaseBot {
-  public static final RobotType[] types = {RobotType.DRONE};
-
-  public Helipad(RobotController rc) {
-	  super(rc);
+public class MinerFactory extends BaseBot {
+  public static int targetNumMiners;
+  public static RobotType[] types = {RobotType.MINER};
+  public MinerFactory(RobotController rc) {
+    super(rc);
   }
 
   public void execute() throws GameActionException {
     int unitToProduce = Messaging.getUnitToProduce();
-    if (unitToProduce != -1 && unitToProduce != RobotType.DRONE.ordinal()) {
+    if (unitToProduce != -1 && unitToProduce != RobotType.MINER.ordinal()) {
       return;
     }
     

@@ -1,4 +1,4 @@
-package ghetto_v2_5;
+package terranbot;
 
 import battlecode.common.Clock;
 import battlecode.common.Direction;

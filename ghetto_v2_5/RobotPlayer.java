@@ -1,6 +1,8 @@
 package ghetto_v2_5;
 
 import battlecode.common.*;
+import ghetto_v2_5.Cache;
+import ghetto_v2_5.Util;
 import ghetto_v2_5.Nav;
 import ghetto_v2_5.BotTypes.Barracks;
 import ghetto_v2_5.BotTypes.Beaver;
@@ -10,6 +12,8 @@ import ghetto_v2_5.BotTypes.Helipad;
 import ghetto_v2_5.BotTypes.Miner;
 import ghetto_v2_5.BotTypes.MinerFactory;
 import ghetto_v2_5.BotTypes.Soldier;
+import ghetto_v2_5.BotTypes.Tank;
+import ghetto_v2_5.BotTypes.TankFactory;
 import ghetto_v2_5.BotTypes.Tower;
 
 import java.util.*;
@@ -46,6 +50,12 @@ public class RobotPlayer {
     case DRONE:
     	myself = new Drone(rc);
     	break;
+    case TANKFACTORY:
+      myself = new TankFactory(rc);
+      break;
+    case TANK:
+      myself = new Tank(rc);
+      break;
     default:
       myself = new BaseBot(rc);
       break;
@@ -99,7 +109,7 @@ public class RobotPlayer {
       Direction toDest = rc.getLocation().directionTo(dest);
       Direction[] dirs = { toDest, toDest.rotateLeft(), toDest.rotateRight(),
           toDest.rotateLeft().rotateLeft(), toDest.rotateRight().rotateRight() };
-
+      
       return dirs;
     }
 
@@ -187,23 +197,26 @@ public class RobotPlayer {
     // Override this in subclasses to do class specific setups procedures(only called once).
     // This is different from init, which sets up Nav and Messaging type stuff.
     public void setup() throws GameActionException {
+      //System.out.println("Done building; " +rc.getType() );
+      Messaging.announceDoneBuilding(rc.getType());
     }
     
-    public void beginningOfTurn() {
+    public void beginningOfTurn() throws GameActionException {
       updateRoundVariables();
+      Messaging.announceUnit(rc.getType());
     }
 
-    public void endOfTurn() {
+    public void endOfTurn() throws GameActionException {
     }
 
     public void go() throws GameActionException {
       beginningOfTurn();
       execute();
       endOfTurn();
+      rc.yield();
     }
 
     public void execute() throws GameActionException {
-      rc.yield();
     }
 
     public void updateRoundVariables() {
@@ -239,7 +252,7 @@ public class RobotPlayer {
     protected int[] cachedNumAttackingEnemyDirs;
     protected double[] cachedEnemyDangerValsDirs;
     protected int[] cachedNumAttackingTowerDirs;
-    protected int[] cachedAttackingHQDirs;
+    protected boolean[] cachedAttackingHQDirs;
     protected double[] cachedDangerVals;
     
     public MovingBot(RobotController rc) {
@@ -253,8 +266,8 @@ public class RobotPlayer {
       int[] i = Util.ATTACK_NOTES[0][0][0];
       super.init();
     }
-    
-    public void beginningOfTurn() {
+        
+    public void beginningOfTurn() throws GameActionException {
       // Moving enemies only
       cachedNumAttackingEnemyDirs = null;
       cachedEnemyDangerValsDirs = null;
@@ -340,38 +353,31 @@ public class RobotPlayer {
 
         // Do HQ
         dangerVal = Util.DANGER_VALUE_MAP[RobotType.HQ.ordinal()];
-        int[] attackingHQDirs = calculateAttackingHQDirs();
-        //rc.setIndicatorString(0, "HQ Dirs: " + Arrays.toString(attackingHQDirs));
+        boolean[] attackingHQDirs = calculateAttackingHQDirs();
         for (int i = attackingHQDirs.length; i-- > 0;) {
-          cachedDangerVals[i] += attackingHQDirs[i]*dangerVal;
+          if (attackingHQDirs[i]) {
+            cachedDangerVals[i] += dangerVal;
+          }
         }
       }
       
-      /*
-      String debug = "Danger vals: ";
-      for (int i = 9; i-- > 0;) {
-        debug += Util.REGULAR_DIRECTIONS_WITH_NONE[i].name() + ": " + cachedDangerVals[i] + ", ";
-      }
-      rc.setIndicatorString(2, debug + Clock.getRoundNum());
-  */
       return cachedDangerVals;
     }
     
     protected int[] calculateNumAttackingTowerDirs(MapLocation ignoreTower) throws GameActionException {
       if (cachedNumAttackingTowerDirs == null) {
         cachedNumAttackingTowerDirs = new int[9];
-        MapLocation[] enemyTowers = Cache.getEnemyTowerLocations();
+        MapLocation[] enemyTowers = Cache.getEnemyTowerLocationsDirect();
 
         int xdiff;
         int ydiff;
         for (int i = enemyTowers.length; i-- > 0;) {
-          if (enemyTowers[i] == null || (ignoreTower != null && enemyTowers[i].x == ignoreTower.x && enemyTowers[i].y == ignoreTower.y)) {
-            continue;
-          }
-
           xdiff = enemyTowers[i].x - curLoc.x;
           ydiff = enemyTowers[i].y - curLoc.y;
           if (xdiff <= 5 && xdiff >= -5 && ydiff <= 5 && ydiff >= -5) {
+            if (ignoreTower != null && enemyTowers[i].equals(ignoreTower)) {
+              continue;
+            }
             int[] attackedDirs = Util.ATTACK_NOTES[Util.RANGE_TYPE_MAP[RobotType.TOWER.ordinal()]][5 + xdiff][5 + ydiff];
             for (int j = attackedDirs.length; j-- > 0;) {
               cachedNumAttackingTowerDirs[attackedDirs[j]]++;
@@ -382,20 +388,42 @@ public class RobotPlayer {
       return cachedNumAttackingTowerDirs;
     }
     
-    protected int[] calculateAttackingHQDirs() throws GameActionException {
+    protected boolean[] calculateAttackingHQDirs() throws GameActionException {
       if (cachedAttackingHQDirs == null) {
-        int range = (Messaging.getNumSurvivingEnemyTowers() >= 2) ? 35 : RobotType.HQ.attackRadiusSquared;
-  
-        cachedAttackingHQDirs = new int[9];
-        int xdiff, ydiff;
-        
-
-        if (this.curLoc.distanceSquaredTo(enemyHQ) <= range) {
-          xdiff = this.enemyHQ.x - curLoc.x;
-          ydiff = this.enemyHQ.y - curLoc.y;
-          int[] attackedDirs = Util.ATTACK_NOTES[Util.RANGE_TYPE_MAP[RobotType.HQ.ordinal()]][5 + xdiff][5 + ydiff];
-          for (int j = attackedDirs.length; j-- > 0;) {
-            cachedAttackingHQDirs[attackedDirs[j]]++;
+        int curDist = curLoc.distanceSquaredTo(enemyHQ);
+        int numEnemyTowers = Cache.getEnemyTowerLocationsDirect().length;
+        cachedAttackingHQDirs = new boolean[9];
+        if (numEnemyTowers >= 5) {
+          
+          if (curDist < 81) {
+            int xdiff = curLoc.x - this.enemyHQ.x;
+            int ydiff = curLoc.y - this.enemyHQ.y;
+            int dx, dy;
+            for (int i = 9; i-- > 0;) {
+              dx = xdiff + Util.DIR_DX[i];
+              dy = ydiff + Util.DIR_DY[i];
+              dx = (dx > 0) ? dx : -dx;
+              dy = (dy > 0) ? dy : -dy;
+              cachedAttackingHQDirs[i] = (dx <= 6 && dy <= 6 && dx + dy <= 10);
+            }
+          }
+        } else if (numEnemyTowers >= 2) {
+          if (curDist < 49) {
+            if (curDist <= 35) {
+              cachedAttackingHQDirs[8] = true;
+            }
+            for (int i = 8; i-- > 0;) {
+              cachedAttackingHQDirs[i] = curLoc.add(Util.REGULAR_DIRECTIONS[i]).distanceSquaredTo(enemyHQ) < 35;
+            }
+          }
+        } else {
+          if (curDist < 36) {
+            if (curDist <= 24) {
+              cachedAttackingHQDirs[8] = true;
+            }
+            for (int i = 8; i-- > 0;) {
+              cachedAttackingHQDirs[i] = curLoc.add(Util.REGULAR_DIRECTIONS[i]).distanceSquaredTo(enemyHQ) < 24;
+            }
           }
         }
       }

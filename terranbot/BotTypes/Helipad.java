@@ -1,7 +1,7 @@
-package ghetto_v2_5.BotTypes;
+package terranbot.BotTypes;
 
-import ghetto_v2_5.Messaging;
-import ghetto_v2_5.RobotPlayer.BaseBot;
+import terranbot.Messaging;
+import terranbot.RobotPlayer.BaseBot;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;

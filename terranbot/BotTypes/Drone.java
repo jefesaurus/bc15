@@ -1,12 +1,12 @@
-package ghetto_v2_5.BotTypes;
+package terranbot.BotTypes;
 
-import ghetto_v2_5.HibernateSystem;
-import ghetto_v2_5.Messaging;
-import ghetto_v2_5.Nav;
-import ghetto_v2_5.SupplyDistribution;
-import ghetto_v2_5.Nav.Engage;
-import ghetto_v2_5.RobotPlayer.BaseBot;
-import ghetto_v2_5.RobotPlayer.MovingBot;
+import terranbot.HibernateSystem;
+import terranbot.Messaging;
+import terranbot.Nav;
+import terranbot.SupplyDistribution;
+import terranbot.Nav.Engage;
+import terranbot.RobotPlayer.BaseBot;
+import terranbot.MovingBot;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -102,10 +102,10 @@ public class Drone extends MovingBot {
       break;
     case DEFEND_TOWERS:
       if (rc.isCoreReady()) {
-        double[] dangerVals = this.getAllDangerVals();
+        int[] attackingEnemyDirs = this.calculateNumAttackingEnemyDirs();
         // If the center square is in danger, retreat
-        if (dangerVals[8] > 0) {
-          Nav.retreat(dangerVals);
+        if (attackingEnemyDirs[8] > 0) {
+          Nav.retreat(attackingEnemyDirs);
         } else if (currentEnemies.length > 0 && rc.isWeaponReady()){
           attackLeastHealthEnemy(currentEnemies);
         // Can move, not in danger, can't attack: Advance

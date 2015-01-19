@@ -120,11 +120,49 @@ public class NoteGen {
     }
     System.out.println("},");
   }
+  
+  public static MapLocation getBuildLocation() {
+    int size = 1;
+    MapLocation center = new MapLocation(0,0);
+    while (true) {
+      int lx = center.x - size;
+      int rx = center.x + size;
+      int ty = center.y - size;
+      int by = center.y + size;
+
+
+      // Top side
+      for (int i = rx + 1; i-- > lx;) {
+        System.out.println("(" + i +  ", " + ty + ")");
+        System.out.println("(" + i +  ", " + by + ")");
+      }
+      
+
+      // Right side
+      for (int i = by; i-- > ty + 1;) {
+        System.out.println("(" + rx +  ", " + i + ")");
+        System.out.println("(" + lx +  ", " + i + ")");
+      }
+      /*
+      // Bottom side
+      for (int i = size*2 + 1; i-- > 0;) {
+      }
+      
+      // Right side
+      for (int i = size*2; i-- > 1;) {
+        System.out.println("(" + lx +  ", " + (ty + i) + ")");
+
+      }
+      */
+      return center;
+    }
+  }
 
   public static void main(String[] args) {
     // centerNotes();
     // getOrdinalValues();
-    vectorMags();
+    // vectorMags();
+    getBuildLocation();
   }
 
 }

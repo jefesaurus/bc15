@@ -1,7 +1,9 @@
 package ghetto_v2_5.BotTypes;
 
+import ghetto_v2_5.HibernateSystem;
 import ghetto_v2_5.Messaging;
 import ghetto_v2_5.Nav;
+import ghetto_v2_5.SupplyDistribution;
 import ghetto_v2_5.Nav.Engage;
 import ghetto_v2_5.RobotPlayer.BaseBot;
 import ghetto_v2_5.RobotPlayer.MovingBot;
@@ -12,10 +14,13 @@ import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotInfo;
 
-public class Soldier extends MovingBot {  
+public class Tank extends MovingBot {  
   
-  public Soldier(RobotController rc) {
+  public Tank(RobotController rc) {
     super(rc);
+    SupplyDistribution.init(this);
+    SupplyDistribution.setBatteryMode();
+    HibernateSystem.init(rc);
   }
 
   protected MapLocation rallyPoint = null;
@@ -26,6 +31,11 @@ public class Soldier extends MovingBot {
     
     rallyPoint = Messaging.readRallyPoint();
     mode = Messaging.getFleetMode();
+    if (HibernateSystem.manageHibernation(mode, currentEnemies, rallyPoint)) {
+      return;
+    }
+    rc.setIndicatorString(1, mode.name());
+    SupplyDistribution.manageSupply();
 
     switch (mode) {
     case SAFE_TOWER_DIVE:

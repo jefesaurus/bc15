@@ -1,12 +1,12 @@
-package ghetto_v2_5.BotTypes;
+package terranbot.BotTypes;
 
-import ghetto_v2_5.Cache;
-import ghetto_v2_5.Messaging;
-import ghetto_v2_5.SupplyDistribution;
-import ghetto_v2_5.Util;
-import ghetto_v2_5.RobotPlayer.BaseBot;
-import ghetto_v2_5.RobotPlayer.MovingBot;
-import ghetto_v2_5.RobotPlayer.MovingBot.AttackMode;
+import terranbot.Cache;
+import terranbot.Messaging;
+import terranbot.SupplyDistribution;
+import terranbot.Util;
+import terranbot.RobotPlayer.BaseBot;
+import terranbot.MovingBot;
+import terranbot.MovingBot.AttackMode;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -383,8 +383,17 @@ public class HQ extends BaseBot {
     return true;
   }
   
+  public static final int TOWER_DIVE_RADIUS = 49;
   public boolean haveDecentSurround(MapLocation loc) {
-    return (rc.senseNearbyRobots(loc, 63, myTeam).length > 10);
+    double allyScore = Util.getDangerScore(rc.senseNearbyRobots(loc, TOWER_DIVE_RADIUS, myTeam));
+    if (allyScore > 50.0) {
+      double enemyScore = Util.getDangerScore(rc.senseNearbyRobots(loc, TOWER_DIVE_RADIUS, theirTeam));
+      rc.setIndicatorString(2, "Tower score, Ally: " + allyScore + ", enemy: " + enemyScore);
+
+      return allyScore > enemyScore;
+    }
+    rc.setIndicatorString(2, "Tower score: no allies");
+    return false;
   }
    
    
