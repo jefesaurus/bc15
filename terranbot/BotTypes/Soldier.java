@@ -1,10 +1,10 @@
 package terranbot.BotTypes;
 
 import terranbot.Messaging;
+import terranbot.MovingBot;
 import terranbot.Nav;
 import terranbot.Nav.Engage;
 import terranbot.RobotPlayer.BaseBot;
-import terranbot.MovingBot;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;

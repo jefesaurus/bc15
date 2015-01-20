@@ -1,8 +1,8 @@
 package terranbot;
 
+import terranbot.MovingBot;
 import terranbot.Util;
 import terranbot.RobotPlayer.BaseBot;
-import terranbot.MovingBot;
 import battlecode.common.*;
 import battlecode.world.Robot;
 

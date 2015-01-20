@@ -2,11 +2,11 @@ package terranbot.BotTypes;
 
 import terranbot.Cache;
 import terranbot.Messaging;
+import terranbot.MovingBot;
 import terranbot.SupplyDistribution;
 import terranbot.Util;
-import terranbot.RobotPlayer.BaseBot;
-import terranbot.MovingBot;
 import terranbot.MovingBot.AttackMode;
+import terranbot.RobotPlayer.BaseBot;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;

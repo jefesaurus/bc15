@@ -2,11 +2,11 @@ package terranbot.BotTypes;
 
 import terranbot.Cache;
 import terranbot.Messaging;
+import terranbot.MovingBot;
 import terranbot.Nav;
 import terranbot.Util;
 import terranbot.Nav.Engage;
 import terranbot.RobotPlayer.BaseBot;
-import terranbot.MovingBot;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -363,12 +363,12 @@ public class Miner extends terranbot.MovingBot {
       }
       
       if (bestLoc == this.curLoc && rc.isCoreReady()) {
-        this.miningTurns = MINING_HORIZON;
+        Miner.miningTurns = MINING_HORIZON;
         rc.mine();
       }
       
       if (bestLoc != this.curLoc && rc.isCoreReady()) {
-        this.miningTurns = MINING_HORIZON;
+        Miner.miningTurns = MINING_HORIZON;
         minerNavSingleMove(getMoveDir(bestLoc));
       }
     }

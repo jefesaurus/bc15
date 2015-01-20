@@ -1,10 +1,10 @@
 package terranbot.BotTypes;
 
 import terranbot.Messaging;
+import terranbot.MovingBot;
 import terranbot.Nav;
 import terranbot.Nav.Engage;
 import terranbot.RobotPlayer.BaseBot;
-import terranbot.MovingBot;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -72,6 +72,10 @@ public class Beaver extends MovingBot {
         if (rc.canBuild(curLoc.directionTo(targetBuildSpot), robotToBuild)) {
           rc.build(curLoc.directionTo(targetBuildSpot), robotToBuild);
           buildingStage = BuildingStage.WAITING_TO_FINISH_BUILDING;
+        } else {
+          targetBuildSpot = null;
+          buildingStage = BuildingStage.MOVING_TO_LOCATION;
+          continueMoveToBuildLocation();
         }
       }
       break;

@@ -1,17 +1,13 @@
 package terranbot.BotTypes;
 
-import java.util.Arrays;
-
-import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
-
 import terranbot.Cache;
 import terranbot.HibernateSystem;
 import terranbot.Messaging;
+import terranbot.MovingBot;
 import terranbot.Nav;
 import terranbot.SupplyDistribution;
 import terranbot.Nav.Engage;
 import terranbot.RobotPlayer.BaseBot;
-import terranbot.MovingBot;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
