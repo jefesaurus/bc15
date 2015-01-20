@@ -36,6 +36,8 @@ public class Messaging {
   
   public final static int SAFE_ZONES = 28; // channels 28-41
   public final static int NUM_ACTIVE_SAFEZONES = 42;
+  public final static int HIGH_ORE_REQUEST = 43;
+  public final static int HIGH_ORE_LOCS = 44; // channels 44-53
 
   public final static int COUNT_OFFSET = 100;
   public final static int KILLED_OFFSET = 1000;

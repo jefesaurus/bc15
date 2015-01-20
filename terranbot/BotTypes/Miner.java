@@ -36,6 +36,8 @@ public class Miner extends terranbot.MovingBot {
 
   public static boolean mineWhileMoveMode = true;
   public static MapLocation safeZoneCenter = null;
+  
+  public static boolean requestedHighOreLoc = false;
     
   public Miner(RobotController rc) {
     super(rc);
@@ -71,6 +73,7 @@ public class Miner extends terranbot.MovingBot {
   }
 
   private void disperseMine() throws GameActionException {
+    this.broadcastHighestOreInSensorRange();
     if (rc.isCoreReady()) {
       if (disperseModeMiningTurns == 0) {
         disperseMode = false;
@@ -233,6 +236,22 @@ public class Miner extends terranbot.MovingBot {
     return (rc.senseOre(curLoc) / (GameConstants.MINER_MINE_RATE) * unsuppliedCoeff <= GameConstants.MINIMUM_MINE_AMOUNT);
   }
   
+  public void broadcastHighestOreInSensorRange() throws GameActionException {
+    MapLocation[] locationsInVisionRange = MapLocation.getAllMapLocationsWithinRadiusSq(this.curLoc, RobotType.MINER.sensorRadiusSquared);
+    int currentX = rc.readBroadcast(Messaging.HIGH_ORE_LOCS);
+    int currentY = rc.readBroadcast(Messaging.HIGH_ORE_LOCS + 1);
+    for (int i = locationsInVisionRange.length; i-- > 0;) {
+      MapLocation loc = locationsInVisionRange[i];
+      if (rc.senseOre(loc) > rc.senseOre(new MapLocation(currentX, currentY))) {
+        rc.broadcast(Messaging.HIGH_ORE_LOCS, loc.x);
+        rc.broadcast(Messaging.HIGH_ORE_LOCS + 1, loc.y);
+      }
+    }
+    
+    rc.broadcast(Messaging.HIGH_ORE_REQUEST, 0);
+
+  }
+  
   public MapLocation calculateNextLocationUsingGradient(int radius) {
     MapLocation[] locationsInVisionRange = MapLocation.getAllMapLocationsWithinRadiusSq(this.curLoc, radius);
 
@@ -285,6 +304,9 @@ public class Miner extends terranbot.MovingBot {
   
   // NOTE: Only used for mining in the safe zone
   public void basicMineAlgorithm() throws GameActionException {
+    if (rc.readBroadcast(Messaging.HIGH_ORE_REQUEST) == 1) {
+      broadcastHighestOreInSensorRange();
+    }
     if (currentLocGivesMaxOre()) {
       if (rc.isCoreReady()) {
         rc.mine();
@@ -292,7 +314,18 @@ public class Miner extends terranbot.MovingBot {
       return;
     } else if (currentLocGivesMinOre()) {
       if (rc.isCoreReady()) {
-        minerNavSingleMove(Util.REGULAR_DIRECTIONS[MINER_ID % 7]);
+        if (MINER_ID < 8) { // TODO, maybe by round number?
+          minerNavSingleMove(Util.REGULAR_DIRECTIONS[MINER_ID % 7]);
+        } else if (!requestedHighOreLoc) {
+          rc.broadcast(Messaging.HIGH_ORE_REQUEST, 1);
+          requestedHighOreLoc = true;
+        } else if (requestedHighOreLoc) {
+          int x = rc.readBroadcast(Messaging.HIGH_ORE_LOCS);
+          int y = rc.readBroadcast(Messaging.HIGH_ORE_LOCS + 1);
+          Nav.goTo(new MapLocation(x, y), Engage.NONE);
+          requestedHighOreLoc = false;
+          rc.broadcast(Messaging.HIGH_ORE_REQUEST, 0);
+        }
       }
       return;
     } else {
