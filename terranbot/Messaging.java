@@ -46,6 +46,8 @@ public class Messaging {
   public final static int NUM_BATTLE_CHANNELS = 5;
   public final static int DEFEND_OFFSET = 3000;
   public final static int NUM_DEFEND_CHANNELS = 5;
+  
+  public final static int MAP_OFFSET = 10000;
 
   
   public static RobotController rc;

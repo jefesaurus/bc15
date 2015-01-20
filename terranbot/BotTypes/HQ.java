@@ -386,14 +386,15 @@ public class HQ extends BaseBot {
     return true;
   }
   
+  public static final double DEFENDERS_ADVANTAGE = 1.5;
   public static final int TOWER_DIVE_RADIUS = 49;
   public boolean haveDecentSurround(MapLocation loc) {
     double allyScore = Util.getDangerScore(rc.senseNearbyRobots(loc, TOWER_DIVE_RADIUS, myTeam));
-    if (allyScore > 40.0) {
+    if (allyScore > 10.0) {
       double enemyScore = Util.getDangerScore(rc.senseNearbyRobots(loc, TOWER_DIVE_RADIUS, theirTeam));
       //rc.setIndicatorString(2, "Tower score, Ally: " + allyScore + ", enemy: " + enemyScore);
 
-      return allyScore > enemyScore;
+      return allyScore > DEFENDERS_ADVANTAGE*enemyScore;
     }
     //rc.setIndicatorString(2, "Tower score: no allies");
     return false;
