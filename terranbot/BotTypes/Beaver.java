@@ -131,7 +131,8 @@ public class Beaver extends MovingBot {
       numSquares = 0;
 
       // Top / bottom
-      for (int i = rx + 1; i-- > lx;) {
+      //for (int i = rx + 1; i-- > lx;) {
+      for (int i = rx; i >= lx; i -= 2) {
         current = new MapLocation(i, ty);
 
         if (rc.senseTerrainTile(current) == TerrainTile.NORMAL && !rc.isLocationOccupied(current)) {
@@ -154,7 +155,9 @@ public class Beaver extends MovingBot {
       }
 
       // Left and right
-      for (int i = by; i-- > ty + 1;) {
+      //for (int i = by; i-- > ty + 1;) {
+      for (int i = by; i >= ty + 1; i -= 2) {
+
         current = new MapLocation(rx, i);
 
         if (rc.senseTerrainTile(current) == TerrainTile.NORMAL && !rc.isLocationOccupied(current)) {
@@ -177,7 +180,7 @@ public class Beaver extends MovingBot {
       }
 
       // System.out.println("Candidate: " + candidate + " occupancy: " + numOccupied + " num squares: " + numSquares);
-      if (candidate != null && numOccupied/(double)numSquares <= .5) {
+      if (candidate != null) {// && numOccupied/(double)numSquares <= .5) {
         return candidate;
       }
       candidate = null;
