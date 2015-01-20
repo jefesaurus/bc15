@@ -408,9 +408,9 @@ public class HQ extends BaseBot {
   public static final int NUM_SUPPLY_DEPOTS = 4;
   
   public void doMacro() throws GameActionException {
-    if (Clock.getRoundNum() <= 1 && Messaging.checkTotalNumUnits(RobotType.DRONE) < 3) {
+    /**if (Clock.getRoundNum() <= 1 && Messaging.checkTotalNumUnits(RobotType.DRONE) < 3) {
       Messaging.queueUnits(RobotType.DRONE, 3);
-    }
+    }**/
     
     if (Messaging.peekQueueUnits(RobotType.TANK) < curNumTankFactories) {
       Messaging.queueUnits(RobotType.TANK, curNumTankFactories);
