@@ -130,7 +130,12 @@ public class HQ extends BaseBot {
         break;
       }
       setFleetMode(MovingBot.AttackMode.RALLYING);
-      Messaging.setRallyPoint(new MapLocation(myHQ.x + ((enemyHQ.x - myHQ.x) / 3), myHQ.y + ((enemyHQ.y - myHQ.y) / 3)));
+      MapLocation[] towerLocs = rc.senseTowerLocations();
+      if (towerLocs.length == 1) {
+        Messaging.setRallyPoint(towerLocs[0]);
+      } else {
+        Messaging.setRallyPoint(new MapLocation(myHQ.x + ((enemyHQ.x - myHQ.x) / 3), myHQ.y + ((enemyHQ.y - myHQ.y) / 3)));
+      }
       break;
     case BUILDING_FORCES:
       if (Clock.getRoundNum() >= 600 && Messaging.checkNumUnits(RobotType.TANK) > FLEET_COUNT_ATTACK_THRESHOLD) {
