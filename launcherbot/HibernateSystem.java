@@ -1,8 +1,8 @@
-package terranbot;
+package launcherbot;
 
-import terranbot.MovingBot;
-import terranbot.MovingBot.AttackMode;
-import terranbot.RobotPlayer.BaseBot;
+import launcherbot.MovingBot;
+import launcherbot.MovingBot.AttackMode;
+import launcherbot.RobotPlayer.BaseBot;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;

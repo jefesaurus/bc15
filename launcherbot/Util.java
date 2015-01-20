@@ -1,4 +1,4 @@
-package terranbot;
+package launcherbot;
 
 import battlecode.common.Clock;
 import battlecode.common.Direction;

@@ -1,7 +1,7 @@
-package terranbot;
+package launcherbot;
 
-import terranbot.MovingBot;
-import terranbot.RobotPlayer.BaseBot;
+import launcherbot.MovingBot;
+import launcherbot.RobotPlayer.BaseBot;
 import battlecode.common.Clock;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;

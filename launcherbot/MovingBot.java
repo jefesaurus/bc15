@@ -1,9 +1,9 @@
-package terranbot;
+package launcherbot;
 
 import java.util.Arrays;
 
-import terranbot.Nav.Engage;
-import terranbot.RobotPlayer.BaseBot;
+import launcherbot.Nav.Engage;
+import launcherbot.RobotPlayer.BaseBot;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;

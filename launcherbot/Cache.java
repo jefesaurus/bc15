@@ -1,6 +1,6 @@
-package terranbot;
+package launcherbot;
 
-import terranbot.RobotPlayer.BaseBot;
+import launcherbot.RobotPlayer.BaseBot;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
