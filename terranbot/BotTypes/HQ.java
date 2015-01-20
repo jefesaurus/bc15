@@ -57,7 +57,8 @@ public class HQ extends BaseBot {
     SWARMING,
     APPROACHING_TOWER,
     TOWER_DIVING,
-    TOWER_DEFENDING
+    TOWER_DEFENDING,
+    COUNTER_ATTACK
   };
   
   public static final int FLEET_COUNT_ATTACK_THRESHOLD = 15;
@@ -123,6 +124,13 @@ public class HQ extends BaseBot {
       return;
     }
     
+    if (Messaging.areWeFightLaunchers()) {
+      setCurrentTowerTarget(Cache.getEnemyTowerLocationsDirect());
+      counterAttack(currentTargetTower);
+    }
+    
+    MapLocation[] enemyTowers = Cache.getEnemyTowerLocationsDirect();
+    
     switch (strat) {
     case HARASS:
       if (Clock.getRoundNum() >= 600) {
@@ -154,7 +162,6 @@ public class HQ extends BaseBot {
       // Set rally point to just in front of nearest tower.
       // Wait until ally centroid is epsilon close, then switch to tower diving
       if (haveDecentSurround(currentTargetTower)) {
-        MapLocation[] enemyTowers = Cache.getEnemyTowerLocationsDirect();
         // If there are no more towers, then we are engaging the HQ
         if (enemyTowers.length == 0) {
           diveTowerUnsafe(currentTargetTower);
@@ -169,7 +176,6 @@ public class HQ extends BaseBot {
       break;
     case TOWER_DIVING:
       // If we're winning in tower count, switch to TOWER_DEFENDING
-      MapLocation[] enemyTowers = Cache.getEnemyTowerLocationsDirect();
       if (enemyTowers.length > 0) {
         // Check if our current target is dead yet:
         boolean targetIsDead = currentTargetTowerIsDead(enemyTowers);
@@ -194,6 +200,19 @@ public class HQ extends BaseBot {
         buildForces();
       }
       break;
+    case COUNTER_ATTACK:
+      if (haveDecentSurround(currentTargetTower)) {
+        // If there are no more towers, then we are engaging the HQ
+        if (enemyTowers.length == 0) {
+          diveTowerUnsafe(currentTargetTower);
+        } else {
+          if (isSafeTowerDive) {
+            diveTowerSafe(currentTargetTower);
+          } else {
+            diveTowerUnsafe(currentTargetTower);
+          }
+        }
+      }
     }
   }
   
@@ -257,6 +276,13 @@ public class HQ extends BaseBot {
         rc.attackLocation(toAttackInRange);
       }
     }
+  }
+  
+  public void counterAttack(MapLocation towerLoc) throws GameActionException {
+    strat = HighLevelStrat.COUNTER_ATTACK;
+    currentTargetTower = towerLoc;
+    setRallyPoint(currentTargetTower);
+    setFleetMode(MovingBot.AttackMode.COUNTER_ATTACK);
   }
   
   public void approachTower(MapLocation towerLoc) throws GameActionException {

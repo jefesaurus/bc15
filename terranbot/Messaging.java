@@ -59,6 +59,9 @@ public class Messaging {
   public final static int BATTLE_RANGE_SQUARED = 25;
   public final static int FRESHNESS_TOLERANCE = 2;
   
+  public final static int FIGHTING_LAUNCHERS = 20000;
+
+  
   // init needs to get called once at the beginning to set up some stuff.
   public static void init(BaseBot brIn) throws GameActionException {
     rc = brIn.rc;
@@ -140,6 +143,19 @@ public class Messaging {
         }
       }
     }
+  }
+  
+  
+  public static boolean areWeFightLaunchers() throws GameActionException {
+    if (rc.readBroadcast(FIGHTING_LAUNCHERS) == 1) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  
+  public static void weAreFightingLaunchers() throws GameActionException {
+    rc.broadcast(FIGHTING_LAUNCHERS, 1);
   }
   
   // Returns null if no battlefront

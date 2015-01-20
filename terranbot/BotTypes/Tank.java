@@ -91,6 +91,8 @@ public class Tank extends MovingBot {
     case DEFENSIVE_SWARM:
       doDefensiveMicro(currentEnemies, rallyPoint);
       break;
+    case COUNTER_ATTACK:
+      doSneakyMove(rallyPoint);
     default:
       System.out.println("No default behavior");
       break;

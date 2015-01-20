@@ -15,7 +15,7 @@ public class MovingBot extends BaseBot {
   public enum AttackMode {
       OFFENSIVE_SWARM,
       DEFENSIVE_SWARM,
-      CONCAVE,
+      COUNTER_ATTACK,
       SAFE_TOWER_DIVE,
       UNSAFE_TOWER_DIVE,
       DEFEND_TOWERS,
@@ -141,8 +141,9 @@ public class MovingBot extends BaseBot {
     //int enemyCentroidX = 0;
     //int enemyCentroidY = 0;
     //int numEnemies = 0;
-
+    double enemyAttackPower = 0;
     for (int i = nearbyEnemies.length; i-- > 0;) {
+      RobotInfo enemy = nearbyEnemies[i];
       switch (nearbyEnemies[i].type) {
       case HQ:
       case TOWER:
@@ -156,6 +157,9 @@ public class MovingBot extends BaseBot {
       case MINER:
       case BASHER:
       case MISSILE:
+        if (enemy.weaponDelay < 1 && enemy.location.distanceSquaredTo(rc.getLocation()) <= enemy.type.attackRadiusSquared) {
+          enemyAttackPower += enemy.type.attackPower;
+        }
         tempDist = curLoc.distanceSquaredTo(nearbyEnemies[i].location);
         if (tempDist < closestDist) {
           closestDist = tempDist;
@@ -195,7 +199,7 @@ public class MovingBot extends BaseBot {
       }
       // We didn't find any bots with lower health, so we are the lowest.
       // If we are alone, we should retreat anyways...
-      return new int[] {0, (isAlone) ? 0 : 1};
+      return new int[] {0, (isAlone || enemyAttackPower < myHealth) ? 0 : 1};
     }
   }
   
@@ -340,6 +344,10 @@ public class MovingBot extends BaseBot {
       }
     }
     return cachedAttackingHQDirs;
+  }
+  
+  public void doSneakyMove(MapLocation rallyPoint) throws GameActionException {
+    Nav.goTo(rallyPoint, Engage.NONE);
   }
   
   public void doOffensiveMicro(RobotInfo[] engageableEnemies, MapLocation rallyPoint) throws GameActionException {
