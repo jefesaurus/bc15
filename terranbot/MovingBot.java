@@ -416,7 +416,7 @@ public class MovingBot extends BaseBot {
             Nav.goTo(new MapLocation(metrics[1], metrics[2]), Engage.UNITS);
           } else {
             MapLocation nearestBattle = Messaging.getClosestDefendFront(curLoc);
-            if (nearestBattle != null && myHQ.distanceSquaredTo(nearestBattle) <= 80) {
+            if (nearestBattle != null) {
               Nav.goTo(nearestBattle, Engage.UNITS);
             }
           }
@@ -441,7 +441,7 @@ public class MovingBot extends BaseBot {
     } else {
       if (rc.isCoreReady()) {
         MapLocation nearestBattle = Messaging.getClosestDefendFront(curLoc);
-        if (nearestBattle != null && myHQ.distanceSquaredTo(nearestBattle) <= 80) {
+        if (nearestBattle != null) {
           Nav.goTo(nearestBattle, Engage.UNITS);
         } else if (rallyPoint != null) {
           Nav.goTo(rallyPoint, Engage.UNITS);

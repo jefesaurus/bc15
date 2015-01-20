@@ -16,6 +16,20 @@ public class Tower extends BaseBot {
   public void execute() throws GameActionException {
     RobotInfo[] visibleEnemies = getVisibleEnemies();
     if (visibleEnemies.length > 0) {
+      MapLocation closest = null;
+      for (int i=visibleEnemies.length; i-->0;) {
+        MapLocation trialLoc = visibleEnemies[i].location;
+        if (closest == null) {
+          closest = trialLoc;
+        } else {
+          if (this.curLoc.distanceSquaredTo(trialLoc) < this.curLoc.distanceSquaredTo(closest)) {
+            closest = trialLoc;
+          }
+        }
+      }
+      Messaging.setDefendFront(closest);
+    }
+    if (visibleEnemies.length > 0) {
       Messaging.setTowerUnderAttack(this.curLoc);
       RobotInfo[] attackableEnemies = this.getEnemiesInAttackingRange();
       if (attackableEnemies.length > 0 && rc.isWeaponReady()) {
