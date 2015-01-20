@@ -1,12 +1,12 @@
-package terranbot.BotTypes;
+package launcherbot.BotTypes;
 
-import terranbot.Cache;
-import terranbot.Messaging;
-import terranbot.MovingBot;
-import terranbot.SupplyDistribution;
-import terranbot.Util;
-import terranbot.MovingBot.AttackMode;
-import terranbot.RobotPlayer.BaseBot;
+import launcherbot.Cache;
+import launcherbot.Messaging;
+import launcherbot.MovingBot;
+import launcherbot.SupplyDistribution;
+import launcherbot.Util;
+import launcherbot.MovingBot.AttackMode;
+import launcherbot.RobotPlayer.BaseBot;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -22,7 +22,9 @@ public class HQ extends BaseBot {
   
   
   public boolean isSafeTowerDive = true;
-  public MapLocation currentTargetTower = new MapLocation(0,0);  
+  public MapLocation currentTargetTower = new MapLocation(0,0);
+  private int MAX_MINERS = 25;
+  
   public int curNumHelipads = 0;
   public int curNumBarracks = 0;
   public int curNumTankFactories = 0;
@@ -65,12 +67,12 @@ public class HQ extends BaseBot {
     Messaging.setUnitToProduce(null);
     curNumHelipads = Messaging.checkTotalNumUnits(RobotType.HELIPAD);
     curNumBarracks = Messaging.checkTotalNumUnits(RobotType.BARRACKS);
-    curNumTankFactories = Messaging.checkTotalNumUnits(RobotType.TANKFACTORY);
+    curNumTankFactories = Messaging.checkTotalNumUnits(RobotType.AEROSPACELAB);
     curNumBeavers = Messaging.checkTotalNumUnits(RobotType.BEAVER);
     curNumMiners = Messaging.checkTotalNumUnits(RobotType.MINER);
     curNumMinerFactories = Messaging.checkTotalNumUnits(RobotType.MINERFACTORY);
     curNumDrones = Messaging.checkTotalNumUnits(RobotType.DRONE);
-    curNumTanks = Messaging.checkTotalNumUnits(RobotType.TANK);
+    curNumTanks = Messaging.checkTotalNumUnits(RobotType.LAUNCHER);
     curNumSupplyDepots = Messaging.checkTotalNumUnits(RobotType.SUPPLYDEPOT);
     //System.out.println("num tanks: " + curNumTanks);
     //System.out.println("curNumBeavers: " + curNumBeavers + ", " + curNumMinerFactories + ", " + curNumHelipads + ", " + curNumBarracks);
@@ -122,7 +124,7 @@ public class HQ extends BaseBot {
       return;
     }
     
-    if (Messaging.areWeFightLaunchers() && strat != HighLevelStrat.COUNTER_ATTACK) {
+    if (Messaging.areWeFightLaunchers()) {
       setCurrentTowerTarget(Cache.getEnemyTowerLocationsDirect());
       counterAttack(currentTargetTower);
     }
@@ -217,11 +219,11 @@ public class HQ extends BaseBot {
   public void endOfTurn() throws GameActionException {
     Messaging.resetUnitCount(RobotType.HELIPAD);
     Messaging.resetUnitCount(RobotType.BARRACKS);
-    Messaging.resetUnitCount(RobotType.TANKFACTORY);
+    Messaging.resetUnitCount(RobotType.AEROSPACELAB);
     Messaging.resetUnitCount(RobotType.BEAVER);
     Messaging.resetUnitCount(RobotType.MINER);
     Messaging.resetUnitCount(RobotType.MINERFACTORY);
-    Messaging.resetUnitCount(RobotType.TANK);
+    Messaging.resetUnitCount(RobotType.LAUNCHER);
     Messaging.resetUnitCount(RobotType.DRONE);
     Messaging.resetUnitCount(RobotType.SUPPLYDEPOT);
     Messaging.resetTowersUnderAttack();
@@ -459,8 +461,8 @@ public class HQ extends BaseBot {
       Messaging.queueUnits(RobotType.DRONE, 3);
     }**/
     
-    if (Messaging.peekQueueUnits(RobotType.TANK) < curNumTankFactories) {
-      Messaging.queueUnits(RobotType.TANK, curNumTankFactories);
+    if (Messaging.peekQueueUnits(RobotType.LAUNCHER) < curNumTankFactories) {
+      Messaging.queueUnits(RobotType.LAUNCHER, curNumTankFactories);
     }
     return;
   }
@@ -476,20 +478,20 @@ public class HQ extends BaseBot {
   
   public void doBuildOrder() throws GameActionException {
     
-   /** if (curNumHelipads < NUM_HELIPADS) {
+    if (curNumHelipads < NUM_HELIPADS) {
       Messaging.queueUnits(RobotType.HELIPAD, NUM_HELIPADS - curNumHelipads);
-    }**/
-    
-    if (curNumBarracks < NUM_BARRACKS /**&& Messaging.peekBuildingUnits(RobotType.HELIPAD) >= 1**/) {
-      Messaging.queueUnits(RobotType.BARRACKS, NUM_BARRACKS - curNumBarracks);
     }
+    
+    /**if (curNumBarracks < NUM_BARRACKS /**&& Messaging.peekBuildingUnits(RobotType.HELIPAD) >= 1) {
+      Messaging.queueUnits(RobotType.BARRACKS, NUM_BARRACKS - curNumBarracks);
+    }**/
 
     if (curNumSupplyDepots < NUM_SUPPLY_DEPOTS) {
       Messaging.queueUnits(RobotType.SUPPLYDEPOT, NUM_SUPPLY_DEPOTS - curNumSupplyDepots);
     }
 
-    if (curNumTankFactories < NUM_TANK_FACTORIES && Messaging.checkNumUnits(RobotType.BARRACKS) >= 1) {
-      Messaging.queueUnits(RobotType.TANKFACTORY, NUM_TANK_FACTORIES - curNumTankFactories);
+    if (curNumTankFactories < NUM_TANK_FACTORIES && Messaging.checkNumUnits(RobotType.HELIPAD) >= 1) {
+      Messaging.queueUnits(RobotType.AEROSPACELAB, NUM_TANK_FACTORIES - curNumTankFactories);
     }
     
   }

@@ -1,13 +1,13 @@
-package terranbot.BotTypes;
+package launcherbot.BotTypes;
 
-import terranbot.Cache;
-import terranbot.HibernateSystem;
-import terranbot.Messaging;
-import terranbot.MovingBot;
-import terranbot.Nav;
-import terranbot.SupplyDistribution;
-import terranbot.Nav.Engage;
-import terranbot.RobotPlayer.BaseBot;
+import launcherbot.Cache;
+import launcherbot.HibernateSystem;
+import launcherbot.Messaging;
+import launcherbot.MovingBot;
+import launcherbot.Nav;
+import launcherbot.SupplyDistribution;
+import launcherbot.Nav.Engage;
+import launcherbot.RobotPlayer.BaseBot;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -93,7 +93,6 @@ public class Tank extends MovingBot {
       break;
     case COUNTER_ATTACK:
       doSneakyMove(rallyPoint);
-      break;
     default:
       System.out.println("No default behavior");
       break;

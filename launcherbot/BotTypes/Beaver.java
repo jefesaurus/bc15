@@ -1,10 +1,10 @@
-package terranbot.BotTypes;
+package launcherbot.BotTypes;
 
-import terranbot.Messaging;
-import terranbot.MovingBot;
-import terranbot.Nav;
-import terranbot.Nav.Engage;
-import terranbot.RobotPlayer.BaseBot;
+import launcherbot.Messaging;
+import launcherbot.MovingBot;
+import launcherbot.Nav;
+import launcherbot.Nav.Engage;
+import launcherbot.RobotPlayer.BaseBot;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -16,7 +16,7 @@ import battlecode.common.RobotType;
 import battlecode.common.TerrainTile;
 
 public class Beaver extends MovingBot {
-  public static final RobotType[] types = {RobotType.MINERFACTORY, RobotType.HELIPAD, RobotType.BARRACKS, RobotType.TANKFACTORY, RobotType.SUPPLYDEPOT};
+  public static final RobotType[] types = {RobotType.MINERFACTORY, RobotType.HELIPAD, RobotType.BARRACKS, RobotType.TANKFACTORY, RobotType.SUPPLYDEPOT, RobotType.AEROSPACELAB};
   public static boolean wasBuildingSomething = false;
   public static RobotType wasBuilding = null;
   
@@ -136,9 +136,7 @@ public class Beaver extends MovingBot {
       //for (int i = rx + 1; i-- > lx;) {
       for (int i = rx; i >= lx; i -= 2) {
         current = new MapLocation(i, ty);
-        if (!rc.canSenseLocation(current)) {
-          continue;
-        }
+
         if (rc.senseTerrainTile(current) == TerrainTile.NORMAL && !rc.isLocationOccupied(current)) {
           if (candidate == null) {
             candidate = current;
@@ -162,9 +160,7 @@ public class Beaver extends MovingBot {
       //for (int i = by; i-- > ty + 1;) {
       for (int i = by - 2; i >= ty + 2; i -= 2) {
         current = new MapLocation(rx, i);
-        if (!rc.canSenseLocation(current)) {
-          continue;
-        }
+
         if (rc.senseTerrainTile(current) == TerrainTile.NORMAL && !rc.isLocationOccupied(current)) {
           if (candidate == null) {
             candidate = current;
