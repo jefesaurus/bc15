@@ -199,6 +199,8 @@ public class HQ extends BaseBot {
       }
       break;
     case COUNTER_ATTACK:
+      setCurrentTowerTarget(Cache.getEnemyTowerLocationsDirect());
+      setRallyPoint(currentTargetTower);
       if (haveDecentSurround(currentTargetTower)) {
         // If there are no more towers, then we are engaging the HQ
         if (enemyTowers.length == 0) {
@@ -211,6 +213,7 @@ public class HQ extends BaseBot {
           }
         }
       }
+      break;
     }
   }
   
@@ -382,7 +385,8 @@ public class HQ extends BaseBot {
    */
   public void setCurrentTowerTarget(MapLocation[] enemyTowers) throws GameActionException {
     if (enemyTowers.length <= 0) {
-      currentTargetTower = null;
+      currentTargetTower = enemyHQ;
+      return;
     }
     
     double maxiMinDist = 0;
