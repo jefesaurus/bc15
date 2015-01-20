@@ -41,12 +41,9 @@ public class MinerFactory extends BaseBot {
       RobotType curType = types[i];
       if (rc.isCoreReady() && rc.hasSpawnRequirements(curType) && Messaging.dequeueUnit(curType)) {
         Direction spawnDir = getDefensiveSpawnDirection(curType);
-        
-//        int ordinalDirection = rc.readBroadcast(Messaging.NUM_MINERS+1) % 7;
-//        Direction spawnDir = Util.REGULAR_DIRECTIONS[ordinalDirection];
-        
         if (spawnDir != null) {
           rc.spawn(spawnDir, curType);
+          Messaging.incrementUnitsBuilt(curType);
         }
       }
     }

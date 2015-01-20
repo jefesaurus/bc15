@@ -46,6 +46,8 @@ public class Messaging {
   public final static int NUM_BATTLE_CHANNELS = 5;
   public final static int DEFEND_OFFSET = 3000;
   public final static int NUM_DEFEND_CHANNELS = 5;
+  public final static int BUILT_OFFSET = 4000;
+  
   
   public final static int MAP_OFFSET = 10000;
 
@@ -70,6 +72,12 @@ public class Messaging {
   public static int getKilledChannel(RobotType type) {
     return type.ordinal() + KILLED_OFFSET;
   }
+  
+  public static int getBuiltChannel(RobotType type) {
+    return type.ordinal() + BUILT_OFFSET;
+  }
+  
+  
   
   public static void setDefendFront(MapLocation loc) throws GameActionException {
     for (int i=NUM_DEFEND_CHANNELS; i-- > 0;) {
@@ -205,6 +213,17 @@ public class Messaging {
 
 //  public static MapLocation[] getTowersCloserToMyHQ() {
 //  }
+  
+  public static void incrementUnitsBuilt(RobotType type) throws GameActionException {
+    int chan = getBuiltChannel(type);
+    int x = rc.readBroadcast(chan);
+    rc.broadcast(chan, x + 1);
+  }
+  
+  public static int readUnitsBuilt(RobotType type) throws GameActionException {
+    int chan = getBuiltChannel(type);
+    return rc.readBroadcast(chan);
+  }
   
   public static void resetUnitCount(RobotType type) throws GameActionException {
     int chan = getCountChannel(type);

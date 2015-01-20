@@ -474,8 +474,8 @@ public class HQ extends BaseBot {
   static final int MAX_NUM_MINERS = 20;
   // Get estimated ore production and compare it to the value required by our current unit output and/or desired future unit output.
   public boolean maintainOreProduction() throws GameActionException {
-    int minersNeeded = 20 - curNumMiners;
-    if (curNumMiners < MAX_NUM_MINERS) {
+    int minersNeeded = MAX_NUM_MINERS - curNumMiners;
+    if (minersNeeded > 0) {
       Messaging.setUnitToProduce(null);
       Messaging.queueUnits(RobotType.MINER, minersNeeded);
     }
