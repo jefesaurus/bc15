@@ -157,12 +157,24 @@ public class NoteGen {
       return center;
     }
   }
+  
+  public static void testLine() {
+    int bitmask = 0b1;
+    int index = 0;
+    int val = 0b11111111111111111111111111111111;
+    while ((val & bitmask) > 0) {
+      bitmask <<= 1;
+      index ++;
+    }
+    System.out.println(index);
+  }
 
   public static void main(String[] args) {
     // centerNotes();
     // getOrdinalValues();
     // vectorMags();
-    getBuildLocation();
+    // getBuildLocation();
+    testLine();
   }
 
 }

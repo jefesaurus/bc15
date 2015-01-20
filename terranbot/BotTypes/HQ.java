@@ -111,7 +111,12 @@ public class HQ extends BaseBot {
     produceUnits();
     doMacro();
     
-    // rc.setIndicatorString(0, strat.name());
+    rc.setIndicatorString(0, strat.name());
+    setFleetMode(MovingBot.AttackMode.FORM_UP);
+    if (true) {
+    return;
+    }
+
     
     // If we are currently winning in towers, and we are under attack, pull back and defend.
     boolean haveMoreTowers = weHaveMoreTowers();
@@ -131,7 +136,7 @@ public class HQ extends BaseBot {
       Messaging.setRallyPoint(new MapLocation(myHQ.x + ((enemyHQ.x - myHQ.x) / 3), myHQ.y + ((enemyHQ.y - myHQ.y) / 3)));
       break;
     case BUILDING_FORCES:
-      if (Clock.getRoundNum() >= 600 && Messaging.checkNumUnits(RobotType.TANK) > FLEET_COUNT_ATTACK_THRESHOLD) {
+      if (Clock.getRoundNum() >= 2000 && Messaging.checkNumUnits(RobotType.TANK) > FLEET_COUNT_ATTACK_THRESHOLD) {
 
         //approachTower(getNearestEnemyTower(Cache.getEnemyTowerLocationsDirect()));
         setCurrentTowerTarget(Cache.getEnemyTowerLocationsDirect());
@@ -278,8 +283,9 @@ public class HQ extends BaseBot {
   
   public void buildForces() throws GameActionException {
     strat = HighLevelStrat.BUILDING_FORCES;
-    setFleetMode(MovingBot.AttackMode.DEFENSIVE_SWARM);
-    setRallyPoint(new MapLocation(myHQ.x + ((enemyHQ.x - myHQ.x) / 4), myHQ.y + ((enemyHQ.y - myHQ.y) / 4)));
+    setFleetMode(MovingBot.AttackMode.FORM_UP);
+    //setRallyPoint(new MapLocation(myHQ.x + ((enemyHQ.x - myHQ.x) / 4), myHQ.y + ((enemyHQ.y - myHQ.y) / 4)));
+    setRallyPoint(myHQ); 
   }
   
   
@@ -401,16 +407,21 @@ public class HQ extends BaseBot {
   public static final int NUM_MINER_FACTORIES = 1;
   public static final int NUM_BARRACKS = 1;
   public static final int NUM_TANK_FACTORIES = 10;
-  public static final int NUM_HELIPADS = 1;
+  public static final int NUM_HELIPADS = 5;
   
   public void doMacro() throws GameActionException {
     if (Clock.getRoundNum() <= 1 && Messaging.checkTotalNumUnits(RobotType.DRONE) < 3) {
       Messaging.queueUnits(RobotType.DRONE, 3);
     }
     
+    if (Messaging.peekQueueUnits(RobotType.DRONE) < curNumHelipads) {
+      Messaging.queueUnits(RobotType.DRONE, curNumHelipads);
+    }
+    /*
     if (Messaging.peekQueueUnits(RobotType.TANK) < curNumTankFactories) {
       Messaging.queueUnits(RobotType.TANK, curNumTankFactories);
     }
+    */
     return;
   }
   
@@ -425,17 +436,18 @@ public class HQ extends BaseBot {
   
   public void doBuildOrder() throws GameActionException {
     
-   /** if (curNumHelipads < NUM_HELIPADS) {
+    if (curNumHelipads < NUM_HELIPADS) {
       Messaging.queueUnits(RobotType.HELIPAD, NUM_HELIPADS - curNumHelipads);
-    }**/
-    
-    if (curNumBarracks < NUM_BARRACKS /**&& Messaging.peekBuildingUnits(RobotType.HELIPAD) >= 1**/) {
+    }
+    /*
+    if (curNumBarracks < NUM_BARRACKS  {
       Messaging.queueUnits(RobotType.BARRACKS, NUM_BARRACKS - curNumBarracks);
     }
 
     if (curNumTankFactories < NUM_TANK_FACTORIES && Messaging.checkNumUnits(RobotType.BARRACKS) >= 1) {
       Messaging.queueUnits(RobotType.TANKFACTORY, NUM_TANK_FACTORIES - curNumTankFactories);
     }
+    */
   }
   
   // Returns true if constant requirements are met.
@@ -497,48 +509,4 @@ public class HQ extends BaseBot {
       }
     }
   }
- 
-  
-  /*
-   * Old code to find a vulnerable tower based on centroid. doesn't work very well.
-  private MapLocation getMostVulnerableEnemyTower(MapLocation[] enemyTowers) throws GameActionException {
-    if (enemyTowers.length <= 0) {
-      return null;
-    }
-    
-    int towerX = enemyHQ.x;
-    int towerY = enemyHQ.y;
-    
-    for (int i = enemyTowers.length; i-- > 0;) {
-      towerX += enemyTowers[i].x;
-      towerY += enemyTowers[i].y;
-    }
-    
-    MapLocation towerCenter = new MapLocation(towerX/(1 + enemyTowers.length), towerY/(1 + enemyTowers.length));
-
-    double tempDist;
-    double tempDist2;
-    double furthestDist = enemyTowers[0].distanceSquaredTo(enemyTowers[0]);
-    int furthestIndex = 0;
-    
-    for (int i = 1; i < enemyTowers.length; i++) {
-      tempDist = towerCenter.distanceSquaredTo(enemyTowers[i]);
-      tempDist2 = furthestDist - tempDist;
-      
-      // If the difference is close, choose the one that is closer to our HQ
-      if (tempDist2 < 1.0 && tempDist2 > -1.0) {
-        if (enemyTowers[i].distanceSquaredTo(myHQ) < enemyTowers[furthestIndex].distanceSquaredTo(myHQ)) {
-          furthestDist = tempDist;
-          furthestIndex = i;
-        }
-      } else 
-        if (tempDist > furthestDist) {
-        furthestDist = tempDist;
-        furthestIndex = i;
-      }
-    }
-    
-    return enemyTowers[furthestIndex];
-  }
-  */
 }

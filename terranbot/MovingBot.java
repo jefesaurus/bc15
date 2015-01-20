@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 import terranbot.Nav.Engage;
 import terranbot.RobotPlayer.BaseBot;
+import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
@@ -20,7 +21,8 @@ public class MovingBot extends BaseBot {
       UNSAFE_TOWER_DIVE,
       DEFEND_TOWERS,
       RALLYING,
-      HUNT_FOR_MINERS
+      HUNT_FOR_MINERS,
+      FORM_UP
   }
         
   protected RobotInfo[] currentEnemies;
@@ -365,6 +367,8 @@ public class MovingBot extends BaseBot {
             MapLocation nearestBattle = Messaging.getClosestBattleFront(curLoc);
             if (nearestBattle != null) {
               Nav.goTo(nearestBattle, Engage.UNITS);
+              rc.setIndicatorString(1, "Nearest battle: " + nearestBattle + ", round: " + Clock.getRoundNum());
+
             }
           }
         }
@@ -390,8 +394,11 @@ public class MovingBot extends BaseBot {
         MapLocation nearestBattle = Messaging.getClosestBattleFront(curLoc);
         if (nearestBattle != null ) {
           Nav.goTo(nearestBattle, Engage.UNITS);
+          rc.setIndicatorString(1, "Nearest battle: " + nearestBattle + ", round: " + Clock.getRoundNum());
         } else if (rallyPoint != null) {
           Nav.goTo(rallyPoint, Engage.UNITS);
+          rc.setIndicatorString(1, "rally: " + rallyPoint + ", round: " + Clock.getRoundNum());
+
         }
       }
     }
@@ -448,5 +455,64 @@ public class MovingBot extends BaseBot {
         }
       }
     }
+  }
+  
+  public void droneAllInMicro(RobotInfo[] engageableEnemies, MapLocation rallyPoint) throws GameActionException {
+    if (engageableEnemies.length > 0) {
+      RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
+      if (attackableEnemies.length > 0) {
+        if (rc.isWeaponReady()) {
+          attackLeastHealthEnemy(attackableEnemies);
+        }
+        rc.setIndicatorString(1, "Doing nothing1:  " + Clock.getRoundNum());
+
+      } else if (rc.isCoreReady() && rc.canMove(curLoc.directionTo(rallyPoint))) {
+        rc.setIndicatorString(1, "Going to enemy centroid1: " + Clock.getRoundNum());
+        Nav.goTo(rallyPoint, Engage.UNITS);
+      }
+    } else if (rc.isCoreReady()) {
+      rc.setIndicatorString(1, "Going to enemy centroid2: " + Clock.getRoundNum());
+      Nav.goTo(rallyPoint, Engage.UNITS);
+    }
+    rc.setIndicatorString(1, "Doing nothing2:  " + Clock.getRoundNum());
+
+  }
+  
+  // dx and dy need to be positive
+  public MapLocation getLineSpot(MapLocation center, int offset, int dx, int dy, boolean invert) {
+    int finalX, finalY;
+    boolean flipX = false;
+    boolean flipY = false;
+    if (dx < 0) {
+      dx *= -1;
+      flipX = true;
+    }
+    if (dy < 0) {
+      dy *= -1;
+      flipY = true;
+    }
+    
+    if (dx > dy) {
+      finalX = offset;
+      finalY = (2*dy*offset + dx)/(2*dx);
+    } else {
+      finalY = offset;
+      finalX = (2*dx*offset + dy)/(2*dy);
+    }
+
+    if (flipX) {
+      finalX *= -1;
+    }
+    if (flipY) {
+      finalY *= -1;
+    }
+    if (invert) {
+      finalX = center.x - finalX;
+      finalY = center.y - finalY;
+    } else {
+      finalX = center.x + finalX;
+      finalY = center.y + finalY;
+    }
+    return new MapLocation(finalX, finalY);
   }
 }

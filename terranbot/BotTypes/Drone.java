@@ -1,5 +1,6 @@
 package terranbot.BotTypes;
 
+import terranbot.Cache;
 import terranbot.HibernateSystem;
 import terranbot.Messaging;
 import terranbot.Nav;
@@ -23,60 +24,39 @@ public class Drone extends MovingBot {
     HibernateSystem.init(rc);
   }
 
-  
-  private void attackMicro(MapLocation loc) throws GameActionException {
-    if (rc.isCoreReady()) {
-      double[] dangerVals = this.getAllDangerVals();
-      // If the center square is in danger, retreat
-      if (dangerVals[8] > 0) {
-        if (Nav.moveToSafetyIfPossible(dangerVals)) {
-          return;
-        } else if (currentEnemies.length > 0 && rc.isWeaponReady()) {
-          attackLeastHealthEnemy(currentEnemies);
-        }
-      } else if (currentEnemies.length > 0 && rc.isWeaponReady()) {
-        attackLeastHealthEnemy(currentEnemies);
-      } else {
-        Nav.goTo(loc, Engage.UNITS);
-      }
-    }
-  }
-
   protected MapLocation rallyPoint = null;
   protected MovingBot.AttackMode mode = MovingBot.AttackMode.OFFENSIVE_SWARM;
-  public MapLocation towerToHelp = null;
+  public int defendingTowerIndex = -1;
+  public int rankSpot = Integer.MAX_VALUE;
 
+  public static final double HALF_ANGLE_WIDTH = 3.14159/3.0;
+  
   public void execute() throws GameActionException {
-    currentEnemies = getEnemiesInAttackingRange();
+    currentEnemies = Cache.getEngagementEnemies();
+    
     rallyPoint = Messaging.readRallyPoint();
     mode = Messaging.getFleetMode();
-    Messaging.addToFleetCentroid();
-    rc.setIndicatorString(1, rallyPoint.toString());
-    
     if (HibernateSystem.manageHibernation(mode, currentEnemies, rallyPoint)) {
       return;
     }
-    
+    rc.setIndicatorString(2, "Mode: " + mode.name() + ", Rally point: " + rallyPoint);
     SupplyDistribution.manageSupply();
-    
+
     switch (mode) {
-    case HUNT_FOR_MINERS:
-      attackMicro(this.enemyHQ);
-      break;
-    case RALLYING:
-      if (currentEnemies.length < 0) {
-        Nav.goTo(rallyPoint, Engage.UNITS);
-      } else {
-        attackMicro(rallyPoint);
-      }
-      break;
     case SAFE_TOWER_DIVE:
       if (currentEnemies.length > 0) {
-        if (rc.isWeaponReady()) {
-          if (rc.canAttackLocation(rallyPoint)) {
-            rc.attackLocation(rallyPoint);
-          } else {
-            attackLeastHealthEnemy(currentEnemies);
+        RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
+        if (attackableEnemies.length > 0) {
+          if (rc.isWeaponReady()) {
+            if (rc.canAttackLocation(rallyPoint)) {
+              rc.attackLocation(rallyPoint);
+            } else {
+              attackLeastHealthEnemy(attackableEnemies);
+            }
+          }
+        } else {
+          if (rc.isCoreReady() && rallyPoint != null) {
+            Nav.goTo(rallyPoint, Engage.ONE_TOWER);
           }
         }
       } else if (rc.isCoreReady()) {
@@ -87,11 +67,18 @@ public class Drone extends MovingBot {
       break;
     case UNSAFE_TOWER_DIVE:
       if (currentEnemies.length > 0) {
-        if (rc.isWeaponReady()) {
-          if (rc.canAttackLocation(rallyPoint)) {
-            rc.attackLocation(rallyPoint);
-          } else {
-            attackLeastHealthEnemy(currentEnemies);
+        RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
+        if (attackableEnemies.length > 0) {
+          if (rc.isWeaponReady()) {
+            if (rc.canAttackLocation(rallyPoint)) {
+              rc.attackLocation(rallyPoint);
+            } else {
+              attackLeastHealthEnemy(attackableEnemies);
+            }
+          }
+        } else {
+          if (rc.isCoreReady() && rallyPoint != null) {
+            Nav.goTo(rallyPoint, Engage.ALL_TOWERS);
           }
         }
       } else if (rc.isCoreReady()) {
@@ -100,49 +87,77 @@ public class Drone extends MovingBot {
         }
       }
       break;
-    case DEFEND_TOWERS:
-      if (rc.isCoreReady()) {
-        int[] attackingEnemyDirs = this.calculateNumAttackingEnemyDirs();
-        // If the center square is in danger, retreat
-        if (attackingEnemyDirs[8] > 0) {
-          Nav.retreat(attackingEnemyDirs);
-        } else if (currentEnemies.length > 0 && rc.isWeaponReady()){
-          attackLeastHealthEnemy(currentEnemies);
-        // Can move, not in danger, can't attack: Advance
-        } else {
-          towerToHelp = Messaging.getClosestTowerUnderAttack();
-          if (towerToHelp != null) {
-            Nav.goTo(towerToHelp, Engage.UNITS);
+    case OFFENSIVE_SWARM:
+      doOffensiveMicro(currentEnemies, rallyPoint);
+      break;
+    case RALLYING:
+    case FORM_UP:
+      for (int i = 7; i-- > 0;) {
+        if (Messaging.rankIsAttacking(i)) {
+          int[] diff = Messaging.getRankTarget(i);
+          MapLocation center = Messaging.getRankCenter(i);
+          MapLocation target = new MapLocation(center.x + diff[0], center.y + diff[1]);
+          droneAllInMicro(currentEnemies, target);
+          return;
+        }
+      }
+      rc.setIndicatorString(1, "No ranks attacking: " + Clock.getRoundNum());
+
+      
+      if (defendingTowerIndex < 0) {
+        defendingTowerIndex = Messaging.getLeastDefendedTowerIndex();
+      }
+      if (defendingTowerIndex >= 0) {
+        if (rankSpot == Integer.MAX_VALUE || !Messaging.refreshRankSpot(defendingTowerIndex, rankSpot)) {
+          rankSpot = Messaging.claimRankSpot(defendingTowerIndex);
+        }
+        if (rankSpot >= 0) {
+          // Now we should have a tower to defend and a spot in the rank reserved.
+          int[] diff = Messaging.getRankTarget(defendingTowerIndex);
+          int offset = rankSpot/2 + 1;
+          rc.setIndicatorString(0, "Spot: " + rankSpot + ", Offset: " + offset + ", Target: " + diff[0] + ", " + diff[1]);
+    
+          MapLocation center = Messaging.getRankCenter(defendingTowerIndex);
+          double angle = Math.atan2(diff[0], diff[1]);
+          if (rankSpot % 2 == 0) {
+            angle += HALF_ANGLE_WIDTH;
           } else {
-            MapLocation[] ourTowers = rc.senseTowerLocations();
-            Nav.goTo(ourTowers[rc.getID()%ourTowers.length], Engage.UNITS);
+            angle -= HALF_ANGLE_WIDTH;
+          }
+          
+          MapLocation mySpot = getLineSpot(center, offset, (int)(Math.cos(angle)*30), (int)(Math.sin(angle)*30), false);
+    
+          if (!curLoc.equals(mySpot)) {
+            Nav.goTo(mySpot, Engage.NONE);
+          } else {
+            RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
+            if (attackableEnemies.length > 0) {
+              if (rc.isWeaponReady()) {
+                attackLeastHealthEnemy(attackableEnemies);
+              }
+            }
+          }
+        } else {
+          MapLocation center = Messaging.getRankCenter(defendingTowerIndex);
+          int[] diff = Messaging.getRankTarget(defendingTowerIndex);
+          MapLocation mySpot = getLineSpot(center, 5, -diff[0], -diff[1], false);
+          Nav.goTo(mySpot, Engage.NONE);
+        }
+      } else {
+        RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
+        if (attackableEnemies.length > 0) {
+          if (rc.isWeaponReady()) {
+            attackLeastHealthEnemy(attackableEnemies);
           }
         }
-      // If we can't move, but we can attack, do so only if we aren't in danger.
-      } else if (rc.isWeaponReady()) {
-        double[] dangerVals = this.getAllDangerVals();
-        // If the center square is in danger, retreat
-        if (dangerVals[8] <= 0) {
-          attackLeastHealthEnemy(currentEnemies);
-        }
       }
-      
       break;
-      
-    case OFFENSIVE_SWARM:
-      // Potentially change to engage none.
-      attackMicro(rallyPoint);
+    case DEFEND_TOWERS:
+    case DEFENSIVE_SWARM:
+      doDefensiveMicro(currentEnemies, rallyPoint);
       break;
     default:
-      if (currentEnemies.length > 0) {
-        if (rc.isWeaponReady()) {
-          attackLeastHealthEnemy(currentEnemies);
-        }
-      } else if (rc.isCoreReady()) {
-        if (rallyPoint != null) {
-          Nav.goTo(rallyPoint, Engage.UNITS);
-        }
-      }
+      System.out.println("No default behavior");
       break;
     }
   }

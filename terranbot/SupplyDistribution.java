@@ -127,6 +127,9 @@ public class SupplyDistribution {
       RobotInfo info = robots[i];
       if (info.type == RobotType.DRONE || info.type == RobotType.TANK && info.supplyLevel < minSupplyBattle*2/3) {
         int x = (int) Math.min(supplyToTransfer, minSupplyBattle - info.supplyLevel);
+        if (x < 0) {
+          return;
+        }
         rc.transferSupplies(x, info.location);
         supplyToTransfer -= x;
       } 

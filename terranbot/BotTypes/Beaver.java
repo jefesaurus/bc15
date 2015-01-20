@@ -156,7 +156,7 @@ public class Beaver extends MovingBot {
 
       // Left and right
       //for (int i = by; i-- > ty + 1;) {
-      for (int i = by; i >= ty + 1; i -= 2) {
+      for (int i = by - 2; i >= ty + 2; i -= 2) {
 
         current = new MapLocation(rx, i);
 

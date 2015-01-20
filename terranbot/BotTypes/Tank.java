@@ -30,6 +30,8 @@ public class Tank extends MovingBot {
 
   protected MapLocation rallyPoint = null;
   protected MovingBot.AttackMode mode = MovingBot.AttackMode.OFFENSIVE_SWARM;
+  public int defendingTowerIndex = -1;
+  public int rankSpot = Integer.MAX_VALUE;
 
   public void execute() throws GameActionException {
     currentEnemies = Cache.getEngagementEnemies();
@@ -87,9 +89,30 @@ public class Tank extends MovingBot {
         }
       }
       break;
-    case RALLYING:
     case OFFENSIVE_SWARM:
       doOffensiveMicro(currentEnemies, rallyPoint);
+      break;
+    case RALLYING:
+    case FORM_UP:
+      if (defendingTowerIndex < 0) {
+        defendingTowerIndex = Messaging.getLeastDefendedTowerIndex();
+      }
+      
+      if (rankSpot == Integer.MAX_VALUE || !Messaging.refreshRankSpot(defendingTowerIndex, rankSpot)) {
+        rankSpot = Messaging.claimRankSpot(defendingTowerIndex);
+      }
+      
+      // Now we should have a tower to defend and a spot in the rank reserved.
+      int[] diff = Messaging.getRankTarget(defendingTowerIndex);
+      int offset = rankSpot/2 + 1;
+      rc.setIndicatorString(0, "Spot: " + rankSpot + ", Offset: " + offset + ", Target: " + diff[0] + ", " + diff[1]);
+
+      MapLocation center = Messaging.getRankCenter(defendingTowerIndex);
+      MapLocation mySpot = getLineSpot(center, offset, -diff[1], diff[0], (rankSpot % 2 == 0));
+
+      if (!curLoc.equals(mySpot)) {
+        Nav.goTo(mySpot, Engage.NONE);
+      }
       break;
     case DEFEND_TOWERS:
     case DEFENSIVE_SWARM:

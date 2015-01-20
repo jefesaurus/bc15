@@ -36,6 +36,21 @@ public class Messaging {
   
   public final static int SAFE_ZONES = 28; // channels 28-41
   public final static int NUM_ACTIVE_SAFEZONES = 42;
+  
+  // RESERVED for rank locations
+  // First spot is whether the tower is active.
+  // Second spot is number of locations after.
+  public final static int[] DEFENSE_RANK_REGISTERS = {200, 220, 240, 260, 280, 300, 320};
+  public final static int TOWER_ALIVE_OFFSET = 0;
+  public final static int OCCUPANCY_COUNT_OFFSET = 1;
+  public final static int OCCUPANCY_MAP_OFFSET = 2;
+  public final static int DX_OFFSET = 3;
+  public final static int DY_OFFSET = 4;
+  public final static int CENTERX_OFFSET = 5;
+  public final static int CENTERY_OFFSET = 6;
+  public final static int TOWER_ATTACK_OFFSET = 7;
+
+
 
   public final static int COUNT_OFFSET = 100;
   public final static int KILLED_OFFSET = 1000;
@@ -311,6 +326,13 @@ public class Messaging {
     return Clock.getRoundNum() - (val >> 20) <= FRESHNESS_TOLERANCE;
   }
   
+  public static void updateRoundNumber(int register) throws GameActionException {
+    int val = rc.readBroadcast(register);
+    val &= 0x00FFFF;
+    val |= (Clock.getRoundNum() << 16);
+    rc.broadcast(val, register);
+  }
+  
   public static void setFleetMode(MovingBot.AttackMode mode) throws GameActionException {
     rc.broadcast(FLEET_MODE, mode.ordinal());
   }
@@ -423,5 +445,186 @@ public class Messaging {
   
   public static int getUnitToProduce() throws GameActionException {
     return rc.readBroadcast(UNIT_TO_PRODUCE);
+  }
+  
+  /*
+  public static int setRoundNumber(int val) throws GameActionException {
+    val &= 0x0000FFFF;
+    val |= (Clock.getRoundNum() << 16);
+    return val;
+  }
+  
+  public static int getRoundNumber(int val) {
+    return (val >> 16) & 0xFFFF;
+  }
+  
+  public static int packLocation(MapLocation loc) {
+    return (loc.x - br.myHQ.x + 120) << 8 | (loc.y - br.myHQ.y + 120);
+  }
+  public static MapLocation unpackLocation(int packedLoc) {
+    if ((packedLoc & 0xFFFF) == 0xFFFF) {
+      return null;
+    }
+    return new MapLocation(((packedLoc >> 8) & 0x000000FF) - 120 + br.myHQ.x, (packedLoc & 0x000000FF) - 120 + br.myHQ.y);
+  }
+  
+  public static boolean isRankSpotReserved(int val) {
+    int roundDiff = Clock.getRoundNum() - getRoundNumber(val);
+    return roundDiff >= 0 && roundDiff < 5;
+  }
+  
+  public static void keepDefenseRankActive(int towerID) throws GameActionException {
+    rc.broadcast(DEFENSE_RANK_ACTIVE_REGISTERS[towerID], Clock.getRoundNum());
+  }
+  
+  public static boolean isDefenseRankActive(int towerID) throws GameActionException {
+    if (towerID >= 0 && towerID <= 6) {
+      return (Clock.getRoundNum() - rc.readBroadcast(DEFENSE_RANK_ACTIVE_REGISTERS[towerID])) < 3;
+    } else {
+      return false;
+    }
+  }
+  */
+  /*
+  public static void setRankData(MapLocation[] rankLocs, int towerID) throws GameActionException {
+    rc.broadcast(DEFENSE_RANK_NUMSPOT_REGISTERS[towerID], rankLocs.length);
+    int val;
+    for (int i = rankLocs.length; i-- > 0;) {
+      val = packLocation(rankLocs[i]) | 0xFFFF0000;
+      rc.broadcast(DEFENSE_RANK_LOC_REGISTER_STARTS[towerID] + i, val);
+    }
+  }
+  */
+  
+
+  
+  /*
+  public static void reserveRankSpot() throws GameActionException {
+    int start = Util.randInt()%6;
+    int tempTowerID = 0;
+    for (int j = 0; j < 6; j++) {
+      tempTowerID = (start + j) % 6 + 1;
+      if (isDefenseRankActive(tempTowerID)) {
+        int numRanks = rc.readBroadcast(DEFENSE_RANK_NUMSPOT_REGISTERS[tempTowerID]);
+        for (int i = numRanks; i-- > 0;) {
+          int val = rc.readBroadcast(DEFENSE_RANK_LOC_REGISTER_STARTS[tempTowerID] + i);
+          if (!isRankSpotReserved(val)) {
+            MapLocation loc = unpackLocation(val);
+            rc.broadcast(DEFENSE_RANK_LOC_REGISTER_STARTS[tempTowerID] + i, setRoundNumber(val));
+            RESERVED_SLOT = DEFENSE_RANK_LOC_REGISTER_STARTS[tempTowerID] + i;
+            DEFENSE_RANK_ID = tempTowerID;
+            MY_SPOT = loc;
+            return;
+          }
+        }
+      }
+    }
+    RESERVED_SLOT = -1;
+    DEFENSE_RANK_ID = -1;
+    MY_SPOT = null;
+    return;
+  }
+  */
+  /*
+  public final static int[] DEFENSE_RANK_REGISTERS = {200, 220, 240, 260, 280, 300, 320};
+  public final static int TOWER_ALIVE_OFFSET = 0;
+  public final static int OCCUPANCY_COUNT_OFFSET = 1;
+  public final static int OCCUPANCY_MAP_OFFSET = 2;
+  public final static int DX_OFFSET_OFFSET = 3;
+  public final static int DY_OFFSET_OFFSET = 4;
+   */
+  static int RESERVED_SLOT = -1;
+  static int DEFENSE_RANK_ID = -1;
+  static MapLocation MY_SPOT = null;
+  
+  public static int claimRankSpot(int towerIndex) throws GameActionException {
+    int val = rc.readBroadcast(DEFENSE_RANK_REGISTERS[towerIndex] + OCCUPANCY_MAP_OFFSET);
+    if (val == 0b11111111111111111111111111111111) {
+      return -1;
+    }
+    int bitmask = 0b1;
+    int index = 0;
+    while ((val & bitmask) > 0 && index < 31) {
+      bitmask <<= 1;
+      index ++;
+    }
+    rc.broadcast(DEFENSE_RANK_REGISTERS[towerIndex] + OCCUPANCY_MAP_OFFSET, val | bitmask);
+    return index;
+  }
+  
+  // Returns false if spot is already taken.
+  public static boolean refreshRankSpot(int towerIndex, int spotIndex) throws GameActionException {
+    int val = rc.readBroadcast(DEFENSE_RANK_REGISTERS[towerIndex] + OCCUPANCY_MAP_OFFSET);
+    int mask = 0b1 << spotIndex;
+    // If someone already set it this turn, look for a new spot.
+    if ((val & mask) > 0) {
+      return false;
+    }
+    rc.broadcast(DEFENSE_RANK_REGISTERS[towerIndex] + OCCUPANCY_MAP_OFFSET, val | mask);
+    return true;
+  }
+  
+  public static int[] getRankTarget(int towerIndex) throws GameActionException {
+    int x = rc.readBroadcast(DEFENSE_RANK_REGISTERS[towerIndex] + DX_OFFSET);
+    int y = rc.readBroadcast(DEFENSE_RANK_REGISTERS[towerIndex] + DY_OFFSET);
+    return new int[] {x, y};
+  }
+  
+  public static MapLocation getRankCenter(int towerIndex) throws GameActionException {
+    int x = rc.readBroadcast(DEFENSE_RANK_REGISTERS[towerIndex] + CENTERX_OFFSET);
+    int y = rc.readBroadcast(DEFENSE_RANK_REGISTERS[towerIndex] + CENTERY_OFFSET);
+    return new MapLocation(x,y);
+  }
+  
+  public static void setRankTarget(int rankIndex, int dx, int dy) throws GameActionException {
+    rc.broadcast(DEFENSE_RANK_REGISTERS[rankIndex] + DX_OFFSET, dx);
+    rc.broadcast(DEFENSE_RANK_REGISTERS[rankIndex] + DY_OFFSET, dy);
+  }
+  
+  public static void setRankCenter(int rankIndex, MapLocation center) throws GameActionException {
+    rc.broadcast(DEFENSE_RANK_REGISTERS[rankIndex] + CENTERX_OFFSET, center.x);
+    rc.broadcast(DEFENSE_RANK_REGISTERS[rankIndex] + CENTERY_OFFSET, center.y);
+  }
+  
+  public static int getRankOccupancyCount(int towerIndex) throws GameActionException {
+    int fromTower = rc.readBroadcast(DEFENSE_RANK_REGISTERS[towerIndex] + OCCUPANCY_COUNT_OFFSET);
+    int fromBits = Integer.bitCount(rc.readBroadcast(DEFENSE_RANK_REGISTERS[towerIndex] + OCCUPANCY_MAP_OFFSET));
+    return (fromTower > fromBits) ? fromTower : fromBits;
+  }
+  
+  public static int completeRankRefresh(int towerIndex) throws GameActionException {
+    int count = Integer.bitCount(rc.readBroadcast(DEFENSE_RANK_REGISTERS[towerIndex] + OCCUPANCY_MAP_OFFSET));
+    rc.broadcast(DEFENSE_RANK_REGISTERS[towerIndex] + OCCUPANCY_COUNT_OFFSET, count);
+    rc.broadcast(DEFENSE_RANK_REGISTERS[towerIndex] + OCCUPANCY_MAP_OFFSET, 0b0);
+    rc.broadcast(DEFENSE_RANK_REGISTERS[towerIndex] + TOWER_ALIVE_OFFSET, Clock.getRoundNum());
+    return count;
+  }
+  
+  public static boolean rankIsActive(int towerIndex) throws GameActionException {
+    return (Clock.getRoundNum() - rc.readBroadcast(DEFENSE_RANK_REGISTERS[towerIndex] + TOWER_ALIVE_OFFSET) < 5);
+  }
+  
+  public static boolean rankIsAttacking(int towerIndex) throws GameActionException {
+    return (Clock.getRoundNum() - rc.readBroadcast(DEFENSE_RANK_REGISTERS[towerIndex] + TOWER_ATTACK_OFFSET) < 3);
+  }
+  
+  public static void setRankIsAttacking(int towerIndex) throws GameActionException {
+    rc.broadcast(DEFENSE_RANK_REGISTERS[towerIndex] + TOWER_ATTACK_OFFSET, Clock.getRoundNum());
+  }
+  
+  public static int getLeastDefendedTowerIndex() throws GameActionException {
+    int leastOccupancy = Integer.MAX_VALUE;
+    int leastOccupiedIndex = -1;
+    int tempCount;
+    for (int i = 7; i-- > 1;) {
+      if (rankIsActive(i)) {
+        tempCount = getRankOccupancyCount(i);
+        if (tempCount < leastOccupancy) {
+          leastOccupiedIndex = i;
+          leastOccupancy = tempCount;
+        }
+      }
+    }
+    return leastOccupiedIndex;
   }
 }
