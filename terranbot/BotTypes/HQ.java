@@ -23,7 +23,7 @@ public class HQ extends BaseBot {
   
   public boolean isSafeTowerDive = true;
   public MapLocation currentTargetTower = new MapLocation(0,0);
-  private int MAX_MINERS = 20;
+  private int MAX_MINERS = 25;
   
   public int curNumHelipads = 0;
   public int curNumBarracks = 0;
@@ -493,7 +493,7 @@ public class HQ extends BaseBot {
     return true;
   }
   
-  static final int MAX_NUM_MINERS = 20;
+  static final int MAX_NUM_MINERS = 25;
   // Get estimated ore production and compare it to the value required by our current unit output and/or desired future unit output.
   public boolean maintainOreProduction() throws GameActionException {
     int minersNeeded = MAX_NUM_MINERS - curNumMiners;
