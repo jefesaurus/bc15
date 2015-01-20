@@ -7,6 +7,7 @@ import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotInfo;
+import battlecode.common.RobotType;
 
 public class Tower extends BaseBot {
   public Tower(RobotController rc) {
@@ -15,10 +16,18 @@ public class Tower extends BaseBot {
 
   public void execute() throws GameActionException {
     RobotInfo[] visibleEnemies = getVisibleEnemies();
+    boolean hasLaunchers = false;
+    boolean hasNotMinerAndBeaverUnits = false;
     if (visibleEnemies.length > 0) {
       MapLocation closest = null;
       for (int i=visibleEnemies.length; i-->0;) {
         MapLocation trialLoc = visibleEnemies[i].location;
+        if (visibleEnemies[i].type != RobotType.MINER || visibleEnemies[i].type != RobotType.BEAVER) {
+          hasNotMinerAndBeaverUnits = true;
+        }
+        if (visibleEnemies[i].type == RobotType.LAUNCHER) {
+          hasLaunchers = true;
+        }
         if (closest == null) {
           closest = trialLoc;
         } else {
@@ -29,7 +38,7 @@ public class Tower extends BaseBot {
       }
       Messaging.setDefendFront(closest);
     }
-    if (visibleEnemies.length > 0) {
+    if (hasLaunchers || (hasNotMinerAndBeaverUnits && visibleEnemies.length >= 3)) {
       Messaging.setTowerUnderAttack(this.curLoc);
       RobotInfo[] attackableEnemies = this.getEnemiesInAttackingRange();
       if (attackableEnemies.length > 0 && rc.isWeaponReady()) {

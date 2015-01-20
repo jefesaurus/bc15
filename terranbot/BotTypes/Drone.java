@@ -49,8 +49,6 @@ public class Drone extends MovingBot {
   public void execute() throws GameActionException {
     currentEnemies = getEnemiesInAttackingRange();
     rallyPoint = Messaging.readRallyPoint();
-    mode = Messaging.getFleetMode();
-    Messaging.addToFleetCentroid();
     rc.setIndicatorString(1, rallyPoint.toString());
     
     if (HibernateSystem.manageHibernation(mode, currentEnemies, rallyPoint)) {
