@@ -44,6 +44,7 @@ public class Miner extends terranbot.MovingBot {
   }
   
   public void setup() throws GameActionException {
+    super.setup();
     if (MINER_ID == -1) {
       int chan = Messaging.getCountChannel(RobotType.MINER);
       MINER_ID = rc.readBroadcast(chan);

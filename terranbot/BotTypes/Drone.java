@@ -47,6 +47,7 @@ public class Drone extends MovingBot {
   public MapLocation towerToHelp = null;
 
   public void execute() throws GameActionException {
+    mode = MovingBot.AttackMode.HUNT_FOR_MINERS;
     currentEnemies = getEnemiesInAttackingRange();
     rallyPoint = Messaging.readRallyPoint();
     rc.setIndicatorString(1, rallyPoint.toString());
@@ -59,7 +60,7 @@ public class Drone extends MovingBot {
     
     switch (mode) {
     case HUNT_FOR_MINERS:
-      attackMicro(this.enemyHQ);
+      doOffensiveMicro(currentEnemies, this.enemyHQ);
       break;
     case RALLYING:
       if (currentEnemies.length < 0) {

@@ -43,7 +43,6 @@ public class Beaver extends MovingBot {
   public void execute() throws GameActionException {
     switch (buildingStage) {
     case IDLE:
-      System.out.println("Idle");
 
       robotToBuild = dequeueBuildJob();
       //System.out.println("robot to build: " + robotToBuild);
@@ -108,7 +107,6 @@ public class Beaver extends MovingBot {
       RobotType curType = types[i];
       if (unitToProduce == -1 || unitToProduce == curType.ordinal()) {
         if (Messaging.dequeueUnit(curType)) {
-          System.out.println("dequeued: " + curType);
           return curType;
         }
       }
