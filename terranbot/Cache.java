@@ -42,6 +42,7 @@ public class Cache {
     return visibleEnemies;
   }
   
+  
   public static RobotInfo[] getAttackableEnemies() {
     if (attackableEnemies_last < br.curRound) {
       attackableEnemies = rc.senseNearbyRobots(rc.getType().attackRadiusSquared, br.theirTeam);

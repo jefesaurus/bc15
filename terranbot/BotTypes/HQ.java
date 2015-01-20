@@ -134,7 +134,7 @@ public class HQ extends BaseBot {
       if (towerLocs.length == 1) {
         Messaging.setRallyPoint(towerLocs[0]);
       } else {
-        Messaging.setRallyPoint(new MapLocation(myHQ.x + ((enemyHQ.x - myHQ.x) / 3), myHQ.y + ((enemyHQ.y - myHQ.y) / 3)));
+        Messaging.setRallyPoint(getTowerToDefend());
       }
       break;
     case BUILDING_FORCES:
@@ -281,7 +281,24 @@ public class HQ extends BaseBot {
   public void defendTowers() throws GameActionException {
     strat = HighLevelStrat.TOWER_DEFENDING;
     setFleetMode(MovingBot.AttackMode.DEFEND_TOWERS);
-    setRallyPoint(new MapLocation(myHQ.x + ((enemyHQ.x - myHQ.x) / 4), myHQ.y + ((enemyHQ.y - myHQ.y) / 4)));
+    MapLocation loc = Messaging.getClosestTowerUnderAttack();
+    setRallyPoint(getTowerToDefend());
+  }
+  
+  public MapLocation getTowerToDefend() throws GameActionException {
+    MapLocation loc = Messaging.getClosestTowerUnderAttack();
+    if (loc == null) {
+      MapLocation[] towerLocs = rc.senseTowerLocations();
+      MapLocation closest = this.myHQ;
+      for (int i=towerLocs.length; i-- >0;) {
+        if (towerLocs[i].distanceSquaredTo(enemyHQ) < closest.distanceSquaredTo(enemyHQ)) {
+          closest = towerLocs[i];
+        }
+      }
+      return closest;
+    } else {
+      return loc;
+    }
   }
   
   public void buildForces() throws GameActionException {
