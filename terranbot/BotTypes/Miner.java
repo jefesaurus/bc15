@@ -17,13 +17,6 @@ import battlecode.common.RobotInfo;
 import battlecode.common.RobotType;
 import battlecode.common.TerrainTile;
 
-  /*
-   * TODO: 
-   * 3. Mid game - supplying, moving from initial safe locations
-   * 2. Messaging - report unsafe locations, account for gaps in messaging array killed and does not exist / areas of high ore
-   * 1. Choose initial safe locations more intelligently
-   * 4. Initial supply
-   */
 
 public class Miner extends terranbot.MovingBot {
   public static final int MINING_HORIZON = 5;
@@ -51,8 +44,84 @@ public class Miner extends terranbot.MovingBot {
     }
   }
 
+  
+  public boolean friendInAttackRange(RobotInfo[] enemiesInSightRange) {
+    if (enemiesInSightRange.length == 0) return false;
+    RobotInfo[] friendsInSightRange = rc.senseNearbyRobots(this.curLoc, RobotType.MINER.sensorRadiusSquared, rc.getTeam());
+    for (int i = 0; i < friendsInSightRange.length; i++) {
+      if ((friendsInSightRange[i].type == RobotType.MINER) || (friendsInSightRange[i].type == RobotType.HQ) || 
+          (friendsInSightRange[i].type == RobotType.TOWER)) {
+        if (enemiesInSightRange[0].location.distanceSquaredTo(friendsInSightRange[i].location) <= friendsInSightRange[i].type.attackRadiusSquared) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+  
+  public boolean inAttackRange(RobotInfo[] enemiesInSightRange) {
+    if (enemiesInSightRange[0].location.distanceSquaredTo(this.curLoc) <= RobotType.MINER.attackRadiusSquared) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  
+  public void selfPreservation() throws GameActionException {
+    RobotInfo[] enemiesInSightRange = rc.senseNearbyRobots(this.curLoc, RobotType.MINER.sensorRadiusSquared, rc.getTeam().opponent());
+//    if (/*friendInAttackRange(enemiesInSightRange) &&*/ inAttackRange(enemiesInSightRange) && enemiesInSightRange.length == 1) {
+//      if (rc.isCoreReady()) {
+//        attackLeastHealthEnemy(enemiesInSightRange);
+//        return;
+//      }
+//    } else {
+//      //retreat
+//      return;
+//    }
+    
+    if (enemiesInSightRange.length == 0) {
+      return;
+    } else if (enemiesInSightRange.length <= 2) {
+      int range = 50; // default at 50 for miner
+      if (enemiesInSightRange[0].type == RobotType.DRONE) {
+        range = (int) (rc.getHealth() / RobotType.DRONE.attackPower * RobotType.DRONE.attackDelay / RobotType.MINER.movementDelay)^2;
+      }
+      RobotInfo[] friendsInSightRange = rc.senseNearbyRobots(this.curLoc, range, rc.getTeam()); //TODO change for enemy type
+      RobotInfo closestFriend = null; 
+      int closestDist = range + 10;
+      for (int i = 0; i < friendsInSightRange.length; i++) {
+        if ((friendsInSightRange[i].type == RobotType.MINER) || (friendsInSightRange[i].type == RobotType.HQ) || 
+            (friendsInSightRange[i].type == RobotType.TOWER)) {
+          int dist = this.curLoc.distanceSquaredTo(friendsInSightRange[i].location);
+          if (dist < closestDist) {
+            closestFriend = friendsInSightRange[i];
+          }
+        }
+      }
+      if (closestFriend == null) {
+        //TODO
+        return;
+      }
+      
+      else if (closestFriend.location.distanceSquaredTo(curLoc) < 2 && 
+          curLoc.distanceSquaredTo(enemiesInSightRange[0].location) < RobotType.MINER.attackRadiusSquared) {
+        if (rc.isWeaponReady()) {
+          rc.attackLocation(enemiesInSightRange[0].location);
+        }
+      } else {
+        Nav.goTo(closestFriend.location, Engage.NONE);
+        return;
+      }
+      
+    } else { // TODO
+      // you see more than two enemies, you're dead. jk, change later
+      // TODO retreat possibly
+      return;
+    }
+  }
+  
   public void execute() throws GameActionException {
-    //mineMicro(this.curLoc);
+    selfPreservation();
     
     if (disperseMode) {
       disperseMine();
