@@ -113,6 +113,10 @@ public class HQ extends BaseBot {
     produceUnits();
     doMacro();
     
+    int bc = Clock.getBytecodeNum();
+    postBattle();
+    rc.setIndicatorString(2, "BC: " + (Clock.getBytecodeNum() - bc));
+    
     // rc.setIndicatorString(0, strat.name());
     
     // If we are currently winning in towers, and we are under attack, pull back and defend.
@@ -182,10 +186,7 @@ public class HQ extends BaseBot {
           buildForces();
         }
       } else {
-        // defendTowers();
-        if (!currentTargetTower.equals(enemyHQ)) {
-          approachTower(enemyHQ);
-        }
+        approachTower(enemyHQ);
       }
       break;
     case TOWER_DEFENDING:
@@ -358,7 +359,8 @@ public class HQ extends BaseBot {
    */
   public void setCurrentTowerTarget(MapLocation[] enemyTowers) throws GameActionException {
     if (enemyTowers.length <= 0) {
-      currentTargetTower = null;
+      currentTargetTower = enemyHQ;
+      return;
     }
     
     double maxiMinDist = 0;
@@ -528,48 +530,51 @@ public class HQ extends BaseBot {
       }
     }
   }
- 
   
-  /*
-   * Old code to find a vulnerable tower based on centroid. doesn't work very well.
-  private MapLocation getMostVulnerableEnemyTower(MapLocation[] enemyTowers) throws GameActionException {
-    if (enemyTowers.length <= 0) {
-      return null;
-    }
+  public void postBattle() throws GameActionException {
+    RobotInfo[] bots = rc.senseNearbyRobots();
+    int enemyCentroidX = 0;
+    int enemyCentroidY = 0;
+    int numEnemies = 0;
     
-    int towerX = enemyHQ.x;
-    int towerY = enemyHQ.y;
-    
-    for (int i = enemyTowers.length; i-- > 0;) {
-      towerX += enemyTowers[i].x;
-      towerY += enemyTowers[i].y;
-    }
-    
-    MapLocation towerCenter = new MapLocation(towerX/(1 + enemyTowers.length), towerY/(1 + enemyTowers.length));
+    int allyCentroidX = 0;
+    int allyCentroidY = 0;
+    int numAllies = 0;
 
-    double tempDist;
-    double tempDist2;
-    double furthestDist = enemyTowers[0].distanceSquaredTo(enemyTowers[0]);
-    int furthestIndex = 0;
-    
-    for (int i = 1; i < enemyTowers.length; i++) {
-      tempDist = towerCenter.distanceSquaredTo(enemyTowers[i]);
-      tempDist2 = furthestDist - tempDist;
-      
-      // If the difference is close, choose the one that is closer to our HQ
-      if (tempDist2 < 1.0 && tempDist2 > -1.0) {
-        if (enemyTowers[i].distanceSquaredTo(myHQ) < enemyTowers[furthestIndex].distanceSquaredTo(myHQ)) {
-          furthestDist = tempDist;
-          furthestIndex = i;
+    for (int i = bots.length; i-- > 0;) {
+      switch (bots[i].type) {
+      case DRONE:
+      case SOLDIER:
+      case TANK:
+      case COMMANDER:
+      case MINER:
+      case BASHER:
+      case LAUNCHER:
+        if (bots[i].team == myTeam) {
+          allyCentroidX += bots[i].location.x;
+          allyCentroidY += bots[i].location.y;
+          numAllies ++;
+        } else {
+          enemyCentroidX += bots[i].location.x;
+          enemyCentroidY += bots[i].location.y;
+          numEnemies ++;
         }
-      } else 
-        if (tempDist > furthestDist) {
-        furthestDist = tempDist;
-        furthestIndex = i;
+        break;
+      default:
+        break;
       }
     }
     
-    return enemyTowers[furthestIndex];
+    if (numEnemies >= 4) {
+      MapLocation enemyCentroid = new MapLocation(enemyCentroidX/numEnemies, enemyCentroidY/numEnemies);
+      MapLocation allyCentroid = new MapLocation(allyCentroidX/numAllies, allyCentroidY/numAllies);
+      Messaging.setRankTarget(0, enemyCentroid);
+      Messaging.setRankCenter(0, allyCentroid);
+      Messaging.completeRankRefresh(0);
+      rc.setIndicatorString(0, "Enemy Centroid: " + enemyCentroid + ", Ally Centroid: " + allyCentroid + ", " + Clock.getRoundNum());
+    } else {
+      rc.setIndicatorString(0, "No Battle: " + Clock.getRoundNum());
+    }
+
   }
-  */
 }
