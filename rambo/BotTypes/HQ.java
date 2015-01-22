@@ -36,6 +36,8 @@ public class HQ extends BaseBot {
   public int curNumTrainingFields = 0;
   public int curNumCommanders = 0;
   public int curNumSoldiers = 0;
+  public int lastOreDifferential = 0;
+  public double curOreDifferentialShift = 0;
   public HQ(RobotController rc) {
     super(rc);
   }
@@ -84,6 +86,9 @@ public class HQ extends BaseBot {
 
     SupplyDistribution.manageSupply();
     int curOreDifferential = getOreDifferential();
+    curOreDifferentialShift = (curOreDifferentialShift * 0.5) + (lastOreDifferential - curOreDifferential) * 0.5;
+    lastOreDifferential = curOreDifferential;
+    System.out.println("curOreDifferential Shift:" + curOreDifferentialShift);
     
     // This checks which enemy towers are still alive and broadcasts it to save bytecode across the fleet
     //Messaging.setSurvivingEnemyTowers(Cache.getEnemyTowerLocationsDirect());
@@ -147,13 +152,11 @@ public class HQ extends BaseBot {
       }
       break;
     case BUILDING_FORCES:
-      if (curOreDifferential <= 1000) {
-        System.out.println("curOredifferential <= 1000");
+      if (Clock.getRoundNum() >= 800 && curOreDifferentialShift <= 100) {
         Messaging.setRallyPoint(getTowerToDefend());
         setFleetMode(MovingBot.AttackMode.DEFENSIVE_SWARM);
       } else {
-        System.out.println("curOredifferential > 1000");
-        if (Clock.getRoundNum() >= 600 && Messaging.checkNumUnits(RobotType.TANK) > FLEET_COUNT_ATTACK_THRESHOLD) {
+        if (Clock.getRoundNum() >= 600 && (Messaging.checkNumUnits(RobotType.TANK) + Messaging.checkNumUnits(RobotType.SOLDIER)) > FLEET_COUNT_ATTACK_THRESHOLD) {
           setCurrentTowerTarget(Cache.getEnemyTowerLocationsDirect());
           approachTower(currentTargetTower);
         }
