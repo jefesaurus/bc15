@@ -173,6 +173,11 @@ public class HQ extends BaseBot {
       break;
     case TOWER_DIVING:
       // If we're winning in tower count, switch to TOWER_DEFENDING
+      if (!haveDecentSurround(currentTargetTower)) {
+        buildForces();
+        break;
+      }
+      
       if (enemyTowers.length > 0) {
         // Check if our current target is dead yet:
         boolean targetIsDead = currentTargetTowerIsDead(enemyTowers);

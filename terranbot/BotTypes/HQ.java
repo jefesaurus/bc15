@@ -120,11 +120,6 @@ public class HQ extends BaseBot {
       return;
     }
     
-    if (Messaging.areWeFightLaunchers() && strat != HighLevelStrat.COUNTER_ATTACK) {
-      setCurrentTowerTarget(Cache.getEnemyTowerLocationsDirect());
-      counterAttack(currentTargetTower);
-    }
-    
     MapLocation[] enemyTowers = Cache.getEnemyTowerLocationsDirect();
     
     switch (strat) {
