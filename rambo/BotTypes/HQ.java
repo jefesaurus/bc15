@@ -1,12 +1,12 @@
-package terranbot.BotTypes;
+package rambo.BotTypes;
 
-import terranbot.Cache;
-import terranbot.Messaging;
-import terranbot.MovingBot;
-import terranbot.SupplyDistribution;
-import terranbot.Util;
-import terranbot.MovingBot.AttackMode;
-import terranbot.RobotPlayer.BaseBot;
+import rambo.Cache;
+import rambo.Messaging;
+import rambo.MovingBot;
+import rambo.SupplyDistribution;
+import rambo.Util;
+import rambo.MovingBot.AttackMode;
+import rambo.RobotPlayer.BaseBot;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -32,6 +32,9 @@ public class HQ extends BaseBot {
   public int curNumDrones = 0;
   public int curNumTanks = 0;
   public int curNumSupplyDepots = 0;
+  public int curNumTechInstitutes = 0;
+  public int curNumTrainingFields = 0;
+  public int curNumCommanders = 0;
   public HQ(RobotController rc) {
     super(rc);
   }
@@ -72,6 +75,9 @@ public class HQ extends BaseBot {
     curNumDrones = Messaging.checkTotalNumUnits(RobotType.DRONE);
     curNumTanks = Messaging.checkTotalNumUnits(RobotType.TANK);
     curNumSupplyDepots = Messaging.checkTotalNumUnits(RobotType.SUPPLYDEPOT);
+    curNumTechInstitutes = Messaging.checkTotalNumUnits(RobotType.TECHNOLOGYINSTITUTE);
+    curNumTrainingFields = Messaging.checkTotalNumUnits(RobotType.TRAININGFIELD);
+    curNumCommanders = Messaging.checkTotalNumUnits(RobotType.COMMANDER);
 
     SupplyDistribution.manageSupply();
     
@@ -118,11 +124,6 @@ public class HQ extends BaseBot {
     if (strat != HighLevelStrat.TOWER_DEFENDING && (haveMoreTowers || strat != HighLevelStrat.TOWER_DIVING) && towersUnderAttack) {
       defendTowers();
       return;
-    }
-    
-    if (Messaging.areWeFightLaunchers() && strat != HighLevelStrat.COUNTER_ATTACK) {
-      setCurrentTowerTarget(Cache.getEnemyTowerLocationsDirect());
-      counterAttack(currentTargetTower);
     }
     
     MapLocation[] enemyTowers = Cache.getEnemyTowerLocationsDirect();
@@ -225,6 +226,9 @@ public class HQ extends BaseBot {
     Messaging.resetUnitCount(RobotType.TANK);
     Messaging.resetUnitCount(RobotType.DRONE);
     Messaging.resetUnitCount(RobotType.SUPPLYDEPOT);
+    Messaging.resetUnitCount(RobotType.TECHNOLOGYINSTITUTE);
+    Messaging.resetUnitCount(RobotType.TRAININGFIELD);
+    Messaging.resetUnitCount(RobotType.COMMANDER);
     Messaging.resetTowersUnderAttack();
     super.endOfTurn();
   }
@@ -260,10 +264,6 @@ public class HQ extends BaseBot {
           break;
         }
       }
-    }
-    
-    if (range_squared == 25) {
-      // System.out.println(rc.getLocation().distanceSquaredTo(toAttack));
     }
     
     if (attackable) {
@@ -449,6 +449,8 @@ public class HQ extends BaseBot {
   }
    
    
+  public static final int NUM_TECH_INSTITUTES = 1;
+  public static final int NUM_TRAINING_FIELDS = 1;
   public static final int NUM_BEAVERS = 2;
   public static final int NUM_MINER_FACTORIES = 1;
   public static final int NUM_BARRACKS = 1;
@@ -481,12 +483,20 @@ public class HQ extends BaseBot {
    /** if (curNumHelipads < NUM_HELIPADS) {
       Messaging.queueUnits(RobotType.HELIPAD, NUM_HELIPADS - curNumHelipads);
     }**/
+    if (curNumTechInstitutes < NUM_TECH_INSTITUTES) {
+      Messaging.queueUnits(RobotType.TECHNOLOGYINSTITUTE, 1);
+    }
     
-    if (curNumBarracks < NUM_BARRACKS /**&& Messaging.peekBuildingUnits(RobotType.HELIPAD) >= 1**/) {
+    if (curNumTrainingFields < NUM_TRAINING_FIELDS && Messaging.peekBuildingUnits(RobotType.TECHNOLOGYINSTITUTE) >= 1) {
+      Messaging.queueUnits(RobotType.TRAININGFIELD, 1);
+      Messaging.queueUnits(RobotType.COMMANDER, 1);
+    }
+    
+    if (curNumBarracks < NUM_BARRACKS && Messaging.peekBuildingUnits(RobotType.SUPPLYDEPOT) >= 1) {
       Messaging.queueUnits(RobotType.BARRACKS, NUM_BARRACKS - curNumBarracks);
     }
 
-    if (curNumSupplyDepots < NUM_SUPPLY_DEPOTS) {
+    if (curNumSupplyDepots < NUM_SUPPLY_DEPOTS && Messaging.checkNumUnits(RobotType.TRAININGFIELD) >= 1) {
       Messaging.queueUnits(RobotType.SUPPLYDEPOT, NUM_SUPPLY_DEPOTS - curNumSupplyDepots);
     }
 
