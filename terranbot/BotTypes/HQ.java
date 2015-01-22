@@ -40,7 +40,7 @@ public class HQ extends BaseBot {
   
   public void setup() throws GameActionException {
     SupplyDistribution.init(this);
-    strat = HighLevelStrat.HARASS;
+    buildForces();
     SupplyDistribution.setBatteryMode();
     //Harass force
   }
@@ -115,7 +115,7 @@ public class HQ extends BaseBot {
     
     int bc = Clock.getBytecodeNum();
     postBattle();
-    rc.setIndicatorString(2, "BC: " + (Clock.getBytecodeNum() - bc));
+    rc.setIndicatorString(2, "BC: " + (Clock.getBytecodeNum() - bc) + ", mode: " + strat.name());
     
     // rc.setIndicatorString(0, strat.name());
     

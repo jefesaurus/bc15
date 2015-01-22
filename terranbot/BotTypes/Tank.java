@@ -105,40 +105,51 @@ public class Tank extends MovingBot {
           MapLocation target = Messaging.getRankTarget(rankIndex);
           MapLocation center = Messaging.getRankCenter(rankIndex);
           int width = Messaging.getRankWidth(rankIndex);
+          if (width == 0) {
+            width = 5;
+          }
 
           int dx = target.x - center.x;
           int dy = target.y - center.y;
-          int midX = (target.x + center.x)/2;
-          int midY = (target.y + center.y)/2;
+          double midX = (target.x + center.x)/2.0;
+          double midY = (target.y + center.y)/2.0;
+          double length = Math.sqrt(dx*dx + dy*dy);
           MapLocation ep1, ep2;
           if (dy == 0) {
-            ep1 = new MapLocation(midX + width/2, midY);
-            ep2 = new MapLocation(midX - width/2, midY);
+            ep1 = new MapLocation((int)midX, (int)(midY + width/2));
+            ep2 = new MapLocation((int)midX, (int)(midY - width/2));
           } else if (dx == 0) {
-            ep1 = new MapLocation(midX, midY + width/2);
-            ep2 = new MapLocation(midX, midY - width/2);
+            ep1 = new MapLocation((int)(midX + width/2), (int)midY);
+            ep2 = new MapLocation((int)(midX - width/2), (int)midY);
           } else {
-            int xW = width*dy/(dx+dy);
-            int yW = width*dx/(dx+dy);
+            double xW = width*dy/(2*length);
+            double yW = width*dx/(2*length);
 
-            ep1 = new MapLocation(midX + xW/2, midY + yW/2);
-            ep2 = new MapLocation(midX - xW/2, midY - yW/2);
+            ep1 = new MapLocation((int)(midX + xW/2), (int)(midY + yW/2));
+            ep2 = new MapLocation((int)(midX - xW/2), (int)(midY - yW/2));
           }
           
-          boolean targetSignEp1 = ((ep2.x - ep1.x)*(target.y - ep1.y) - (ep2.y - ep1.y)*(target.x - ep1.x)) > 0;
-          boolean currentSignEp1 = ((ep2.x - ep1.x)*(curLoc.y - ep1.y) - (ep2.y - ep1.y)*(curLoc.x - ep1.x)) > 0;
+          int testVecX = ep2.x - ep1.x;
+          int testVecY = ep2.y - ep1.y;
+
+          
+          double targetMidDist = (testVecX*(target.y - ep1.y) - testVecY*(target.x - ep1.x))/width;
+          double currentMidDist = (testVecY*(curLoc.y - ep1.y) - testVecY*(curLoc.x - ep1.x))/width;
           // If behind our centroid.
-          if (currentSignEp1 != targetSignEp1) {
+          if ((currentMidDist > 0) != (targetMidDist > 0)) {
             rc.setIndicatorString(0, "Behind the line");
-            boolean ep1SignCenter = ((target.x - center.x)*(ep1.y - center.y) - (target.y - center.y)*(ep1.x - center.x)) > 0;
-            if (((target.x - center.x)*(curLoc.y - center.y) - (target.y - center.y)*(curLoc.x - center.x)) > 0 == ep1SignCenter) {
+            testVecX = target.x - center.x;
+            testVecY = target.y - center.y;
+            boolean ep1SignCenter = (testVecX*(ep1.y - center.y) - testVecY*(ep1.x - center.x)) > 0;
+            if ((testVecX*(curLoc.y - center.y) - testVecY*(curLoc.x - center.x)) > 0 == ep1SignCenter) {
               Nav.goTo(ep1, Engage.NONE);
             } else {
               Nav.goTo(ep2, Engage.NONE);
             }
           } else {
-            rc.setIndicatorString(0, "In front of line the line");
-            Nav.goTo(target, Engage.UNITS);
+            rc.setIndicatorString(0, "In front of the line");
+            double destCoeff = currentMidDist / length;
+            Nav.goTo(new MapLocation((int)(midX + dx*destCoeff), (int)(midY + dy*destCoeff)), Engage.UNITS);
           }          
         } else {
           rc.setIndicatorString(0, "No Rank");
