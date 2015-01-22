@@ -20,7 +20,7 @@ public class HQ extends BaseBot {
   public AttackMode currentFleetMode;
   public MapLocation currentRallyPoint = new MapLocation(0,0);
   
-  
+  public static RobotType[] robotTypes = RobotType.values();
   public boolean isSafeTowerDive = true;
   public MapLocation currentTargetTower = new MapLocation(0,0);  
   public int curNumHelipads = 0;
@@ -35,6 +35,7 @@ public class HQ extends BaseBot {
   public int curNumTechInstitutes = 0;
   public int curNumTrainingFields = 0;
   public int curNumCommanders = 0;
+  public int curNumSoldiers = 0;
   public HQ(RobotController rc) {
     super(rc);
   }
@@ -78,8 +79,11 @@ public class HQ extends BaseBot {
     curNumTechInstitutes = Messaging.checkTotalNumUnits(RobotType.TECHNOLOGYINSTITUTE);
     curNumTrainingFields = Messaging.checkTotalNumUnits(RobotType.TRAININGFIELD);
     curNumCommanders = Messaging.checkTotalNumUnits(RobotType.COMMANDER);
+    curNumSoldiers = Messaging.checkTotalNumUnits(RobotType.SOLDIER);
+
 
     SupplyDistribution.manageSupply();
+    int curOreDifferential = getOreDifferential();
     
     // This checks which enemy towers are still alive and broadcasts it to save bytecode across the fleet
     //Messaging.setSurvivingEnemyTowers(Cache.getEnemyTowerLocationsDirect());
@@ -143,11 +147,16 @@ public class HQ extends BaseBot {
       }
       break;
     case BUILDING_FORCES:
-      if (Clock.getRoundNum() >= 600 && Messaging.checkNumUnits(RobotType.TANK) > FLEET_COUNT_ATTACK_THRESHOLD) {
-
-        //approachTower(getNearestEnemyTower(Cache.getEnemyTowerLocationsDirect()));
-        setCurrentTowerTarget(Cache.getEnemyTowerLocationsDirect());
-        approachTower(currentTargetTower);
+      if (curOreDifferential <= 1000) {
+        System.out.println("curOredifferential <= 1000");
+        Messaging.setRallyPoint(getTowerToDefend());
+        setFleetMode(MovingBot.AttackMode.DEFENSIVE_SWARM);
+      } else {
+        System.out.println("curOredifferential > 1000");
+        if (Clock.getRoundNum() >= 600 && Messaging.checkNumUnits(RobotType.TANK) > FLEET_COUNT_ATTACK_THRESHOLD) {
+          setCurrentTowerTarget(Cache.getEnemyTowerLocationsDirect());
+          approachTower(currentTargetTower);
+        }
       }
       break;
     case SWARMING:
@@ -234,6 +243,7 @@ public class HQ extends BaseBot {
     Messaging.resetUnitCount(RobotType.TECHNOLOGYINSTITUTE);
     Messaging.resetUnitCount(RobotType.TRAININGFIELD);
     Messaging.resetUnitCount(RobotType.COMMANDER);
+    Messaging.resetUnitCount(RobotType.SOLDIER);
     Messaging.resetTowersUnderAttack();
     super.endOfTurn();
   }
@@ -379,6 +389,14 @@ public class HQ extends BaseBot {
   }
   
 
+  public static int getOreDifferential() throws GameActionException {
+    int netDifferential = 0;
+    for (int i=robotTypes.length; i-->0;) {
+      RobotType type = robotTypes[i];
+      netDifferential += (Messaging.checkKillCount(type) - (Messaging.readUnitsBuilt(type) - Messaging.checkNumUnits(type))) * type.oreCost;
+    }
+    return netDifferential;
+  }
   
   /*
    * This sets two class scope variables: the target tower and whether or not to approach the target "safely"
@@ -468,6 +486,10 @@ public class HQ extends BaseBot {
       Messaging.queueUnits(RobotType.DRONE, 3);
     }**/
     
+    if (Messaging.peekQueueUnits(RobotType.SOLDIER) < curNumBarracks) {
+      Messaging.queueUnits(RobotType.SOLDIER, 2*curNumBarracks);
+    }
+    
     if (Messaging.peekQueueUnits(RobotType.TANK) < curNumTankFactories) {
       Messaging.queueUnits(RobotType.TANK, curNumTankFactories);
     }
@@ -487,7 +509,7 @@ public class HQ extends BaseBot {
     
    /** if (curNumHelipads < NUM_HELIPADS) {
       Messaging.queueUnits(RobotType.HELIPAD, NUM_HELIPADS - curNumHelipads);
-    }**/
+    }**//**
     if (curNumTechInstitutes < NUM_TECH_INSTITUTES) {
       Messaging.queueUnits(RobotType.TECHNOLOGYINSTITUTE, 1);
     }
@@ -495,13 +517,13 @@ public class HQ extends BaseBot {
     if (curNumTrainingFields < NUM_TRAINING_FIELDS && Messaging.peekBuildingUnits(RobotType.TECHNOLOGYINSTITUTE) >= 1) {
       Messaging.queueUnits(RobotType.TRAININGFIELD, 1);
       Messaging.queueUnits(RobotType.COMMANDER, 1);
-    }
+    }**/
     
-    if (curNumBarracks < NUM_BARRACKS && Messaging.peekBuildingUnits(RobotType.SUPPLYDEPOT) >= 1) {
+    if (curNumBarracks < NUM_BARRACKS /** && Messaging.peekBuildingUnits(RobotType.SUPPLYDEPOT) >= 1**/) {
       Messaging.queueUnits(RobotType.BARRACKS, NUM_BARRACKS - curNumBarracks);
     }
 
-    if (curNumSupplyDepots < NUM_SUPPLY_DEPOTS && Messaging.checkNumUnits(RobotType.TRAININGFIELD) >= 1) {
+    if (curNumSupplyDepots < NUM_SUPPLY_DEPOTS /**&& Messaging.checkNumUnits(RobotType.TRAININGFIELD) >= 1**/) {
       Messaging.queueUnits(RobotType.SUPPLYDEPOT, NUM_SUPPLY_DEPOTS - curNumSupplyDepots);
     }
 
