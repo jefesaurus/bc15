@@ -415,9 +415,9 @@ public class MovingBot extends BaseBot {
       int[] metrics = getBattleMetrics(engageableEnemies);
       // rc.setIndicatorString(1, Arrays.toString(metrics));
       if (metrics[0] > 0) {
-        if (metrics[1] != -1 || metrics[2] != -1) {
+       /** if (metrics[1] != -1 || metrics[2] != -1) {
           Messaging.setDefendFront(new MapLocation(metrics[1], metrics[2]));
-        }
+        }**/
         RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
         if (attackableEnemies.length > 0) {
           if (rc.isWeaponReady()) {

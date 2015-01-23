@@ -38,6 +38,7 @@ public class HQ extends BaseBot {
   public int curNumSoldiers = 0;
   public int lastOreDifferential = 0;
   public double curOreDifferentialShift = 0;
+  public static int teamOreValue = 0;
   public HQ(RobotController rc) {
     super(rc);
   }
@@ -83,12 +84,10 @@ public class HQ extends BaseBot {
     curNumCommanders = Messaging.checkTotalNumUnits(RobotType.COMMANDER);
     curNumSoldiers = Messaging.checkTotalNumUnits(RobotType.SOLDIER);
 
-
     SupplyDistribution.manageSupply();
     int curOreDifferential = getOreDifferential();
-    curOreDifferentialShift = (curOreDifferentialShift * 0.5) + (lastOreDifferential - curOreDifferential) * 0.5;
     lastOreDifferential = curOreDifferential;
-    System.out.println("curOreDifferential Shift:" + curOreDifferentialShift);
+    teamOreValue = getOreValue();
     
     // This checks which enemy towers are still alive and broadcasts it to save bytecode across the fleet
     //Messaging.setSurvivingEnemyTowers(Cache.getEnemyTowerLocationsDirect());
@@ -153,8 +152,7 @@ public class HQ extends BaseBot {
       break;
     case BUILDING_FORCES:
       if (Clock.getRoundNum() >= 800 && curOreDifferentialShift <= 100) {
-        Messaging.setRallyPoint(getTowerToDefend());
-        setFleetMode(MovingBot.AttackMode.DEFENSIVE_SWARM);
+        break;
       } else {
         if (Clock.getRoundNum() >= 600 && (Messaging.checkNumUnits(RobotType.TANK) + Messaging.checkNumUnits(RobotType.SOLDIER)) > FLEET_COUNT_ATTACK_THRESHOLD) {
           setCurrentTowerTarget(Cache.getEnemyTowerLocationsDirect());
@@ -325,7 +323,7 @@ public class HQ extends BaseBot {
     strat = HighLevelStrat.TOWER_DEFENDING;
     setFleetMode(MovingBot.AttackMode.DEFEND_TOWERS);
     MapLocation loc = Messaging.getClosestTowerUnderAttack();
-    setRallyPoint(getTowerToDefend());
+    setRallyPoint(loc);
   }
   
   public MapLocation getTowerToDefend() throws GameActionException {
@@ -345,7 +343,7 @@ public class HQ extends BaseBot {
   }
   
   public void buildForces() throws GameActionException {
-    strat = HighLevelStrat.BUILDING_FORCES;
+    strat = HighLevelStrat.BUILDING_FORCES; 
     setFleetMode(MovingBot.AttackMode.DEFENSIVE_SWARM);
     setRallyPoint(new MapLocation(myHQ.x + ((enemyHQ.x - myHQ.x) / 4), myHQ.y + ((enemyHQ.y - myHQ.y) / 4)));
   }
@@ -399,6 +397,15 @@ public class HQ extends BaseBot {
       netDifferential += (Messaging.checkKillCount(type) - (Messaging.readUnitsBuilt(type) - Messaging.checkNumUnits(type))) * type.oreCost;
     }
     return netDifferential;
+  }
+  
+  public static int getOreValue() throws GameActionException {
+    int oreValue = 0;
+    for (int i=robotTypes.length; i-->0;) {
+      RobotType type = robotTypes[i];
+      oreValue += (Messaging.checkNumUnits(type)) * type.oreCost;
+    }
+    return oreValue;
   }
   
   /*
@@ -482,7 +489,7 @@ public class HQ extends BaseBot {
   public static final int NUM_BARRACKS = 1;
   public static final int NUM_TANK_FACTORIES = 10;
   public static final int NUM_HELIPADS = 1;
-  public static final int NUM_SUPPLY_DEPOTS = 4;
+  public static int NUM_SUPPLY_DEPOTS = Math.max(4, teamOreValue / (12 * 90));
   
   public void doMacro() throws GameActionException {
     /**if (Clock.getRoundNum() <= 1 && Messaging.checkTotalNumUnits(RobotType.DRONE) < 3) {
@@ -521,7 +528,8 @@ public class HQ extends BaseBot {
       Messaging.queueUnits(RobotType.TRAININGFIELD, 1);
       Messaging.queueUnits(RobotType.COMMANDER, 1);
     }**/
-    
+    NUM_SUPPLY_DEPOTS = Math.max(4, teamOreValue / (12 * 80));
+
     if (curNumBarracks < NUM_BARRACKS /** && Messaging.peekBuildingUnits(RobotType.SUPPLYDEPOT) >= 1**/) {
       Messaging.queueUnits(RobotType.BARRACKS, NUM_BARRACKS - curNumBarracks);
     }

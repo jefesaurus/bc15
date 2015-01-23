@@ -3,6 +3,9 @@ package rambo;
 import rambo.MovingBot;
 import rambo.MovingBot.AttackMode;
 import rambo.RobotPlayer.BaseBot;
+import rambo.HibernateSystem;
+import rambo.Messaging;
+import rambo.Nav;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
@@ -19,27 +22,33 @@ public class HibernateSystem {
   }
   
   public static boolean manageHibernation(MovingBot.AttackMode mode, RobotInfo[] currentEnemies, MapLocation rallyPoint) throws GameActionException {
-    if (mode == MovingBot.AttackMode.RALLYING || mode == MovingBot.AttackMode.DEFEND_TOWERS || mode == MovingBot.AttackMode.DEFENSIVE_SWARM || mode == MovingBot.AttackMode.OFFENSIVE_SWARM) {
+    if (mode == MovingBot.AttackMode.RALLYING) {
       MapLocation towerToHelp = Messaging.getClosestTowerUnderAttack();
-      if (mode == MovingBot.AttackMode.OFFENSIVE_SWARM && Messaging.getClosestBattleFront(rc.getLocation()) != null) {
+      if (mode == MovingBot.AttackMode.DEFENSIVE_SWARM && Messaging.getClosestDefendFront(rc.getLocation()) != null) {
         return false;
       }
-      if (currentEnemies.length == 0 && towerToHelp == null && (Nav.dest == null || HibernateSystem.rc.getLocation().distanceSquaredTo(Nav.dest) <= HIBERNATE_DISTANCE)) {
+      if ((Nav.dest == null || HibernateSystem.rc.getLocation().distanceSquaredTo(Nav.dest) <= HIBERNATE_DISTANCE)
+        && currentEnemies.length == 0 && towerToHelp == null) {
         //Hibernate
         if (TRYING_TO_HIBERNATE) {
           if (HIBERNATE_COUNT_DOWN > 0) {
             HIBERNATE_COUNT_DOWN--;
+            return false;
           } else {
             return true;
           }
         } else {
           TRYING_TO_HIBERNATE = true;
+          return false;
         }
       } else {
         TRYING_TO_HIBERNATE = false;
         HIBERNATE_COUNT_DOWN = 5;
+        return false;
       }
     }
+    TRYING_TO_HIBERNATE = false;
+    HIBERNATE_COUNT_DOWN = 5;
     return false;
   }
 }

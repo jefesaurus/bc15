@@ -32,10 +32,12 @@ public class Soldier extends MovingBot {
     
     rallyPoint = Messaging.readRallyPoint();
     mode = Messaging.getFleetMode();
+    rc.setIndicatorString(2, "Mode: " + mode.name() + ", Rally point: " + rallyPoint);
+
     if (HibernateSystem.manageHibernation(mode, currentEnemies, rallyPoint)) {
+      rc.setIndicatorString(2, "hibernating");
       return;
     }
-    rc.setIndicatorString(2, "Mode: " + mode.name() + ", Rally point: " + rallyPoint);
     SupplyDistribution.manageSupply();
 
     switch (mode) {
@@ -90,9 +92,6 @@ public class Soldier extends MovingBot {
     case DEFEND_TOWERS:
     case DEFENSIVE_SWARM:
       doDefensiveMicro(currentEnemies, rallyPoint);
-      break;
-    case COUNTER_ATTACK:
-      doSneakyMove(rallyPoint);
       break;
     default:
       System.out.println("No default behavior");

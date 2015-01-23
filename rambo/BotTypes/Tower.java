@@ -40,10 +40,10 @@ public class Tower extends BaseBot {
     }
     if (hasLaunchers || (hasNotMinerAndBeaverUnits && visibleEnemies.length >= 3)) {
       Messaging.setTowerUnderAttack(this.curLoc);
-      RobotInfo[] attackableEnemies = this.getEnemiesInAttackingRange();
-      if (attackableEnemies.length > 0 && rc.isWeaponReady()) {
-        attackLeastHealthEnemy(attackableEnemies);
-      }
+    }
+    RobotInfo[] attackableEnemies = this.getEnemiesInAttackingRange();
+    if (attackableEnemies.length > 0 && rc.isWeaponReady()) {
+      attackLeastHealthEnemy(attackableEnemies);
     }
   }
 }
