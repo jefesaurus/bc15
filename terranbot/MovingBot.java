@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 import terranbot.Nav.Engage;
 import terranbot.RobotPlayer.BaseBot;
+import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
@@ -346,8 +347,9 @@ public class MovingBot extends BaseBot {
     if (engageableEnemies.length > 0) {
       // returns {is winning, is lowest health and not alone}
       int[] metrics = getBattleMetrics(engageableEnemies);
-      // rc.setIndicatorString(1, Arrays.toString(metrics));
       if (metrics[0] > 0) {
+        rc.setIndicatorString(1, "Posting winning battlefront. " + Clock.getRoundNum());
+
         if (metrics[1] != -1 || metrics[2] != -1) {
           Messaging.setBattleFront(new MapLocation(metrics[1], metrics[2]));
         } else {
@@ -369,8 +371,11 @@ public class MovingBot extends BaseBot {
           }
         }
       } else {
+
         // "are we definitely going to die?"
         if (metrics[1] > 0) {
+          rc.setIndicatorString(1, "Dying. " + Clock.getRoundNum());
+
           SupplyDistribution.setDyingMode();
           SupplyDistribution.manageSupply();
           if (rc.isWeaponReady()) {
@@ -379,6 +384,8 @@ public class MovingBot extends BaseBot {
           
         // Retreat
         } else {
+          rc.setIndicatorString(1, "retreating. " + Clock.getRoundNum());
+
           if (rc.isCoreReady()) {
             int[] attackingEnemyDirs = calculateNumAttackingEnemyDirs();
             Nav.retreat(attackingEnemyDirs);
@@ -386,6 +393,8 @@ public class MovingBot extends BaseBot {
         }
       }
     } else {
+      rc.setIndicatorString(1, "Going to nearest battlefront. " + Clock.getRoundNum());
+
       if (rc.isCoreReady()) {
         MapLocation nearestBattle = Messaging.getClosestBattleFront(curLoc);
         if (nearestBattle != null ) {

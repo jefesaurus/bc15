@@ -36,7 +36,7 @@ public class Cache {
   
   public static RobotInfo[] getVisibleEnemies() {
     if (visibleEnemies_last < br.curRound) {
-      visibleEnemies = rc.senseNearbyRobots(RobotType.SOLDIER.sensorRadiusSquared, br.theirTeam);
+      visibleEnemies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, br.theirTeam);
       visibleEnemies_last = br.curRound;
     }
     return visibleEnemies;

@@ -43,6 +43,10 @@ public class Messaging {
   // RESERVED for rank locations
   // First spot is whether the tower is active.
   // Second spot is number of locations after.
+  public final static int NUM_FRONT_REPORTS = 197;
+  public final static int BATTLE_FRONT_X = 198;
+  public final static int BATTLE_FRONT_Y = 199;
+
   public final static int[] RANK_REGISTERS = {200, 220, 240, 260, 280, 300, 320};
   public final static int IS_ACTIVE_OFFSET = 0;
   public final static int OCCUPANCY_COUNT_OFFSET = 1;
@@ -566,5 +570,34 @@ public class Messaging {
     }
 
     return -1;
+  }
+  /*
+   * NUM_FRONT_REPORTS = 197;
+   * BATTLE_FRONT_X = 198;
+   * BATTLE_FRONT_Y = 199;
+   */
+  public static void reportEnemies(int x, int y, int weight) throws GameActionException {
+    int numReports = rc.readBroadcast(NUM_FRONT_REPORTS);
+    int currX = rc.readBroadcast(BATTLE_FRONT_X);
+    int currY = rc.readBroadcast(BATTLE_FRONT_Y);
+    rc.broadcast(NUM_FRONT_REPORTS, numReports + weight);
+    rc.broadcast(BATTLE_FRONT_X, currX + weight*x);
+    rc.broadcast(BATTLE_FRONT_Y, currY + weight*y);
+  }
+  
+  public static MapLocation getEnemyReporterCentroid() throws GameActionException {
+    int numReports = rc.readBroadcast(NUM_FRONT_REPORTS);
+    if (numReports == 0) {
+      return null;
+    }
+    int currX = rc.readBroadcast(BATTLE_FRONT_X);
+    int currY = rc.readBroadcast(BATTLE_FRONT_Y);
+    return new MapLocation(currX/numReports, currY/numReports);
+  }
+  
+  public static void resetEnemyReports() throws GameActionException {
+    rc.broadcast(NUM_FRONT_REPORTS, 0);
+    rc.broadcast(BATTLE_FRONT_X, 0);
+    rc.broadcast(BATTLE_FRONT_Y, 0);
   }
 }

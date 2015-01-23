@@ -19,12 +19,8 @@ public class HibernateSystem {
   }
   
   public static boolean manageHibernation(MovingBot.AttackMode mode, RobotInfo[] currentEnemies, MapLocation rallyPoint) throws GameActionException {
-    if (mode == MovingBot.AttackMode.RALLYING || mode == MovingBot.AttackMode.DEFEND_TOWERS || mode == MovingBot.AttackMode.DEFENSIVE_SWARM || mode == MovingBot.AttackMode.OFFENSIVE_SWARM) {
-      MapLocation towerToHelp = Messaging.getClosestTowerUnderAttack();
-      if (mode == MovingBot.AttackMode.OFFENSIVE_SWARM && Messaging.getClosestBattleFront(rc.getLocation()) != null) {
-        return false;
-      }
-      if (currentEnemies.length == 0 && towerToHelp == null && (Nav.dest == null || HibernateSystem.rc.getLocation().distanceSquaredTo(Nav.dest) <= HIBERNATE_DISTANCE)) {
+    if (mode == MovingBot.AttackMode.RALLYING || mode == MovingBot.AttackMode.DEFEND_TOWERS || mode == MovingBot.AttackMode.DEFENSIVE_SWARM) {
+      if (currentEnemies.length == 0 && Messaging.getClosestTowerUnderAttack() == null && (Nav.dest == null || HibernateSystem.rc.getLocation().distanceSquaredTo(Nav.dest) <= HIBERNATE_DISTANCE)) {
         //Hibernate
         if (TRYING_TO_HIBERNATE) {
           if (HIBERNATE_COUNT_DOWN > 0) {

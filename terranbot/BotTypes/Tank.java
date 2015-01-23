@@ -8,6 +8,7 @@ import terranbot.Nav;
 import terranbot.SupplyDistribution;
 import terranbot.Nav.Engage;
 import terranbot.RobotPlayer.BaseBot;
+import terranbot.Util;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -29,12 +30,19 @@ public class Tank extends MovingBot {
   public int rankIndex = -1;
 
   public void execute() throws GameActionException {
-    currentEnemies = Cache.getEngagementEnemies();
+    currentEnemies = Cache.getVisibleEnemies();
     
     rallyPoint = Messaging.readRallyPoint();
     mode = Messaging.getFleetMode();
+
     if (HibernateSystem.manageHibernation(mode, currentEnemies, rallyPoint)) {
       return;
+    }
+    if (currentEnemies.length > 0){
+      int numAttackers = Util.getNumAttackUnits(currentEnemies);
+      if (numAttackers > 0) {
+        Messaging.reportEnemies(curLoc.x, curLoc.y, numAttackers);
+      }
     }
     rc.setIndicatorString(2, "Mode: " + mode.name() + ", Rally point: " + rallyPoint);
     SupplyDistribution.manageSupply();
@@ -89,6 +97,8 @@ public class Tank extends MovingBot {
     case DEFEND_TOWERS:
     case DEFENSIVE_SWARM:
       if (currentEnemies.length > 0) {
+        rc.setIndicatorString(0, "Offensive micro");
+
         doOffensiveMicro(currentEnemies, rallyPoint);
       } else {
         if (rankIndex < 0 || !Messaging.rankIsActive(rankIndex)) {
@@ -131,10 +141,9 @@ public class Tank extends MovingBot {
           
           int testVecX = ep2.x - ep1.x;
           int testVecY = ep2.y - ep1.y;
-
           
           double targetMidDist = (testVecX*(target.y - ep1.y) - testVecY*(target.x - ep1.x))/width;
-          double currentMidDist = (testVecY*(curLoc.y - ep1.y) - testVecY*(curLoc.x - ep1.x))/width;
+          double currentMidDist = (testVecX*(curLoc.y - ep1.y) - testVecY*(curLoc.x - ep1.x))/width;
           // If behind our centroid.
           if ((currentMidDist > 0) != (targetMidDist > 0)) {
             rc.setIndicatorString(0, "Behind the line");

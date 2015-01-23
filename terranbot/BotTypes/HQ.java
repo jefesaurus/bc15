@@ -52,9 +52,7 @@ public class HQ extends BaseBot {
   }
   
   public enum HighLevelStrat {
-    HARASS,
     BUILDING_FORCES,
-    SWARMING,
     APPROACHING_TOWER,
     TOWER_DIVING,
     TOWER_DEFENDING
@@ -98,17 +96,6 @@ public class HQ extends BaseBot {
       }
     }
     
-    /*
-    // Spawn if possible
-    if (numBeavers < 1 && rc.isCoreReady() && rc.hasSpawnRequirements(RobotType.BEAVER)) {
-      Direction newDir = getOffensiveSpawnDirection(RobotType.BEAVER);
-      if (newDir != null) {
-        rc.spawn(newDir, RobotType.BEAVER);
-        rc.broadcast(Messaging.NUM_BEAVERS, numBeavers + 1);
-      }
-    }
-    */
-    
     maintainUnitComposition();
     produceUnits();
     doMacro();
@@ -128,19 +115,6 @@ public class HQ extends BaseBot {
     }
     
     switch (strat) {
-    case HARASS:
-      if (Clock.getRoundNum() >= 600) {
-        buildForces();
-        break;
-      }
-      setFleetMode(MovingBot.AttackMode.RALLYING);
-      MapLocation[] towerLocs = rc.senseTowerLocations();
-      if (towerLocs.length == 1) {
-        Messaging.setRallyPoint(towerLocs[0]);
-      } else {
-        Messaging.setRallyPoint(getTowerToDefend());
-      }
-      break;
     case BUILDING_FORCES:
       if (Clock.getRoundNum() >= 600 && Messaging.checkNumUnits(RobotType.TANK) > FLEET_COUNT_ATTACK_THRESHOLD) {
 
@@ -148,11 +122,6 @@ public class HQ extends BaseBot {
         setCurrentTowerTarget(Cache.getEnemyTowerLocationsDirect());
         approachTower(currentTargetTower);
       }
-      break;
-    case SWARMING:
-      // Set rally point anywhere
-      setRallyPoint(new MapLocation((this.myHQ.x + this.enemyHQ.x) / 2,(this.myHQ.y + this.enemyHQ.y) / 2));
-      setFleetMode(MovingBot.AttackMode.RALLYING);
       break;
     case APPROACHING_TOWER:
       // Set rally point to just in front of nearest tower.
@@ -209,6 +178,7 @@ public class HQ extends BaseBot {
     Messaging.resetUnitCount(RobotType.DRONE);
     Messaging.resetUnitCount(RobotType.SUPPLYDEPOT);
     Messaging.resetTowersUnderAttack();
+    Messaging.resetEnemyReports();
     super.endOfTurn();
   }
   
@@ -532,14 +502,26 @@ public class HQ extends BaseBot {
   }
   
   public void postBattle() throws GameActionException {
-    RobotInfo[] bots = rc.senseNearbyRobots();
+    MapLocation battleCentroid = Messaging.getEnemyReporterCentroid();
+    RobotInfo[] bots;
+    if (battleCentroid != null) {
+      rc.setIndicatorString(1, "Got reported centroid: " + battleCentroid);
+      bots = rc.senseNearbyRobots(144);
+    } else {
+      rc.setIndicatorString(1, "No reporters");
+
+      bots = rc.senseNearbyRobots();
+    }
+    
     int enemyCentroidX = 0;
     int enemyCentroidY = 0;
     int numEnemies = 0;
+    double enemyScore = 0;
     
     int allyCentroidX = 0;
     int allyCentroidY = 0;
     int numAllies = 0;
+    double allyScore = 0;
 
     for (int i = bots.length; i-- > 0;) {
       switch (bots[i].type) {
@@ -547,16 +529,17 @@ public class HQ extends BaseBot {
       case SOLDIER:
       case TANK:
       case COMMANDER:
-      case MINER:
       case BASHER:
       case LAUNCHER:
         if (bots[i].team == myTeam) {
           allyCentroidX += bots[i].location.x;
           allyCentroidY += bots[i].location.y;
+          allyScore += Util.getDangerScore(bots[i]);
           numAllies ++;
         } else {
           enemyCentroidX += bots[i].location.x;
           enemyCentroidY += bots[i].location.y;
+          enemyScore += Util.getDangerScore(bots[i]);
           numEnemies ++;
         }
         break;
@@ -571,10 +554,9 @@ public class HQ extends BaseBot {
       Messaging.setRankTarget(0, enemyCentroid);
       Messaging.setRankCenter(0, allyCentroid);
       Messaging.completeRankRefresh(0);
-      rc.setIndicatorString(0, "Enemy Centroid: " + enemyCentroid + ", Ally Centroid: " + allyCentroid + ", " + Clock.getRoundNum());
+      rc.setIndicatorString(0, "Enemy Centroid: " + enemyCentroid + ", Ally Centroid: " + allyCentroid + ", Winning? " + (allyScore > enemyScore) + ", " + Clock.getRoundNum());
     } else {
       rc.setIndicatorString(0, "No Battle: " + Clock.getRoundNum());
     }
-
   }
 }
