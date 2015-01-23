@@ -362,11 +362,11 @@ public class MovingBot extends BaseBot {
           }
         } else {
           if (metrics[1] != -1 || metrics[2] != -1) {
-            Nav.goTo(new MapLocation(metrics[1], metrics[2]), Engage.UNITS);
+            Nav.goTo(new MapLocation(metrics[1], metrics[2]), Engage.NONE);
           } else {
             MapLocation nearestBattle = Messaging.getClosestBattleFront(curLoc);
             if (nearestBattle != null) {
-              Nav.goTo(nearestBattle, Engage.UNITS);
+              Nav.goTo(nearestBattle, Engage.NONE);
             }
           }
         }
@@ -398,9 +398,9 @@ public class MovingBot extends BaseBot {
       if (rc.isCoreReady()) {
         MapLocation nearestBattle = Messaging.getClosestBattleFront(curLoc);
         if (nearestBattle != null ) {
-          Nav.goTo(nearestBattle, Engage.UNITS);
+          Nav.goTo(nearestBattle, Engage.NONE);
         } else if (rallyPoint != null) {
-          Nav.goTo(rallyPoint, Engage.UNITS);
+          Nav.goTo(rallyPoint, Engage.NONE);
         }
       }
     }

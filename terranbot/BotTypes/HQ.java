@@ -505,12 +505,11 @@ public class HQ extends BaseBot {
     MapLocation battleCentroid = Messaging.getEnemyReporterCentroid();
     RobotInfo[] bots;
     if (battleCentroid != null) {
-      rc.setIndicatorString(1, "Got reported centroid: " + battleCentroid);
-      bots = rc.senseNearbyRobots(144);
+      bots = rc.senseNearbyRobots(battleCentroid, 143, null);
+      rc.setIndicatorString(1, "Got reported centroid: " + battleCentroid + ", sensed bots: " +bots.length);
     } else {
-      rc.setIndicatorString(1, "No reporters");
-
       bots = rc.senseNearbyRobots();
+      rc.setIndicatorString(1, "No reporters" + ", sensed bots: " +bots.length);
     }
     
     int enemyCentroidX = 0;
@@ -554,9 +553,9 @@ public class HQ extends BaseBot {
       Messaging.setRankTarget(0, enemyCentroid);
       Messaging.setRankCenter(0, allyCentroid);
       Messaging.completeRankRefresh(0);
-      rc.setIndicatorString(0, "Enemy Centroid: " + enemyCentroid + ", Ally Centroid: " + allyCentroid + ", Winning? " + (allyScore > enemyScore) + ", " + Clock.getRoundNum());
+      rc.setIndicatorString(0, "Enemy Centroid: " + enemyCentroid + ", Ally Centroid: " + allyCentroid + ", Scores, ally: " + allyScore + ", enemy: " + enemyScore + ", " + Clock.getRoundNum() + ", num enemies: " + numEnemies);
     } else {
-      rc.setIndicatorString(0, "No Battle: " + Clock.getRoundNum());
+      rc.setIndicatorString(0, "No Battle: " + Clock.getRoundNum() + ", num enemies: " + numEnemies);
     }
   }
 }
