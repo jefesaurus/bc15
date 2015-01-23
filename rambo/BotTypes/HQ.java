@@ -39,7 +39,8 @@ public class HQ extends BaseBot {
   public int lastOreDifferential = 0;
   public double curOreDifferentialShift = 0;
   public static int teamOreValue = 0;
-  
+  public static int END_GAME_ROUND_NUM = 1500; 
+
   static int MAX_NUM_MINERS;
 
   public HQ(RobotController rc) {
@@ -51,6 +52,7 @@ public class HQ extends BaseBot {
     SupplyDistribution.setBatteryMode();
     MAX_NUM_MINERS = (int) (25 * (rc.getRoundLimit() * 1.25 / 2000));
     System.out.println(MAX_NUM_MINERS);
+    END_GAME_ROUND_NUM = rc.getRoundLimit() - 500;
     buildForces();
   }
   
@@ -71,6 +73,7 @@ public class HQ extends BaseBot {
   
   public static final int FLEET_COUNT_ATTACK_THRESHOLD = 15;
 
+
   public void execute() throws GameActionException {
     Messaging.setUnitToProduce(null);
     curNumHelipads = Messaging.checkTotalNumUnits(RobotType.HELIPAD);
@@ -89,7 +92,10 @@ public class HQ extends BaseBot {
 
     SupplyDistribution.manageSupply();
     int curOreDifferential = getOreDifferential();
-    lastOreDifferential = curOreDifferential;
+    if (Clock.getRoundNum() % 20 == 0) {
+      curOreDifferentialShift = (curOreDifferentialShift * 0.8) + (curOreDifferential - lastOreDifferential) * 0.2;
+      lastOreDifferential = curOreDifferential;
+    }
     teamOreValue = getOreValue();
     
     // This checks which enemy towers are still alive and broadcasts it to save bytecode across the fleet
@@ -112,22 +118,13 @@ public class HQ extends BaseBot {
       }
     }
     
-    /*
-    // Spawn if possible
-    if (numBeavers < 1 && rc.isCoreReady() && rc.hasSpawnRequirements(RobotType.BEAVER)) {
-      Direction newDir = getOffensiveSpawnDirection(RobotType.BEAVER);
-      if (newDir != null) {
-        rc.spawn(newDir, RobotType.BEAVER);
-        rc.broadcast(Messaging.NUM_BEAVERS, numBeavers + 1);
-      }
-    }
-    */
+
     
     maintainUnitComposition();
     produceUnits();
     doMacro();
     
-    // rc.setIndicatorString(0, strat.name());
+    rc.setIndicatorString(0, strat.name());
     
     // If we are currently winning in towers, and we are under attack, pull back and defend.
     boolean haveMoreTowers = weHaveMoreTowers();
@@ -141,19 +138,16 @@ public class HQ extends BaseBot {
     
     switch (strat) {
     case BUILDING_FORCES:
-      if (Clock.getRoundNum() >= 800 && curOreDifferentialShift <= 100) {
-        break;
-      } else {
-        if (Clock.getRoundNum() >= 600 && (Messaging.checkNumUnits(RobotType.TANK) + Messaging.checkNumUnits(RobotType.SOLDIER)) > FLEET_COUNT_ATTACK_THRESHOLD) {
-          setCurrentTowerTarget(Cache.getEnemyTowerLocationsDirect());
-          approachTower(currentTargetTower);
-        }
+      if (Clock.getRoundNum() >= 600 && (Messaging.checkNumUnits(RobotType.TANK) + Messaging.checkNumUnits(RobotType.SOLDIER)) > FLEET_COUNT_ATTACK_THRESHOLD) {
+        setCurrentTowerTarget();
+        approachTower(currentTargetTower);
       }
+      
       break;
     case APPROACHING_TOWER:
       // Set rally point to just in front of nearest tower.
       // Wait until ally centroid is epsilon close, then switch to tower diving
-      if (haveDecentSurround(currentTargetTower)) {
+      if (doDesperateDive() || haveDecentSurround(currentTargetTower)) {
         // If there are no more towers, then we are engaging the HQ
         if (enemyTowers.length == 0) {
           diveTowerUnsafe(currentTargetTower);
@@ -168,7 +162,7 @@ public class HQ extends BaseBot {
       break;
     case TOWER_DIVING:
       // If we're winning in tower count, switch to TOWER_DEFENDING
-      if (!haveDecentSurround(currentTargetTower)) {
+      if (!doDesperateDive() && !haveDecentSurround(currentTargetTower)) {
         buildForces();
         break;
       }
@@ -179,15 +173,12 @@ public class HQ extends BaseBot {
         
         if (targetIsDead) {
           // defendTowers();
-          setCurrentTowerTarget(enemyTowers);
-          buildForces();
-        } else if (!haveDecentSurround(currentTargetTower)) {
-          buildForces();
-        }
-      } else {
-        // defendTowers();
-        if (!currentTargetTower.equals(enemyHQ)) {
-          approachTower(enemyHQ);
+          setCurrentTowerTarget();
+          if (doDesperateDive()) {
+            approachTower(currentTargetTower);
+          } else {
+            buildForces();
+          }
         }
       }
       break;
@@ -198,7 +189,7 @@ public class HQ extends BaseBot {
       }
       break;
     case COUNTER_ATTACK:
-      setCurrentTowerTarget(Cache.getEnemyTowerLocationsDirect());
+      setCurrentTowerTarget();
       setRallyPoint(currentTargetTower);
       if (haveDecentSurround(currentTargetTower)) {
         // If there are no more towers, then we are engaging the HQ
@@ -354,6 +345,10 @@ public class HQ extends BaseBot {
     }
   }
   
+  public boolean doDesperateDive() throws GameActionException {
+    return(!weHaveMoreTowers() && Clock.getRoundNum() > END_GAME_ROUND_NUM);
+  }
+  
   public boolean weHaveMoreTowers() throws GameActionException {
     return rc.senseTowerLocations().length > Cache.getEnemyTowerLocationsDirect().length;
   }
@@ -415,7 +410,8 @@ public class HQ extends BaseBot {
    * It determines the target to be the tower with the Maximum minimum distance to another tower or HQ. That is, the one that is furthest away from the others
    * The safety metric is basically just to check whether this tower is directly adjacent to another tower, in which case it must ignore danger from untargeted towers.
    */
-  public void setCurrentTowerTarget(MapLocation[] enemyTowers) throws GameActionException {
+  public void setCurrentTowerTarget() throws GameActionException {
+    enemyTowers = Cache.getEnemyTowerLocationsDirect();
     if (enemyTowers.length <= 0) {
       currentTargetTower = enemyHQ;
       return;
@@ -429,18 +425,28 @@ public class HQ extends BaseBot {
     
     int tempDist = 0;
     int minDist;
+    int numAtDist;
+    int tempNum;
     for (int i = enemyTowers.length; i-- > 0;) {
       minDist = enemyTowers[i].distanceSquaredTo(enemyHQ);
+      numAtDist = 0;
       for (int j = enemyTowers.length; j-- > i + 1;) {
         if (distMat[i][j] < minDist) {
           minDist = distMat[i][j];
+          numAtDist = 0;
+        } else if (distMat[i][j] == minDist) {
+           numAtDist++;
         }
       }
+      tempNum = 0;
       for (int j = i; j-- > 0;) {
         tempDist = enemyTowers[i].distanceSquaredTo(enemyTowers[j]);
         distMat[j][i] = tempDist;
         if (tempDist < minDist) {
           minDist = tempDist;
+          tempNum = 0;
+        } else if (tempDist == minDist) {
+          tempNum++;
         }
       }
 
@@ -449,7 +455,7 @@ public class HQ extends BaseBot {
           maxiMinDist = minDist;
           chosenIndex = i;
         }
-      } else if (minDist > maxiMinDist) {
+      } else if ((minDist > maxiMinDist) || (minDist == maxiMinDist && tempNum < numAtDist)) {
         maxiMinDist = minDist;
         chosenIndex = i;
       }
@@ -472,7 +478,7 @@ public class HQ extends BaseBot {
   public static final int TOWER_DIVE_RADIUS = 49;
   public boolean haveDecentSurround(MapLocation loc) {
     double allyScore = Util.getDangerScore(rc.senseNearbyRobots(loc, TOWER_DIVE_RADIUS, myTeam));
-    if (allyScore > 10.0) {
+    if (allyScore > 24.0) {
       double enemyScore = Util.getDangerScore(rc.senseNearbyRobots(loc, TOWER_DIVE_RADIUS, theirTeam));
       //rc.setIndicatorString(2, "Tower score, Ally: " + allyScore + ", enemy: " + enemyScore);
 
@@ -496,6 +502,7 @@ public class HQ extends BaseBot {
     /**if (Clock.getRoundNum() <= 1 && Messaging.checkTotalNumUnits(RobotType.DRONE) < 3) {
       Messaging.queueUnits(RobotType.DRONE, 3);
     }**/
+    
     
     if (Messaging.peekQueueUnits(RobotType.SOLDIER) < curNumBarracks) {
       Messaging.queueUnits(RobotType.SOLDIER, 2*curNumBarracks);
@@ -521,6 +528,7 @@ public class HQ extends BaseBot {
     /**if (curNumHelipads < NUM_HELIPADS) {
       Messaging.queueUnits(RobotType.HELIPAD, NUM_HELIPADS - curNumHelipads);
     }**/
+    /*
     if (curNumTechInstitutes < NUM_TECH_INSTITUTES) {
       Messaging.queueUnits(RobotType.TECHNOLOGYINSTITUTE, 1);
     }
@@ -529,16 +537,17 @@ public class HQ extends BaseBot {
       Messaging.queueUnits(RobotType.TRAININGFIELD, 1);
       Messaging.queueUnits(RobotType.COMMANDER, 1);
     }
-    NUM_SUPPLY_DEPOTS = Math.max(4, teamOreValue / (12 * 65));
+    */
+    NUM_SUPPLY_DEPOTS = Math.min(Math.max(4, teamOreValue / (12 * 65)), Clock.getRoundNum() / 100);
     if (Messaging.areWeFightingLaunchers()) {
       NUM_BARRACKS = 2;
     }
     
-    if (curNumBarracks < NUM_BARRACKS && Messaging.peekBuildingUnits(RobotType.SUPPLYDEPOT) >= 1) {
+    if (curNumBarracks < NUM_BARRACKS /**&& Messaging.peekBuildingUnits(RobotType.SUPPLYDEPOT) >= 1*/) {
       Messaging.queueUnits(RobotType.BARRACKS, NUM_BARRACKS - curNumBarracks);
     }
 
-    if (curNumSupplyDepots < NUM_SUPPLY_DEPOTS && Messaging.checkNumUnits(RobotType.TRAININGFIELD) >= 1) {
+    if (curNumSupplyDepots < NUM_SUPPLY_DEPOTS /**&& Messaging.checkNumUnits(RobotType.TRAININGFIELD) >= 1*/) {
       Messaging.queueUnits(RobotType.SUPPLYDEPOT, NUM_SUPPLY_DEPOTS - curNumSupplyDepots);
     }
 

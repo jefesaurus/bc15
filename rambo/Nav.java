@@ -343,46 +343,48 @@ public class Nav {
   }
   
   public static boolean retreat(int[] attackingEnemyDirs) throws GameActionException {
-    boolean[] canMove = new boolean[8];
-    for (int i = 8; i-- > 0;) {
-      if (rc.canMove(Util.REGULAR_DIRECTIONS[i])) {
-        if (attackingEnemyDirs[i] == 0) {
-          rc.move(Util.REGULAR_DIRECTIONS[i]);
-          return true;
-        }
-        canMove[i] = true;
-      } else {
-        canMove[i] = false;
-      }
-    }
-    
-    int bestDir;
-    RobotInfo[] enemies = Cache.getEngagementEnemies();
-      if (enemies.length > 0) {
-      int centerX = 0;
-      int centerY = 0;
-      for (int i = enemies.length; i-- > 0;) {
-        centerX += enemies[i].location.x;
-        centerY += enemies[i].location.y;
-      }
-      MapLocation enemyCentroid = new MapLocation(centerX/enemies.length, centerY/enemies.length);
-      bestDir = enemyCentroid.directionTo(br.curLoc).ordinal() + 8;
+    if (!moveIsTowerSafe(Util.REGULAR_DIRECTIONS_WITH_NONE[8], null) || !moveIsHQSafe(Util.REGULAR_DIRECTIONS_WITH_NONE[8])) {
+      Nav.goTo(br.myHQ, Engage.HQ);
+      return true;
     } else {
-      bestDir = br.curLoc.directionTo(br.myHQ).ordinal() + 8;
-    }
-      
-    int tempDir;
-    for (int i = 0; i < 8; i++) {
-      if (i%2 == 0) {
-        tempDir = (bestDir - i)%8;
+      int bestDir;
+      RobotInfo[] enemies = Cache.getEngagementEnemies();
+      if (enemies.length > 0) {
+        int centerX = 0;
+        int centerY = 0;
+        for (int i = enemies.length; i-- > 0;) {
+          centerX += enemies[i].location.x;
+          centerY += enemies[i].location.y;
+        }
+        MapLocation enemyCentroid = new MapLocation(centerX/enemies.length, centerY/enemies.length);
+        bestDir = enemyCentroid.directionTo(br.curLoc).ordinal() + 8;
       } else {
-        tempDir = (bestDir + i)%8;
+        bestDir = br.curLoc.directionTo(br.myHQ).ordinal() + 8;
       }
-      if (canMove[tempDir] && moveIsHQSafe(Util.REGULAR_DIRECTIONS[tempDir]) && moveIsTowerSafe(Util.REGULAR_DIRECTIONS[tempDir], null)) {
-        rc.move(Util.REGULAR_DIRECTIONS[tempDir]);
+      int fewestAttackers = attackingEnemyDirs[8];
+      int chosenDir = -1;
+      int tempDir;
+      for (int i = 0; i < 8; i++) {
+        if (i%2 == 0) {
+          tempDir = (bestDir - i)%8;
+        } else {
+          tempDir = (bestDir + i)%8;
+        }
+        if (attackingEnemyDirs[i] < fewestAttackers &&
+            rc.canMove(Util.REGULAR_DIRECTIONS[i]) &&
+            moveIsHQSafe(Util.REGULAR_DIRECTIONS[tempDir]) &&
+            moveIsTowerSafe(Util.REGULAR_DIRECTIONS[tempDir], null)) {
+          chosenDir = i;
+          fewestAttackers = attackingEnemyDirs[i];
+        }
+      }
+      if (chosenDir > 0) {
+        rc.move(Util.REGULAR_DIRECTIONS[chosenDir]);
+        return true;
+      } else {
+        Nav.goTo(br.myHQ, Engage.NONE);
         return true;
       }
     }
-    return false;
   }
 }

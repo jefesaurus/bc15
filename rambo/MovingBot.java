@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 import rambo.Nav.Engage;
 import rambo.RobotPlayer.BaseBot;
+import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
@@ -386,15 +387,16 @@ public class MovingBot extends BaseBot {
   }
   
   public void doOffensiveMicro(RobotInfo[] engageableEnemies, MapLocation rallyPoint) throws GameActionException {
+    //rc.setIndicatorString(0, "Offensive micro " + ", " + Clock.getRoundNum());
+
     if (engageableEnemies.length > 0) {
       // returns {is winning, is lowest health and not alone}
       int[] metrics = getBattleMetrics(engageableEnemies);
-      // rc.setIndicatorString(1, Arrays.toString(metrics));
       if (metrics[0] > 0) {
+        //rc.setIndicatorString(1, "winning..." + Clock.getRoundNum());
+
         if (metrics[1] != -1 || metrics[2] != -1) {
           Messaging.setBattleFront(new MapLocation(metrics[1], metrics[2]));
-        } else {
-          Messaging.setBattleFront(curLoc);
         }
         RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
         if (attackableEnemies.length > 0) {
@@ -407,7 +409,10 @@ public class MovingBot extends BaseBot {
           } else {
             MapLocation nearestBattle = Messaging.getClosestBattleFront(curLoc);
             if (nearestBattle != null) {
+              //rc.setIndicatorString(1, "Going to battlefront: " + nearestBattle + ", " + Clock.getRoundNum());
               Nav.goTo(nearestBattle, Engage.UNITS);
+            } else {
+              Nav.goTo(rallyPoint, Engage.NONE);
             }
           }
         }
@@ -432,9 +437,10 @@ public class MovingBot extends BaseBot {
       if (rc.isCoreReady()) {
         MapLocation nearestBattle = Messaging.getClosestBattleFront(curLoc);
         if (nearestBattle != null ) {
+          //rc.setIndicatorString(1, "Going to battlefront: " + nearestBattle + ", " + Clock.getRoundNum());
           Nav.goTo(nearestBattle, Engage.UNITS);
         } else if (rallyPoint != null) {
-          Nav.goTo(rallyPoint, Engage.UNITS);
+          Nav.goTo(rallyPoint, Engage.NONE);
         }
       }
     }
@@ -459,6 +465,8 @@ public class MovingBot extends BaseBot {
             MapLocation nearestBattle = Messaging.getClosestDefendFront(curLoc);
             if (nearestBattle != null) {
               Nav.goTo(nearestBattle, Engage.UNITS);
+            } else if (rallyPoint != null) {
+              Nav.goTo(rallyPoint, Engage.UNITS);
             }
           }
         }

@@ -32,10 +32,10 @@ public class Soldier extends MovingBot {
     
     rallyPoint = Messaging.readRallyPoint();
     mode = Messaging.getFleetMode();
-    rc.setIndicatorString(2, "Mode: " + mode.name() + ", Rally point: " + rallyPoint);
+    //rc.setIndicatorString(2, "Mode: " + mode.name() + ", Rally point: " + rallyPoint);
 
     if (HibernateSystem.manageHibernation(mode, currentEnemies, rallyPoint)) {
-      rc.setIndicatorString(2, "hibernating");
+      //rc.setIndicatorString(2, "hibernating");
       return;
     }
     SupplyDistribution.manageSupply();
