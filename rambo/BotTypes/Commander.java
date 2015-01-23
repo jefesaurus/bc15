@@ -60,7 +60,46 @@ public class Commander extends MovingBot {
   
   /**public MapLocation offensiveFlash(MapLocation loc) throws GameActionException {
     
-  }**/
+  }
+   * @throws GameActionException **/
+  
+  public void doHarassMicro(RobotInfo[] engageableEnemies, MapLocation rallyPoint) throws GameActionException {
+    if (rc.getSupplyLevel() <= 2000) {
+      return;
+    }
+    if (engageableEnemies.length > 0) {
+      int[] metrics = getBattleMetrics(engageableEnemies);
+      if (metrics[1] > 0) {
+        MapLocation flashLoc = defensiveFlash();
+        Direction retreatDir = getBestRetreatDir(engageableEnemies);
+        if (flashLoc == null && retreatDir == null) {
+          SupplyDistribution.setDyingMode();
+          SupplyDistribution.manageSupply();
+          if (rc.isWeaponReady()) {
+            attackLeastHealthEnemy(Cache.getAttackableEnemies());
+          }
+        } else if (flashLoc != null) {
+          rc.castFlash(flashLoc);
+        } else {
+          rc.move(retreatDir);
+        }
+      }
+      RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
+      if (attackableEnemies.length > 0) {
+        if (rc.isWeaponReady()) {
+          attackLeastHealthEnemy(attackableEnemies);
+        }
+      } else {
+        if (rc.isCoreReady())  {
+          Nav.goTo(enemyHQ, Engage.UNITS);
+        }
+      }
+    } else {
+      if (rc.isCoreReady())  {
+        Nav.goTo(enemyHQ, Engage.UNITS);
+      }
+    }
+  }
 
   public void doOffensiveMicro(RobotInfo[] engageableEnemies, MapLocation rallyPoint) throws GameActionException {
     if (engageableEnemies.length > 0) {
@@ -183,7 +222,7 @@ public class Commander extends MovingBot {
       break;
     case RALLYING:
     case OFFENSIVE_SWARM:
-      doOffensiveMicro(currentEnemies, rallyPoint);
+        doOffensiveMicro(currentEnemies, rallyPoint);
       break;
     case DEFEND_TOWERS:
     case DEFENSIVE_SWARM:

@@ -147,6 +147,9 @@ public class MovingBot extends BaseBot {
       if (enemy.type == RobotType.LAUNCHER) {
         Messaging.weAreFightingLaunchers();
       }
+      if (enemy.type == RobotType.COMMANDER) {
+        Messaging.weAreFightingCommander();
+      }
       switch (nearbyEnemies[i].type) {
       case HQ:
       case TOWER:
@@ -204,6 +207,34 @@ public class MovingBot extends BaseBot {
       // We didn't find any bots with lower health, so we are the lowest.
       // If we are alone, we should retreat anyways...
       return new int[] {0, (isAlone || enemyAttackPower < myHealth) ? 0 : 1};
+    }
+  }
+  
+  // return null if can't retreat or dead anyway
+  public Direction getBestRetreatDir(RobotInfo[] enemies) throws GameActionException {
+    Direction[] dirs = Direction.values();
+    double minDmg = 999999999;
+    Direction bestDir = null;
+    for (int i=8; i-->0;){
+      double trialDmg = 0;
+      if (rc.canMove(dirs[i])) {
+        MapLocation trialLoc = rc.getLocation().add(dirs[i]);
+        for (int j=enemies.length; j-->0;) {
+          RobotInfo info = enemies[j];
+          if (info.location.distanceSquaredTo(trialLoc) <= info.type.attackRadiusSquared) {
+            trialDmg += info.type.attackPower;
+          }
+        }
+        if (trialDmg < minDmg) {
+          minDmg = trialDmg;
+          bestDir = dirs[i];
+        }
+      }
+    }
+    if (bestDir == null || minDmg >= rc.getHealth()) {
+      return null;
+    } else {
+      return bestDir;
     }
   }
   
@@ -333,7 +364,7 @@ public class MovingBot extends BaseBot {
             cachedAttackingHQDirs[8] = true;
           }
           for (int i = 8; i-- > 0;) {
-            cachedAttackingHQDirs[i] = curLoc.add(Util.REGULAR_DIRECTIONS[i]).distanceSquaredTo(enemyHQ) < 35;
+            cachedAttackingHQDirs[i] = curLoc.add(Util.REGULAR_DIRECTIONS[i]).distanceSquaredTo(enemyHQ) <= 35;
           }
         }
       } else {
@@ -342,7 +373,7 @@ public class MovingBot extends BaseBot {
             cachedAttackingHQDirs[8] = true;
           }
           for (int i = 8; i-- > 0;) {
-            cachedAttackingHQDirs[i] = curLoc.add(Util.REGULAR_DIRECTIONS[i]).distanceSquaredTo(enemyHQ) < 24;
+            cachedAttackingHQDirs[i] = curLoc.add(Util.REGULAR_DIRECTIONS[i]).distanceSquaredTo(enemyHQ) <= 24;
           }
         }
       }

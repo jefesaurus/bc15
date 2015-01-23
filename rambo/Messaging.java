@@ -60,6 +60,7 @@ public class Messaging {
   public final static int FRESHNESS_TOLERANCE = 2;
   
   public final static int FIGHTING_LAUNCHERS = 20000;
+  public final static int FIGHTING_COMMANDER = 20001;
 
   
   // init needs to get called once at the beginning to set up some stuff.
@@ -146,7 +147,7 @@ public class Messaging {
   }
   
   
-  public static boolean areWeFightLaunchers() throws GameActionException {
+  public static boolean areWeFightingLaunchers() throws GameActionException {
     if (rc.readBroadcast(FIGHTING_LAUNCHERS) == 1) {
       return true;
     } else {
@@ -157,6 +158,19 @@ public class Messaging {
   public static void weAreFightingLaunchers() throws GameActionException {
     rc.broadcast(FIGHTING_LAUNCHERS, 1);
   }
+  
+  public static boolean areWeFightingCommander() throws GameActionException {
+    if (rc.readBroadcast(FIGHTING_COMMANDER) == 1) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  
+  public static void weAreFightingCommander() throws GameActionException {
+    rc.broadcast(FIGHTING_COMMANDER, 1);
+  }
+  
   
   // Returns null if no battlefront
   public static MapLocation getClosestBattleFront(MapLocation loc) throws GameActionException {

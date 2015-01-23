@@ -1,10 +1,10 @@
 package rambo.BotTypes;
 
-import rambo.SupplyDistribution;
 import rambo.Cache;
 import rambo.Messaging;
 import rambo.MovingBot;
 import rambo.Nav;
+import rambo.SupplyDistribution;
 import rambo.Util;
 import rambo.Nav.Engage;
 import rambo.RobotPlayer.BaseBot;

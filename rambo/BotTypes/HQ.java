@@ -39,6 +39,9 @@ public class HQ extends BaseBot {
   public int lastOreDifferential = 0;
   public double curOreDifferentialShift = 0;
   public static int teamOreValue = 0;
+  
+  static int MAX_NUM_MINERS;
+
   public HQ(RobotController rc) {
     super(rc);
   }
@@ -47,6 +50,8 @@ public class HQ extends BaseBot {
     SupplyDistribution.init(this);
     strat = HighLevelStrat.HARASS;
     SupplyDistribution.setBatteryMode();
+    MAX_NUM_MINERS = (int) (25 * (rc.getRoundLimit() * 1.25 / 2000));
+    System.out.println(MAX_NUM_MINERS);
     //Harass force
   }
   
@@ -389,6 +394,17 @@ public class HQ extends BaseBot {
     return enemyTowers[closestIndex];
   }
   
+  public static MapLocation getTowerCentroid(RobotController rc) {
+    MapLocation[] towerLocs = rc.senseTowerLocations();
+    int x = rc.getLocation().x;
+    int y = rc.getLocation().y;
+    for (int i=towerLocs.length; i-->0;) {
+      x += towerLocs[i].x;
+      y += towerLocs[i].y;
+    }
+    return new MapLocation(x / (towerLocs.length+1), y / (towerLocs.length + 1));
+  }
+  
 
   public static int getOreDifferential() throws GameActionException {
     int netDifferential = 0;
@@ -486,7 +502,7 @@ public class HQ extends BaseBot {
   public static final int NUM_TRAINING_FIELDS = 1;
   public static final int NUM_BEAVERS = 2;
   public static final int NUM_MINER_FACTORIES = 1;
-  public static final int NUM_BARRACKS = 1;
+  public static int NUM_BARRACKS = 1;
   public static final int NUM_TANK_FACTORIES = 10;
   public static final int NUM_HELIPADS = 1;
   public static int NUM_SUPPLY_DEPOTS = Math.max(4, teamOreValue / (12 * 90));
@@ -517,9 +533,9 @@ public class HQ extends BaseBot {
   
   public void doBuildOrder() throws GameActionException {
     
-   /** if (curNumHelipads < NUM_HELIPADS) {
+    /**if (curNumHelipads < NUM_HELIPADS) {
       Messaging.queueUnits(RobotType.HELIPAD, NUM_HELIPADS - curNumHelipads);
-    }**//**
+    }**/
     if (curNumTechInstitutes < NUM_TECH_INSTITUTES) {
       Messaging.queueUnits(RobotType.TECHNOLOGYINSTITUTE, 1);
     }
@@ -527,14 +543,17 @@ public class HQ extends BaseBot {
     if (curNumTrainingFields < NUM_TRAINING_FIELDS && Messaging.peekBuildingUnits(RobotType.TECHNOLOGYINSTITUTE) >= 1) {
       Messaging.queueUnits(RobotType.TRAININGFIELD, 1);
       Messaging.queueUnits(RobotType.COMMANDER, 1);
-    }**/
+    }
     NUM_SUPPLY_DEPOTS = Math.max(4, teamOreValue / (12 * 65));
-
-    if (curNumBarracks < NUM_BARRACKS /** && Messaging.peekBuildingUnits(RobotType.SUPPLYDEPOT) >= 1**/) {
+    if (Messaging.areWeFightingLaunchers()) {
+      NUM_BARRACKS = 2;
+    }
+    
+    if (curNumBarracks < NUM_BARRACKS && Messaging.peekBuildingUnits(RobotType.SUPPLYDEPOT) >= 1) {
       Messaging.queueUnits(RobotType.BARRACKS, NUM_BARRACKS - curNumBarracks);
     }
 
-    if (curNumSupplyDepots < NUM_SUPPLY_DEPOTS /**&& Messaging.checkNumUnits(RobotType.TRAININGFIELD) >= 1**/) {
+    if (curNumSupplyDepots < NUM_SUPPLY_DEPOTS && Messaging.checkNumUnits(RobotType.TRAININGFIELD) >= 1) {
       Messaging.queueUnits(RobotType.SUPPLYDEPOT, NUM_SUPPLY_DEPOTS - curNumSupplyDepots);
     }
 
@@ -567,7 +586,6 @@ public class HQ extends BaseBot {
     return true;
   }
   
-  static final int MAX_NUM_MINERS = 25;
   // Get estimated ore production and compare it to the value required by our current unit output and/or desired future unit output.
   public boolean maintainOreProduction() throws GameActionException {
     int minersNeeded = MAX_NUM_MINERS - curNumMiners;

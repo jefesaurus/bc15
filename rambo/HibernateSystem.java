@@ -1,11 +1,11 @@
 package rambo;
 
-import rambo.MovingBot;
-import rambo.MovingBot.AttackMode;
-import rambo.RobotPlayer.BaseBot;
 import rambo.HibernateSystem;
 import rambo.Messaging;
+import rambo.MovingBot;
 import rambo.Nav;
+import rambo.MovingBot.AttackMode;
+import rambo.RobotPlayer.BaseBot;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
