@@ -48,11 +48,10 @@ public class HQ extends BaseBot {
   
   public void setup() throws GameActionException {
     SupplyDistribution.init(this);
-    strat = HighLevelStrat.HARASS;
     SupplyDistribution.setBatteryMode();
     MAX_NUM_MINERS = (int) (25 * (rc.getRoundLimit() * 1.25 / 2000));
     System.out.println(MAX_NUM_MINERS);
-    //Harass force
+    buildForces();
   }
   
   public enum BaseState {
@@ -64,7 +63,6 @@ public class HQ extends BaseBot {
   public enum HighLevelStrat {
     HARASS,
     BUILDING_FORCES,
-    SWARMING,
     APPROACHING_TOWER,
     TOWER_DIVING,
     TOWER_DEFENDING,
@@ -142,19 +140,6 @@ public class HQ extends BaseBot {
     MapLocation[] enemyTowers = Cache.getEnemyTowerLocationsDirect();
     
     switch (strat) {
-    case HARASS:
-      if (Clock.getRoundNum() >= 600) {
-        buildForces();
-        break;
-      }
-      setFleetMode(MovingBot.AttackMode.RALLYING);
-      MapLocation[] towerLocs = rc.senseTowerLocations();
-      if (towerLocs.length == 1) {
-        Messaging.setRallyPoint(towerLocs[0]);
-      } else {
-        Messaging.setRallyPoint(getTowerToDefend());
-      }
-      break;
     case BUILDING_FORCES:
       if (Clock.getRoundNum() >= 800 && curOreDifferentialShift <= 100) {
         break;
@@ -164,11 +149,6 @@ public class HQ extends BaseBot {
           approachTower(currentTargetTower);
         }
       }
-      break;
-    case SWARMING:
-      // Set rally point anywhere
-      setRallyPoint(new MapLocation((this.myHQ.x + this.enemyHQ.x) / 2,(this.myHQ.y + this.enemyHQ.y) / 2));
-      setFleetMode(MovingBot.AttackMode.RALLYING);
       break;
     case APPROACHING_TOWER:
       // Set rally point to just in front of nearest tower.
@@ -350,7 +330,12 @@ public class HQ extends BaseBot {
   public void buildForces() throws GameActionException {
     strat = HighLevelStrat.BUILDING_FORCES; 
     setFleetMode(MovingBot.AttackMode.DEFENSIVE_SWARM);
-    setRallyPoint(new MapLocation(myHQ.x + ((enemyHQ.x - myHQ.x) / 4), myHQ.y + ((enemyHQ.y - myHQ.y) / 4)));
+    MapLocation[] towerLocs = rc.senseTowerLocations();
+    if (towerLocs.length == 1) {
+      setRallyPoint(towerLocs[0]);
+    } else {
+      setRallyPoint(getTowerToDefend());
+    }
   }
   
   
