@@ -15,6 +15,7 @@ public class SupplyDistribution {
   private static final int minSupplyLaunch = 10000;
   private static final int minSupplyBattle = 100;
   private static int minSupplyMiner = 14000;
+  private static int minSupplyMinerWorking = 100;
   private static enum SupplyDistributionMode {
     //Pool supply at HQ
     NO_TRANSFER,
@@ -59,6 +60,8 @@ public class SupplyDistribution {
     case BATTERY:
       if (rc.getType() == RobotType.HQ) {
         distributeBatteryHQ();
+      } else if (rc.getType() == RobotType.MINER) {
+        distributeBatteryMiner();
       } else {
         distributeBatteryUnit();
       }
@@ -88,7 +91,7 @@ public class SupplyDistribution {
   }
   
   public static boolean isNonBattleUnit(RobotType type) {
-    return type == RobotType.MINER || type == RobotType.BEAVER;
+    return type == RobotType.MINER;
   }
   
   public static void distributeDying() throws GameActionException {
@@ -142,6 +145,27 @@ public class SupplyDistribution {
       RobotInfo info = robots[i];
       if (isBattleUnit(info.type) && info.supplyLevel < minSupplyBattle*2/3) {
         int x = (int) Math.min(supplyToTransfer, minSupplyBattle - info.supplyLevel);
+        rc.transferSupplies(x, info.location);
+        supplyToTransfer -= x;
+      } 
+    }
+  }
+  
+  public static void distributeBatteryMiner() throws GameActionException {
+    int supplyToTransfer = (int) (rc.getSupplyLevel() - 2 * minSupplyMinerWorking);
+    
+    if (supplyToTransfer <= 0) {
+      return;
+    }
+    
+    RobotInfo[] robots = rc.senseNearbyRobots(GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED, rc.getTeam());
+    for (int i=robots.length-1; i >= 0 && supplyToTransfer > 0; i--) {
+      if (Clock.getBytecodesLeft() < 500) {
+        return;
+      }
+      RobotInfo info = robots[i];
+      if (isNonBattleUnit(info.type) && info.supplyLevel < minSupplyMinerWorking*2/3) {
+        int x = (int) Math.min(supplyToTransfer, 5*minSupplyMinerWorking);
         rc.transferSupplies(x, info.location);
         supplyToTransfer -= x;
       } 

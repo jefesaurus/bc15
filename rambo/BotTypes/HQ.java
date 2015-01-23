@@ -528,7 +528,7 @@ public class HQ extends BaseBot {
       Messaging.queueUnits(RobotType.TRAININGFIELD, 1);
       Messaging.queueUnits(RobotType.COMMANDER, 1);
     }**/
-    NUM_SUPPLY_DEPOTS = Math.max(4, teamOreValue / (12 * 80));
+    NUM_SUPPLY_DEPOTS = Math.max(4, teamOreValue / (12 * 65));
 
     if (curNumBarracks < NUM_BARRACKS /** && Messaging.peekBuildingUnits(RobotType.SUPPLYDEPOT) >= 1**/) {
       Messaging.queueUnits(RobotType.BARRACKS, NUM_BARRACKS - curNumBarracks);

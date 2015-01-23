@@ -1,5 +1,6 @@
 package rambo.BotTypes;
 
+import rambo.SupplyDistribution;
 import rambo.Cache;
 import rambo.Messaging;
 import rambo.MovingBot;
@@ -34,6 +35,8 @@ public class Miner extends rambo.MovingBot {
     
   public Miner(RobotController rc) {
     super(rc);
+    SupplyDistribution.init((BaseBot) this);
+    SupplyDistribution.setBatteryMode();
   }
   
   public void setup() throws GameActionException {
@@ -121,6 +124,7 @@ public class Miner extends rambo.MovingBot {
   }
   
   public void execute() throws GameActionException {
+    SupplyDistribution.manageSupply();
     selfPreservation();
     
     if (disperseMode) {

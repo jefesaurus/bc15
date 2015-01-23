@@ -22,7 +22,7 @@ public class HibernateSystem {
   }
   
   public static boolean manageHibernation(MovingBot.AttackMode mode, RobotInfo[] currentEnemies, MapLocation rallyPoint) throws GameActionException {
-    if (mode == MovingBot.AttackMode.RALLYING) {
+    if (mode == MovingBot.AttackMode.RALLYING || mode == MovingBot.AttackMode.DEFENSIVE_SWARM) {
       MapLocation towerToHelp = Messaging.getClosestTowerUnderAttack();
       if (mode == MovingBot.AttackMode.DEFENSIVE_SWARM && Messaging.getClosestDefendFront(rc.getLocation()) != null) {
         return false;
