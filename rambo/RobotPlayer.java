@@ -201,6 +201,37 @@ public class RobotPlayer {
 
       rc.attackLocation(toAttack);
     }
+    
+    public void attackLeastHealthPrioritized(RobotInfo[] enemies) throws GameActionException {
+      if (enemies.length == 0) {
+        return;
+      }
+
+      double minLauncherHealth = Double.MAX_VALUE;
+      MapLocation launcherSpot = null;
+      double minNonMissileHealth = Double.MAX_VALUE;
+      MapLocation nonMissileSpot = null;
+      double minMissileHealth = Double.MAX_VALUE;
+      MapLocation missileSpot = null;
+      
+      for (int i = enemies.length; i-- > 0;) {
+        if (enemies[i].type == RobotType.LAUNCHER && enemies[i].health < minLauncherHealth) {
+          launcherSpot = enemies[i].location;
+        } else if (enemies[i].type != RobotType.MISSILE && enemies[i].health < minNonMissileHealth) {
+          nonMissileSpot = enemies[i].location;
+        } else if (enemies[i].health < minMissileHealth) {
+          missileSpot = enemies[i].location;
+        }
+      }
+      
+      if (launcherSpot != null) {
+        rc.attackLocation(launcherSpot);
+      } else if (nonMissileSpot != null) {
+        rc.attackLocation(nonMissileSpot);
+      } else if (missileSpot != null) {
+        rc.attackLocation(missileSpot);
+      }
+    }
 
     // Override this in subclasses to do class specific setups procedures(only called once).
     // This is different from init, which sets up Nav and Messaging type stuff.

@@ -43,7 +43,7 @@ public class Tower extends BaseBot {
     }
     RobotInfo[] attackableEnemies = this.getEnemiesInAttackingRange();
     if (attackableEnemies.length > 0 && rc.isWeaponReady()) {
-      attackLeastHealthEnemy(attackableEnemies);
+      attackLeastHealthPrioritized(attackableEnemies);
     }
   }
 }

@@ -401,7 +401,7 @@ public class MovingBot extends BaseBot {
         RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
         if (attackableEnemies.length > 0) {
           if (rc.isWeaponReady()) {
-            attackLeastHealthEnemy(attackableEnemies);
+            attackLeastHealthPrioritized(attackableEnemies);
           }
         } else {
           if (metrics[1] != -1 || metrics[2] != -1) {
@@ -422,7 +422,7 @@ public class MovingBot extends BaseBot {
           SupplyDistribution.setDyingMode();
           SupplyDistribution.manageSupply();
           if (rc.isWeaponReady()) {
-            attackLeastHealthEnemy(Cache.getAttackableEnemies());
+            attackLeastHealthPrioritized(Cache.getAttackableEnemies());
           }
           
         // Retreat
@@ -456,7 +456,7 @@ public class MovingBot extends BaseBot {
         RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
         if (attackableEnemies.length > 0) {
           if (rc.isWeaponReady()) {
-            attackLeastHealthEnemy(attackableEnemies);
+            attackLeastHealthPrioritized(attackableEnemies);
           }
         } else {
           if (metrics[1] != -1 || metrics[2] != -1) {
@@ -476,7 +476,7 @@ public class MovingBot extends BaseBot {
           SupplyDistribution.setDyingMode();
           SupplyDistribution.manageSupply();
           if (rc.isWeaponReady()) {
-            attackLeastHealthEnemy(Cache.getAttackableEnemies());
+            attackLeastHealthPrioritized(Cache.getAttackableEnemies());
           }
           
         // Retreat
