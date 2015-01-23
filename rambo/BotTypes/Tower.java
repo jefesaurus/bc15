@@ -25,7 +25,7 @@ public class Tower extends BaseBot {
         if (visibleEnemies[i].type != RobotType.MINER || visibleEnemies[i].type != RobotType.BEAVER) {
           hasNotMinerAndBeaverUnits = true;
         }
-        if (visibleEnemies[i].type == RobotType.LAUNCHER) {
+        if (visibleEnemies[i].type == RobotType.LAUNCHER || visibleEnemies[i].type == RobotType.LAUNCHER) {
           hasLaunchers = true;
         }
         if (closest == null) {
