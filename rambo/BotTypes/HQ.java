@@ -41,7 +41,10 @@ public class HQ extends BaseBot {
   public static int teamOreValue = 0;
   public static int END_GAME_ROUND_NUM = 1500; 
   public static int distanceBetweenHQ;
-  static int MAX_NUM_MINERS;
+  public static int MAX_NUM_MINERS;
+  public static MapLocation splitPush1 = null;
+  public static MapLocation splitPush2 = null;
+  public static boolean lessThanOneTowerLeft = false;
 
   public HQ(RobotController rc) {
     super(rc);
@@ -70,7 +73,9 @@ public class HQ extends BaseBot {
     APPROACHING_TOWER,
     TOWER_DIVING,
     TOWER_DEFENDING,
-    COUNTER_ATTACK
+    COUNTER_ATTACK,
+    SPLIT_PUSH,
+    TOWER_DIVING_SPLIT
   };
   
   public static final int FLEET_COUNT_ATTACK_THRESHOLD = 15;
@@ -136,9 +141,20 @@ public class HQ extends BaseBot {
     
     switch (strat) {
     case BUILDING_FORCES:
-      if (Clock.getRoundNum() >= 600 && (Messaging.checkNumUnits(RobotType.TANK) + Messaging.checkNumUnits(RobotType.SOLDIER)) > FLEET_COUNT_ATTACK_THRESHOLD) {
-        setCurrentTowerTarget();
-        approachTower(currentTargetTower);
+      if (Clock.getRoundNum() >= 600 && 
+      (Messaging.checkNumUnits(RobotType.TANK) + Messaging.checkNumUnits(RobotType.SOLDIER)) > FLEET_COUNT_ATTACK_THRESHOLD) {
+        if (distanceBetweenHQ <= 6000 || Cache.getEnemyTowerLocations().length < 2) {
+          System.out.println("Not split pushing");
+          setCurrentTowerTarget();
+          approachTower(currentTargetTower);
+        } else {
+          if (splitPush1 == null || splitPush2 == null) {
+            setSplitPushTargets();
+            splitPush();
+          } else {
+            splitPush();
+          }
+        }
       }
       
       break;
@@ -180,6 +196,55 @@ public class HQ extends BaseBot {
         }
       }
       break;
+    case TOWER_DIVING_SPLIT:
+      // If we're winning in tower count, switch to TOWER_DEFENDING
+      if (!doDesperateDive() && (!haveDecentSurround(splitPush1) && !haveDecentSurround(splitPush2))) {
+        buildForces();
+        break;
+      }
+      
+      if (doDesperateDive() || haveDecentSurround(splitPush1)) {
+        // If there are no more towers, then we are engaging the HQ
+        if (enemyTowers.length == 0) {
+          diveTowerUnsafeSplit(splitPush1);
+        } else {
+          if (isSafeTowerDive) {
+            diveTowerSafeSplit(splitPush1);
+          } else {
+            diveTowerUnsafeSplit(splitPush1);
+          }
+        }
+      }
+      if (doDesperateDive() || haveDecentSurround(splitPush2)) {
+        // If there are no more towers, then we are engaging the HQ
+        if (enemyTowers.length == 0) {
+          diveTowerUnsafeSplit(splitPush2);
+        } else {
+          if (isSafeTowerDive) {
+            diveTowerSafeSplit(splitPush2);
+          } else {
+            diveTowerUnsafeSplit(splitPush2);
+          }
+        }
+      }
+      
+      if (enemyTowers.length > 0) {
+        // Check if our current target is dead yet:
+        boolean targetIsDead = currentTargetTowerIsDead(splitPush1);
+        boolean target2IsDead = currentTargetTowerIsDead(splitPush2);
+        if (targetIsDead || target2IsDead) {
+          // defendTowers();
+          updateSplitPushTargets(targetIsDead, target2IsDead);
+          if (doDesperateDive()) {
+            splitPush();
+          } else {
+            buildForces();
+          }
+        }
+      } else {
+        buildForces();
+      }
+      break;
     case TOWER_DEFENDING:
       // Switch to tower diving if they have equal to or more towers
       if (!towersUnderAttack) {
@@ -198,6 +263,32 @@ public class HQ extends BaseBot {
             diveTowerSafe(currentTargetTower);
           } else {
             diveTowerUnsafe(currentTargetTower);
+          }
+        }
+      }
+      break;
+    case SPLIT_PUSH:
+      if (doDesperateDive() || haveDecentSurround(splitPush1)) {
+        // If there are no more towers, then we are engaging the HQ
+        if (enemyTowers.length == 0) {
+          diveTowerUnsafeSplit(splitPush1);
+        } else {
+          if (isSafeTowerDive) {
+            diveTowerSafeSplit(splitPush1);
+          } else {
+            diveTowerUnsafeSplit(splitPush1);
+          }
+        }
+      }
+      if (doDesperateDive() || haveDecentSurround(splitPush2)) {
+        // If there are no more towers, then we are engaging the HQ
+        if (enemyTowers.length == 0) {
+          diveTowerUnsafeSplit(splitPush2);
+        } else {
+          if (isSafeTowerDive) {
+            diveTowerSafeSplit(splitPush2);
+          } else {
+            diveTowerUnsafeSplit(splitPush2);
           }
         }
       }
@@ -267,6 +358,11 @@ public class HQ extends BaseBot {
     }
   }
   
+  public void splitPush() throws GameActionException {
+    strat = HighLevelStrat.SPLIT_PUSH;
+    setFleetMode(MovingBot.AttackMode.SPLIT_PUSH);
+  }
+  
   public void counterAttack(MapLocation towerLoc) throws GameActionException {
     strat = HighLevelStrat.COUNTER_ATTACK;
     currentTargetTower = towerLoc;
@@ -291,6 +387,24 @@ public class HQ extends BaseBot {
     strat = HighLevelStrat.TOWER_DIVING;
     setRallyPoint(towerLoc);
     setFleetMode(MovingBot.AttackMode.UNSAFE_TOWER_DIVE);
+  }
+  
+  public void diveTowerSafeSplit(MapLocation towerLoc) throws GameActionException {
+    strat = HighLevelStrat.TOWER_DIVING_SPLIT;
+    if (towerLoc == splitPush1) {
+      setFleetMode(MovingBot.AttackMode.SAFE_TOWER_DIVE_SPLIT);
+    } else {
+      Messaging.setFleetMode2(MovingBot.AttackMode.SAFE_TOWER_DIVE_SPLIT);     
+    }
+  }
+  
+  public void diveTowerUnsafeSplit(MapLocation towerLoc) throws GameActionException {
+    strat = HighLevelStrat.TOWER_DIVING_SPLIT;
+    if (towerLoc == splitPush1) {
+      setFleetMode(MovingBot.AttackMode.UNSAFE_TOWER_DIVE_SPLIT);
+    } else {
+      Messaging.setFleetMode2(MovingBot.AttackMode.UNSAFE_TOWER_DIVE_SPLIT);     
+    }
   }
   
   public void defendTowers() throws GameActionException {
@@ -408,6 +522,58 @@ public class HQ extends BaseBot {
    * It determines the target to be the tower with the Maximum minimum distance to another tower or HQ. That is, the one that is furthest away from the others
    * The safety metric is basically just to check whether this tower is directly adjacent to another tower, in which case it must ignore danger from untargeted towers.
    */
+  public void setSplitPushTargets() throws GameActionException {
+    MapLocation[] towerLocs = Cache.getEnemyTowerLocationsDirect();
+    int maxDist = -1;
+    MapLocation towerLoc1 = null;
+    MapLocation towerLoc2 = null;
+    for (int i=towerLocs.length; i-->0;) {
+      for (int j=i-1; j>= 0; j--) {
+        int trialDist = towerLocs[i].distanceSquaredTo(towerLocs[j]);
+        if (trialDist > maxDist) {
+          maxDist = trialDist;
+          towerLoc1 = towerLocs[i];
+          towerLoc2 = towerLocs[j];
+        }
+      }
+    }
+    splitPush1 = towerLoc1;
+    splitPush2 = towerLoc2;
+    
+    Messaging.setRallyPoint(towerLoc1);
+    Messaging.setRallyPoint2(towerLoc2);
+  }
+  
+  public void updateSplitPushTargets(boolean t1, boolean t2) throws GameActionException {
+    MapLocation aliveTower = splitPush1;
+    if (t1 && t2) {
+      System.out.println("setting both");
+      setSplitPushTargets();
+      return;
+    } else if (t1) {
+      System.out.println("splitpush 1 @ " + splitPush1 + " is dead");
+      aliveTower = splitPush2;
+    }
+    MapLocation[] towerLocs = Cache.getEnemyTowerLocationsDirect();
+    int maxDist = -1;
+    MapLocation towerLoc = null;
+    for (int i=towerLocs.length; i-->0;) {
+        int trialDist = towerLocs[i].distanceSquaredTo(aliveTower);
+        if (trialDist > maxDist) {
+          maxDist = trialDist;
+          towerLoc = towerLocs[i];
+        }
+    }
+    if (t2) {
+      System.out.println("splitpush 2 @ " + splitPush2 + " is dead");
+      Messaging.setRallyPoint2(towerLoc);
+      splitPush2 = towerLoc;
+    } else {
+      Messaging.setRallyPoint(towerLoc);
+      splitPush1 = towerLoc;
+    }
+  }
+  
   public void setCurrentTowerTarget() throws GameActionException {
     enemyTowers = Cache.getEnemyTowerLocationsDirect();
     if (enemyTowers.length <= 0) {
@@ -466,6 +632,16 @@ public class HQ extends BaseBot {
   public boolean currentTargetTowerIsDead(MapLocation[] enemyTowers) {
     for (int i = enemyTowers.length; i-- > 0;) {
       if (enemyTowers[i].equals(currentTargetTower)) {
+        return false;
+      }
+    }
+    return true;
+  }
+  
+  public boolean currentTargetTowerIsDead(MapLocation loc) throws GameActionException {
+    MapLocation[] enemyTowers = Cache.getEnemyTowerLocationsDirect();
+    for (int i = enemyTowers.length; i-- > 0;) {
+      if (enemyTowers[i].equals(loc)) {
         return false;
       }
     }

@@ -38,6 +38,10 @@ public class Messaging {
   public final static int NUM_ACTIVE_SAFEZONES = 42;
   public final static int HIGH_ORE_REQUEST = 43;
   public final static int HIGH_ORE_LOCS = 44; // channels 44-53
+  
+  public final static int RALLY_POINT_X2 = 54;
+  public final static int RALLY_POINT_Y2 = 55;
+  public final static int FLEET_MODE2 = 56;
 
   public final static int COUNT_OFFSET = 100;
   public final static int KILLED_OFFSET = 1000;
@@ -353,6 +357,17 @@ public class Messaging {
     rc.broadcast(RALLY_POINT_Y, loc.y);
   }
   
+  public static MapLocation readRallyPoint2() throws GameActionException {
+    int x = rc.readBroadcast(RALLY_POINT_X2);
+    int y = rc.readBroadcast(RALLY_POINT_Y2);
+    return new MapLocation(x, y);
+  }
+  
+  public static void setRallyPoint2(MapLocation loc) throws GameActionException {
+    rc.broadcast(RALLY_POINT_X2, loc.x);
+    rc.broadcast(RALLY_POINT_Y2, loc.y);
+  }
+  
   public static void writeLocation(int register, MapLocation loc, int roundNum) throws GameActionException {
     // This math shifts the location by our HQ's vector and then into the positive quadrant by 120
     // This guarantees the coordinates will be small and positive. (0 <= x,y <= 240)
@@ -379,6 +394,14 @@ public class Messaging {
   
   public static MovingBot.AttackMode getFleetMode() throws GameActionException {
     return MovingBot.AttackMode.values()[rc.readBroadcast(FLEET_MODE)];
+  }
+  
+  public static void setFleetMode2(MovingBot.AttackMode mode) throws GameActionException {
+    rc.broadcast(FLEET_MODE2, mode.ordinal());
+  }
+  
+  public static MovingBot.AttackMode getFleetMode2() throws GameActionException {
+    return MovingBot.AttackMode.values()[rc.readBroadcast(FLEET_MODE2)];
   }
   
   public static void setSurvivingEnemyTowers(MapLocation[] curEnemyTowers) throws GameActionException {
