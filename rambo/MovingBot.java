@@ -106,8 +106,8 @@ public class MovingBot extends BaseBot {
     }
     
     RobotInfo[] allies = rc.senseNearbyRobots(closestEngageable.location, ALLY_INLCUDE_RADIUS_SQ, myTeam);
-    double allyScore = Util.getDangerScore(allies);
-    double enemyScore = Util.getDangerScore(rc.senseNearbyRobots(closestEngageable.location, ENEMY_INCLUDE_RADIUS_SQ, theirTeam));
+    double allyScore = Util.getDangerScore(allies, true);
+    double enemyScore = Util.getDangerScore(rc.senseNearbyRobots(closestEngageable.location, ENEMY_INCLUDE_RADIUS_SQ, theirTeam), false);
     // rc.setIndicatorString(2, "Ally score: " + allyScore + ", Enemy score: " + enemyScore);
     if (allyScore > enemyScore) {
       return new boolean[] {true};
@@ -187,8 +187,8 @@ public class MovingBot extends BaseBot {
     }
     
     RobotInfo[] allies = rc.senseNearbyRobots(closestEngageable.location, ALLY_INLCUDE_RADIUS_SQ, myTeam);
-    double allyScore = Util.getDangerScore(allies);
-    double enemyScore = Util.getDangerScore(rc.senseNearbyRobots(closestEngageable.location, ENEMY_INCLUDE_RADIUS_SQ, theirTeam));
+    double allyScore = Util.getDangerScore(allies, true);
+    double enemyScore = Util.getDangerScore(rc.senseNearbyRobots(closestEngageable.location, ENEMY_INCLUDE_RADIUS_SQ, theirTeam), false);
     // rc.setIndicatorString(0, "Ally score: " + allyScore + ", Enemy score: " + enemyScore);
     if (allyScore > enemyScore) {
       return new int[] {1, closestEngageable.location.x, closestEngageable.location.y};

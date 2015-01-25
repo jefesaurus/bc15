@@ -72,74 +72,78 @@ public class Util {
   public static final double TOWER_DANGER = RobotType.TOWER.attackPower/RobotType.TOWER.attackDelay;
   public static final double HQ_DANGER = RobotType.HQ.attackPower/RobotType.HQ.attackDelay;
   
-  public static double getDangerScore(RobotInfo[] bots) {
+  public static double getDangerScore(RobotInfo[] bots, boolean ally) {
+    int LOW_SUPPLY_COEFF = 1;
+    if (ally) {
+      LOW_SUPPLY_COEFF = 1;
+    }
     int dangerMetric = 0;
     for (RobotInfo bot : bots) {
       switch (bot.type) {
       case BEAVER:
-        if (bot.supplyLevel > RobotType.BEAVER.supplyUpkeep) {
+        if (bot.supplyLevel > RobotType.BEAVER.supplyUpkeep*LOW_SUPPLY_COEFF) {
           dangerMetric += Util.BEAVER_DANGER;
         } else {
           dangerMetric += Util.BEAVER_DANGER*Util.UNSUPPLIED_COEFF;
         }
         break;
       case DRONE:
-        if (bot.supplyLevel > RobotType.DRONE.supplyUpkeep) {
+        if (bot.supplyLevel > RobotType.DRONE.supplyUpkeep*LOW_SUPPLY_COEFF) {
           dangerMetric += Util.DRONE_DANGER;
         } else {
           dangerMetric += Util.DRONE_DANGER*Util.UNSUPPLIED_COEFF;
         }
       case SOLDIER:
-        if (bot.supplyLevel > RobotType.SOLDIER.supplyUpkeep) {
+        if (bot.supplyLevel > RobotType.SOLDIER.supplyUpkeep*LOW_SUPPLY_COEFF) {
           dangerMetric += Util.SOLDIER_DANGER;
         } else {
           dangerMetric += Util.SOLDIER_DANGER*Util.UNSUPPLIED_COEFF;
         }
         break;
       case TANK:
-        if (bot.supplyLevel > RobotType.TANK.supplyUpkeep) {
+        if (bot.supplyLevel > RobotType.TANK.supplyUpkeep*LOW_SUPPLY_COEFF) {
           dangerMetric += Util.TANK_DANGER;
         } else {
           dangerMetric += Util.TANK_DANGER*Util.UNSUPPLIED_COEFF;
         }
         break;
       case COMMANDER:
-        if (bot.supplyLevel > RobotType.COMMANDER.supplyUpkeep) {
+        if (bot.supplyLevel > RobotType.COMMANDER.supplyUpkeep*LOW_SUPPLY_COEFF) {
           dangerMetric += Util.COMMANDER_DANGER;
         } else {
           dangerMetric += Util.COMMANDER_DANGER*Util.UNSUPPLIED_COEFF;
         }
         break;
       case MINER:
-        if (bot.supplyLevel > RobotType.MINER.supplyUpkeep) {
+        if (bot.supplyLevel > RobotType.MINER.supplyUpkeep*LOW_SUPPLY_COEFF) {
           dangerMetric += Util.MINER_DANGER;
         } else {
           dangerMetric += Util.MINER_DANGER*Util.UNSUPPLIED_COEFF;
         }
         break;
       case BASHER:
-        if (bot.supplyLevel > RobotType.BASHER.supplyUpkeep) {
+        if (bot.supplyLevel > RobotType.BASHER.supplyUpkeep*LOW_SUPPLY_COEFF) {
           dangerMetric += Util.BASHER_DANGER;
         } else {
           dangerMetric += Util.BASHER_DANGER*Util.UNSUPPLIED_COEFF;
         }
         break;
       case MISSILE:
-        if (bot.supplyLevel > RobotType.MISSILE.supplyUpkeep) {
+        if (bot.supplyLevel > RobotType.MISSILE.supplyUpkeep*LOW_SUPPLY_COEFF) {
           dangerMetric += Util.MISSILE_DANGER;
         } else {
           dangerMetric += Util.MISSILE_DANGER*Util.UNSUPPLIED_COEFF;
         }
         break;
       case HQ:
-        if (bot.supplyLevel > RobotType.HQ.supplyUpkeep) {
+        if (bot.supplyLevel > RobotType.HQ.supplyUpkeep*LOW_SUPPLY_COEFF) {
           dangerMetric += Util.HQ_DANGER;
         } else {
           dangerMetric += Util.HQ_DANGER*Util.UNSUPPLIED_COEFF;
         }
         break;
       case TOWER:
-        if (bot.supplyLevel > RobotType.TOWER.supplyUpkeep) {
+        if (bot.supplyLevel > RobotType.TOWER.supplyUpkeep*LOW_SUPPLY_COEFF) {
           dangerMetric += Util.TOWER_DANGER;
         } else {
           dangerMetric += Util.TOWER_DANGER*Util.UNSUPPLIED_COEFF;

@@ -40,7 +40,7 @@ public class HQ extends BaseBot {
   public double curOreDifferentialShift = 0;
   public static int teamOreValue = 0;
   public static int END_GAME_ROUND_NUM = 1500; 
-
+  public static int distanceBetweenHQ;
   static int MAX_NUM_MINERS;
 
   public HQ(RobotController rc) {
@@ -50,9 +50,11 @@ public class HQ extends BaseBot {
   public void setup() throws GameActionException {
     SupplyDistribution.init(this);
     SupplyDistribution.setBatteryMode();
-    MAX_NUM_MINERS = (int) (25 * (rc.getRoundLimit() * 1.25 / 2000));
-    System.out.println(MAX_NUM_MINERS);
     END_GAME_ROUND_NUM = rc.getRoundLimit() - 500;
+    distanceBetweenHQ = myHQ.distanceSquaredTo(enemyHQ);
+    MAX_NUM_MINERS = (int) Math.min((40 * distanceBetweenHQ / 5500), 60);
+    System.out.println(distanceBetweenHQ);
+    System.out.println(MAX_NUM_MINERS);
     buildForces();
   }
   
@@ -92,10 +94,6 @@ public class HQ extends BaseBot {
 
     SupplyDistribution.manageSupply();
     int curOreDifferential = getOreDifferential();
-    if (Clock.getRoundNum() % 20 == 0) {
-      curOreDifferentialShift = (curOreDifferentialShift * 0.8) + (curOreDifferential - lastOreDifferential) * 0.2;
-      lastOreDifferential = curOreDifferential;
-    }
     teamOreValue = getOreValue();
     
     // This checks which enemy towers are still alive and broadcasts it to save bytecode across the fleet
@@ -477,9 +475,9 @@ public class HQ extends BaseBot {
   public static final double DEFENDERS_ADVANTAGE = 1.5;
   public static final int TOWER_DIVE_RADIUS = 49;
   public boolean haveDecentSurround(MapLocation loc) {
-    double allyScore = Util.getDangerScore(rc.senseNearbyRobots(loc, TOWER_DIVE_RADIUS, myTeam));
+    double allyScore = Util.getDangerScore(rc.senseNearbyRobots(loc, TOWER_DIVE_RADIUS, myTeam), true);
     if (allyScore > 24.0) {
-      double enemyScore = Util.getDangerScore(rc.senseNearbyRobots(loc, TOWER_DIVE_RADIUS, theirTeam));
+      double enemyScore = Util.getDangerScore(rc.senseNearbyRobots(loc, TOWER_DIVE_RADIUS, theirTeam), false);
       //rc.setIndicatorString(2, "Tower score, Ally: " + allyScore + ", enemy: " + enemyScore);
 
       return allyScore > DEFENDERS_ADVANTAGE*enemyScore;
@@ -493,8 +491,8 @@ public class HQ extends BaseBot {
   public static final int NUM_TRAINING_FIELDS = 1;
   public static final int NUM_BEAVERS = 2;
   public static final int NUM_MINER_FACTORIES = 1;
-  public static int NUM_BARRACKS = 1;
-  public static final int NUM_TANK_FACTORIES = 10;
+  public static int NUM_BARRACKS = 2;
+  public static final int NUM_TANK_FACTORIES = 7;
   public static final int NUM_HELIPADS = 1;
   public static int NUM_SUPPLY_DEPOTS = Math.max(4, teamOreValue / (12 * 90));
   
@@ -538,7 +536,11 @@ public class HQ extends BaseBot {
       Messaging.queueUnits(RobotType.COMMANDER, 1);
     }
     */
-    NUM_SUPPLY_DEPOTS = Math.min(Math.max(4, teamOreValue / (12 * 65)), Clock.getRoundNum() / 100);
+    if (distanceBetweenHQ >= 6500) {
+      NUM_SUPPLY_DEPOTS = Math.min(Math.max(4, teamOreValue / (12 * 65)), Clock.getRoundNum() / 75);
+    } else {
+      NUM_SUPPLY_DEPOTS = Math.min(Math.max(4, teamOreValue / (12 * 65)), Clock.getRoundNum() / 100);
+    }
     if (Messaging.areWeFightingLaunchers()) {
       NUM_BARRACKS = 2;
     }
