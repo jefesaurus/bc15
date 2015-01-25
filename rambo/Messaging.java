@@ -85,8 +85,6 @@ public class Messaging {
     return type.ordinal() + BUILT_OFFSET;
   }
   
-  
-  
   public static void setDefendFront(MapLocation loc) throws GameActionException {
     for (int i=NUM_DEFEND_CHANNELS; i-- > 0;) {
       int chan = DEFEND_OFFSET + i;
