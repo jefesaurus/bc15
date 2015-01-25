@@ -132,7 +132,8 @@ public class HQ extends BaseBot {
     // If we are currently winning in towers, and we are under attack, pull back and defend.
     boolean haveMoreTowers = weHaveMoreTowers();
     boolean towersUnderAttack = Messaging.getClosestTowerUnderAttack() != null;
-    if (strat != HighLevelStrat.TOWER_DEFENDING && (haveMoreTowers || strat != HighLevelStrat.TOWER_DIVING) && towersUnderAttack) {
+    if (strat != HighLevelStrat.TOWER_DEFENDING && (haveMoreTowers || strat != HighLevelStrat.TOWER_DIVING || 
+        strat != HighLevelStrat.TOWER_DIVING_SPLIT) && towersUnderAttack) {
       defendTowers();
       return;
     }
