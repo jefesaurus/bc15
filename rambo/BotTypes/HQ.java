@@ -55,7 +55,7 @@ public class HQ extends BaseBot {
     SupplyDistribution.setBatteryMode();
     END_GAME_ROUND_NUM = rc.getRoundLimit() - 500;
     distanceBetweenHQ = myHQ.distanceSquaredTo(enemyHQ);
-    MAX_NUM_MINERS = (int) Math.min((40 * distanceBetweenHQ / 5500), 60);
+    MAX_NUM_MINERS = (int) Math.min((30 * distanceBetweenHQ / 5500), 50);
     System.out.println(distanceBetweenHQ);
     System.out.println(MAX_NUM_MINERS);
     buildForces();
@@ -361,6 +361,7 @@ public class HQ extends BaseBot {
   public void splitPush() throws GameActionException {
     strat = HighLevelStrat.SPLIT_PUSH;
     setFleetMode(MovingBot.AttackMode.SPLIT_PUSH);
+    Messaging.setFleetMode2(MovingBot.AttackMode.SPLIT_PUSH);
   }
   
   public void counterAttack(MapLocation towerLoc) throws GameActionException {
