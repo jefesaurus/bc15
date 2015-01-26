@@ -38,7 +38,7 @@ public class HQ extends BaseBot {
   public int curNumSoldiers = 0;
   public int lastOreDifferential = 0;
   public double curOreDifferentialShift = 0;
-  public static int teamOreValue = 0;
+  public static int teamSupplyCost = 0;
   public static int END_GAME_ROUND_NUM = 1500; 
   public static int distanceBetweenHQ;
   public static int MAX_NUM_MINERS;
@@ -98,8 +98,7 @@ public class HQ extends BaseBot {
     curNumSoldiers = Messaging.checkTotalNumUnits(RobotType.SOLDIER);
 
     SupplyDistribution.manageSupply();
-    int curOreDifferential = getOreDifferential();
-    teamOreValue = getOreValue();
+    teamSupplyCost = getSupplyCost();
     
     // This checks which enemy towers are still alive and broadcasts it to save bytecode across the fleet
     //Messaging.setSurvivingEnemyTowers(Cache.getEnemyTowerLocationsDirect());
@@ -127,17 +126,11 @@ public class HQ extends BaseBot {
     produceUnits();
     doMacro();
     
-    rc.setIndicatorString(0, strat.name());
+    rc.setIndicatorString(0, strat.name() + ", targets: " + splitPush1 + ", " + splitPush2 + ", " + Clock.getRoundNum());
     
     // If we are currently winning in towers, and we are under attack, pull back and defend.
     boolean haveMoreTowers = weHaveMoreTowers();
     boolean towersUnderAttack = Messaging.getClosestTowerUnderAttack() != null;
-    if (strat != HighLevelStrat.TOWER_DEFENDING && (haveMoreTowers || strat != HighLevelStrat.TOWER_DIVING || 
-        strat != HighLevelStrat.TOWER_DIVING_SPLIT) && towersUnderAttack) {
-      defendTowers();
-      return;
-    }
-    
     MapLocation[] enemyTowers = Cache.getEnemyTowerLocationsDirect();
     
     switch (strat) {
@@ -151,9 +144,12 @@ public class HQ extends BaseBot {
         } else {
           if (splitPush1 == null || splitPush2 == null) {
             setSplitPushTargets();
-            splitPush();
+            System.out.println("SHOULD ONLY BE CALLED ONCE");
+            splitPush(true, true);
           } else {
-            splitPush();
+            System.out.println("SHOULD NEVER BE CALLED");
+
+            splitPush(true, true);
           }
         }
       }
@@ -199,10 +195,6 @@ public class HQ extends BaseBot {
       break;
     case TOWER_DIVING_SPLIT:
       // If we're winning in tower count, switch to TOWER_DEFENDING
-      if (!doDesperateDive() && (!haveDecentSurround(splitPush1) && !haveDecentSurround(splitPush2))) {
-        buildForces();
-        break;
-      }
       
       if (doDesperateDive() || haveDecentSurround(splitPush1)) {
         // If there are no more towers, then we are engaging the HQ
@@ -237,13 +229,11 @@ public class HQ extends BaseBot {
           // defendTowers();
           updateSplitPushTargets(targetIsDead, target2IsDead);
           if (doDesperateDive()) {
-            splitPush();
+            splitPush(targetIsDead, target2IsDead);
           } else {
-            buildForces();
+            splitPush(targetIsDead, target2IsDead);
           }
         }
-      } else {
-        buildForces();
       }
       break;
     case TOWER_DEFENDING:
@@ -290,6 +280,20 @@ public class HQ extends BaseBot {
             diveTowerSafeSplit(splitPush2);
           } else {
             diveTowerUnsafeSplit(splitPush2);
+          }
+        }
+      }
+      if (enemyTowers.length > 0) {
+        // Check if our current target is dead yet:
+        boolean targetIsDead = currentTargetTowerIsDead(splitPush1);
+        boolean target2IsDead = currentTargetTowerIsDead(splitPush2);
+        if (targetIsDead || target2IsDead) {
+          // defendTowers();
+          updateSplitPushTargets(targetIsDead, target2IsDead);
+          if (doDesperateDive()) {
+            splitPush(targetIsDead, target2IsDead);
+          } else {
+            splitPush(targetIsDead, target2IsDead);
           }
         }
       }
@@ -359,10 +363,15 @@ public class HQ extends BaseBot {
     }
   }
   
-  public void splitPush() throws GameActionException {
+  public void splitPush(boolean target1, boolean target2) throws GameActionException {
+    System.out.println("split push called with: "+ target1 + " " + target2);
     strat = HighLevelStrat.SPLIT_PUSH;
-    setFleetMode(MovingBot.AttackMode.SPLIT_PUSH);
-    Messaging.setFleetMode2(MovingBot.AttackMode.SPLIT_PUSH);
+    if (target1) {
+      setFleetMode(MovingBot.AttackMode.SPLIT_PUSH);
+    }
+    if (target2) {
+      Messaging.setFleetMode2(MovingBot.AttackMode.SPLIT_PUSH);
+    }
   }
   
   public void counterAttack(MapLocation towerLoc) throws GameActionException {
@@ -376,24 +385,32 @@ public class HQ extends BaseBot {
     strat = HighLevelStrat.APPROACHING_TOWER;
     currentTargetTower = towerLoc;
     setRallyPoint(currentTargetTower);
+    Messaging.setRallyPoint2(currentTargetTower);
     setFleetMode(MovingBot.AttackMode.OFFENSIVE_SWARM);
+    Messaging.setFleetMode2(MovingBot.AttackMode.OFFENSIVE_SWARM);
+
   }
   
   public void diveTowerSafe(MapLocation towerLoc) throws GameActionException {
     strat = HighLevelStrat.TOWER_DIVING;
     setRallyPoint(towerLoc);
+    Messaging.setRallyPoint2(towerLoc);
     setFleetMode(MovingBot.AttackMode.SAFE_TOWER_DIVE);
+    Messaging.setFleetMode2(MovingBot.AttackMode.SAFE_TOWER_DIVE);
+
   }
   
   public void diveTowerUnsafe(MapLocation towerLoc) throws GameActionException {
     strat = HighLevelStrat.TOWER_DIVING;
     setRallyPoint(towerLoc);
+    Messaging.setRallyPoint2(towerLoc);
     setFleetMode(MovingBot.AttackMode.UNSAFE_TOWER_DIVE);
+    Messaging.setFleetMode2(MovingBot.AttackMode.UNSAFE_TOWER_DIVE);
   }
   
   public void diveTowerSafeSplit(MapLocation towerLoc) throws GameActionException {
     strat = HighLevelStrat.TOWER_DIVING_SPLIT;
-    if (towerLoc == splitPush1) {
+    if (towerLoc.equals(splitPush1)) {
       setFleetMode(MovingBot.AttackMode.SAFE_TOWER_DIVE_SPLIT);
     } else {
       Messaging.setFleetMode2(MovingBot.AttackMode.SAFE_TOWER_DIVE_SPLIT);     
@@ -402,7 +419,7 @@ public class HQ extends BaseBot {
   
   public void diveTowerUnsafeSplit(MapLocation towerLoc) throws GameActionException {
     strat = HighLevelStrat.TOWER_DIVING_SPLIT;
-    if (towerLoc == splitPush1) {
+    if (towerLoc.equals(splitPush1)) {
       setFleetMode(MovingBot.AttackMode.UNSAFE_TOWER_DIVE_SPLIT);
     } else {
       Messaging.setFleetMode2(MovingBot.AttackMode.UNSAFE_TOWER_DIVE_SPLIT);     
@@ -412,8 +429,10 @@ public class HQ extends BaseBot {
   public void defendTowers() throws GameActionException {
     strat = HighLevelStrat.TOWER_DEFENDING;
     setFleetMode(MovingBot.AttackMode.DEFEND_TOWERS);
+    Messaging.setFleetMode2(MovingBot.AttackMode.DEFEND_TOWERS);
     MapLocation loc = Messaging.getClosestTowerUnderAttack();
     setRallyPoint(loc);
+    Messaging.setRallyPoint2(loc);
   }
   
   public MapLocation getTowerToDefend() throws GameActionException {
@@ -435,11 +454,15 @@ public class HQ extends BaseBot {
   public void buildForces() throws GameActionException {
     strat = HighLevelStrat.BUILDING_FORCES; 
     setFleetMode(MovingBot.AttackMode.DEFENSIVE_SWARM);
+    Messaging.setFleetMode2(MovingBot.AttackMode.DEFENSIVE_SWARM);
     MapLocation[] towerLocs = rc.senseTowerLocations();
     if (towerLocs.length == 1) {
       setRallyPoint(towerLocs[0]);
+      Messaging.setRallyPoint2(towerLocs[0]);
+
     } else {
       setRallyPoint(getTowerToDefend());
+      Messaging.setRallyPoint2(getTowerToDefend());
     }
   }
   
@@ -509,13 +532,13 @@ public class HQ extends BaseBot {
     return netDifferential;
   }
   
-  public static int getOreValue() throws GameActionException {
-    int oreValue = 0;
+  public static int getSupplyCost() throws GameActionException {
+    int supplyCost = 0;
     for (int i=robotTypes.length; i-->0;) {
       RobotType type = robotTypes[i];
-      oreValue += (Messaging.checkNumUnits(type)) * type.oreCost;
+      supplyCost += (Messaging.checkNumUnits(type)) * type.supplyUpkeep;
     }
-    return oreValue;
+    return supplyCost;
   }
   
   /*
@@ -567,7 +590,6 @@ public class HQ extends BaseBot {
         }
     }
     if (t2) {
-      System.out.println("splitpush 2 @ " + splitPush2 + " is dead");
       Messaging.setRallyPoint2(towerLoc);
       splitPush2 = towerLoc;
     } else {
@@ -651,13 +673,17 @@ public class HQ extends BaseBot {
   }
   
   public static final double DEFENDERS_ADVANTAGE = 1.5;
-  public static final int TOWER_DIVE_RADIUS = 49;
+  public static final int TOWER_DIVE_RADIUS = 63;
   public boolean haveDecentSurround(MapLocation loc) {
-    double allyScore = Util.getDangerScore(rc.senseNearbyRobots(loc, TOWER_DIVE_RADIUS, myTeam), true);
+    //double allyScore = Util.getDangerScore(rc.senseNearbyRobots(loc, TOWER_DIVE_RADIUS, myTeam));
+    RobotInfo[] r = rc.senseNearbyRobots(loc, TOWER_DIVE_RADIUS, myTeam);
+    double allyScore = 0;
+    for (int i=r.length; i-->0;) {
+      allyScore += Util.getDangerScore(r[i]);
+    }
     if (allyScore > 24.0) {
-      double enemyScore = Util.getDangerScore(rc.senseNearbyRobots(loc, TOWER_DIVE_RADIUS, theirTeam), false);
+      double enemyScore = Util.getDangerScore(rc.senseNearbyRobots(loc, TOWER_DIVE_RADIUS, theirTeam));
       //rc.setIndicatorString(2, "Tower score, Ally: " + allyScore + ", enemy: " + enemyScore);
-
       return allyScore > DEFENDERS_ADVANTAGE*enemyScore;
     }
     //rc.setIndicatorString(2, "Tower score: no allies");
@@ -670,9 +696,9 @@ public class HQ extends BaseBot {
   public static final int NUM_BEAVERS = 2;
   public static final int NUM_MINER_FACTORIES = 1;
   public static int NUM_BARRACKS = 2;
-  public static final int NUM_TANK_FACTORIES = 7;
+  public static final int NUM_TANK_FACTORIES = 5;
   public static final int NUM_HELIPADS = 1;
-  public static int NUM_SUPPLY_DEPOTS = Math.max(4, teamOreValue / (12 * 90));
+  public static int NUM_SUPPLY_DEPOTS = Math.max(4, teamSupplyCost / 90);
   
   public void doMacro() throws GameActionException {
     /**if (Clock.getRoundNum() <= 1 && Messaging.checkTotalNumUnits(RobotType.DRONE) < 3) {
@@ -715,18 +741,20 @@ public class HQ extends BaseBot {
     }
     */
     if (distanceBetweenHQ >= 6500) {
-      NUM_SUPPLY_DEPOTS = Math.min(Math.max(4, teamOreValue / (12 * 65)), Clock.getRoundNum() / 75);
+      NUM_SUPPLY_DEPOTS = Math.min(Math.max(4, teamSupplyCost / (65)), Clock.getRoundNum() / 75);
     } else {
-      NUM_SUPPLY_DEPOTS = Math.min(Math.max(4, teamOreValue / (12 * 65)), Clock.getRoundNum() / 100);
-    }
-    if (Messaging.areWeFightingLaunchers()) {
-      NUM_BARRACKS = 2;
+      NUM_SUPPLY_DEPOTS = Math.min(Math.max(4, teamSupplyCost / (65)), Clock.getRoundNum() / 100);
     }
     
     if (curNumBarracks < NUM_BARRACKS /**&& Messaging.peekBuildingUnits(RobotType.SUPPLYDEPOT) >= 1*/) {
       Messaging.queueUnits(RobotType.BARRACKS, NUM_BARRACKS - curNumBarracks);
     }
 
+    if (Clock.getRoundNum() >= 800 && Messaging.peekQueueUnits(RobotType.BARRACKS) >= 1 && Messaging.areWeFightingLaunchers()) {
+      Messaging.queueUnits(RobotType.BARRACKS, NUM_BARRACKS - curNumBarracks);
+      Messaging.setUnitToProduce(RobotType.BARRACKS);
+    }
+    
     if (curNumSupplyDepots < NUM_SUPPLY_DEPOTS /**&& Messaging.checkNumUnits(RobotType.TRAININGFIELD) >= 1*/) {
       Messaging.queueUnits(RobotType.SUPPLYDEPOT, NUM_SUPPLY_DEPOTS - curNumSupplyDepots);
     }

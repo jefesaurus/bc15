@@ -2,6 +2,7 @@ package rambo;
 
 import battlecode.common.Clock;
 import battlecode.common.Direction;
+import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotInfo;
 import battlecode.common.RobotType;
@@ -57,12 +58,12 @@ public class Util {
   public static final double UNSUPPLIED_COEFF = .5; // How much less dangerous is an unsupplied unit?
   
   // Normal units
-  public static final double BEAVER_DANGER = RobotType.BEAVER.attackPower/RobotType.BEAVER.attackDelay;
-  public static final double DRONE_DANGER = RobotType.DRONE.attackPower/RobotType.DRONE.attackDelay;
-  public static final double SOLDIER_DANGER = RobotType.SOLDIER.attackPower/RobotType.SOLDIER.attackDelay;
-  public static final double MINER_DANGER = RobotType.MINER.attackPower/RobotType.MINER.attackDelay;
-  public static final double TANK_DANGER = RobotType.TANK.attackPower/RobotType.TANK.attackDelay;
-  public static final double COMMANDER_DANGER = RobotType.COMMANDER.attackPower/RobotType.COMMANDER.attackDelay;
+  public static final double BEAVER_DANGER = RobotType.BEAVER.attackPower/(RobotType.BEAVER.attackDelay + 0.5 * RobotType.BEAVER.loadingDelay);
+  public static final double DRONE_DANGER = RobotType.DRONE.attackPower/(RobotType.DRONE.attackDelay + 0.5 * RobotType.DRONE.loadingDelay);
+  public static final double SOLDIER_DANGER = RobotType.SOLDIER.attackPower/(RobotType.SOLDIER.attackDelay + 0.5 * RobotType.SOLDIER.loadingDelay);
+  public static final double MINER_DANGER = RobotType.MINER.attackPower/(RobotType.MINER.attackDelay + 0.5 * RobotType.MINER.loadingDelay);
+  public static final double TANK_DANGER = RobotType.TANK.attackPower/(RobotType.TANK.attackDelay + 0.5 * RobotType.TANK.loadingDelay);
+  public static final double COMMANDER_DANGER = RobotType.COMMANDER.attackPower/(RobotType.COMMANDER.attackDelay + 0.5 * RobotType.COMMANDER.loadingDelay);
 
   // Splash damage. This probably needs some tuning...
   public static final double MISSILE_DANGER = RobotType.MISSILE.attackPower;
@@ -72,81 +73,49 @@ public class Util {
   public static final double TOWER_DANGER = RobotType.TOWER.attackPower/RobotType.TOWER.attackDelay;
   public static final double HQ_DANGER = RobotType.HQ.attackPower/RobotType.HQ.attackDelay;
   
-  public static double getDangerScore(RobotInfo[] bots, boolean ally) {
-    int LOW_SUPPLY_COEFF = 1;
-    if (ally) {
-      LOW_SUPPLY_COEFF = 1;
-    }
+  public static double getDangerScore(RobotInfo[] bots) {
     int dangerMetric = 0;
-    for (RobotInfo bot : bots) {
-      switch (bot.type) {
-      case BEAVER:
-        if (bot.supplyLevel > RobotType.BEAVER.supplyUpkeep*LOW_SUPPLY_COEFF) {
-          dangerMetric += Util.BEAVER_DANGER;
-        } else {
-          dangerMetric += Util.BEAVER_DANGER*Util.UNSUPPLIED_COEFF;
-        }
-        break;
+    for (int i = bots.length; i-- > 0;) {
+      switch (bots[i].type) {
       case DRONE:
-        if (bot.supplyLevel > RobotType.DRONE.supplyUpkeep*LOW_SUPPLY_COEFF) {
+        if (bots[i].supplyLevel > RobotType.DRONE.supplyUpkeep) {
           dangerMetric += Util.DRONE_DANGER;
         } else {
           dangerMetric += Util.DRONE_DANGER*Util.UNSUPPLIED_COEFF;
         }
       case SOLDIER:
-        if (bot.supplyLevel > RobotType.SOLDIER.supplyUpkeep*LOW_SUPPLY_COEFF) {
+        if (bots[i].supplyLevel > RobotType.SOLDIER.supplyUpkeep) {
           dangerMetric += Util.SOLDIER_DANGER;
         } else {
           dangerMetric += Util.SOLDIER_DANGER*Util.UNSUPPLIED_COEFF;
         }
         break;
       case TANK:
-        if (bot.supplyLevel > RobotType.TANK.supplyUpkeep*LOW_SUPPLY_COEFF) {
+        if (bots[i].supplyLevel > RobotType.TANK.supplyUpkeep) {
           dangerMetric += Util.TANK_DANGER;
         } else {
           dangerMetric += Util.TANK_DANGER*Util.UNSUPPLIED_COEFF;
         }
         break;
       case COMMANDER:
-        if (bot.supplyLevel > RobotType.COMMANDER.supplyUpkeep*LOW_SUPPLY_COEFF) {
+        if (bots[i].supplyLevel > RobotType.COMMANDER.supplyUpkeep) {
           dangerMetric += Util.COMMANDER_DANGER;
         } else {
           dangerMetric += Util.COMMANDER_DANGER*Util.UNSUPPLIED_COEFF;
         }
         break;
-      case MINER:
-        if (bot.supplyLevel > RobotType.MINER.supplyUpkeep*LOW_SUPPLY_COEFF) {
-          dangerMetric += Util.MINER_DANGER;
-        } else {
-          dangerMetric += Util.MINER_DANGER*Util.UNSUPPLIED_COEFF;
-        }
-        break;
       case BASHER:
-        if (bot.supplyLevel > RobotType.BASHER.supplyUpkeep*LOW_SUPPLY_COEFF) {
+        if (bots[i].supplyLevel > RobotType.BASHER.supplyUpkeep) {
           dangerMetric += Util.BASHER_DANGER;
         } else {
           dangerMetric += Util.BASHER_DANGER*Util.UNSUPPLIED_COEFF;
         }
         break;
-      case MISSILE:
-        if (bot.supplyLevel > RobotType.MISSILE.supplyUpkeep*LOW_SUPPLY_COEFF) {
-          dangerMetric += Util.MISSILE_DANGER;
+      case LAUNCHER:
+        if (bots[i].supplyLevel > RobotType.LAUNCHER.supplyUpkeep) {
+          dangerMetric += Util.MISSILE_DANGER/RobotType.LAUNCHER.attackDelay + bots[i].missileCount*Util.MISSILE_DANGER/4;
         } else {
-          dangerMetric += Util.MISSILE_DANGER*Util.UNSUPPLIED_COEFF;
-        }
-        break;
-      case HQ:
-        if (bot.supplyLevel > RobotType.HQ.supplyUpkeep*LOW_SUPPLY_COEFF) {
-          dangerMetric += Util.HQ_DANGER;
-        } else {
-          dangerMetric += Util.HQ_DANGER*Util.UNSUPPLIED_COEFF;
-        }
-        break;
-      case TOWER:
-        if (bot.supplyLevel > RobotType.TOWER.supplyUpkeep*LOW_SUPPLY_COEFF) {
-          dangerMetric += Util.TOWER_DANGER;
-        } else {
-          dangerMetric += Util.TOWER_DANGER*Util.UNSUPPLIED_COEFF;
+          dangerMetric += Util.MISSILE_DANGER/RobotType.LAUNCHER.attackDelay*Util.UNSUPPLIED_COEFF + bots[i].missileCount*Util.MISSILE_DANGER/4;
         }
         break;
       default:
@@ -154,6 +123,21 @@ public class Util {
       }
     }
     return dangerMetric;
+  }
+  
+  public static double getDangerScore(RobotInfo bot) {
+    double danger = 0;
+    if (bot.type == RobotType.LAUNCHER) {
+      danger = Util.MISSILE_DANGER/RobotType.LAUNCHER.attackDelay*Util.UNSUPPLIED_COEFF + bot.missileCount*Util.MISSILE_DANGER/4;
+    } else {
+      danger = DANGER_VALUE_MAP[bot.type.ordinal()];
+    }
+    danger *= (bot.health/bot.type.maxHealth);
+    if (bot.supplyLevel <= 0) {
+      danger *= .5;
+    }
+    
+    return danger;
   }
   
   /*
@@ -181,7 +165,6 @@ public class Util {
    */
   public final static double[] DANGER_VALUE_MAP = {Util.HQ_DANGER, Util.TOWER_DANGER, 0, 0, 0, 0, 0, 0, 0, 0, 0, Util.BEAVER_DANGER, 0, Util.SOLDIER_DANGER,
                                                    Util.BASHER_DANGER, Util.MINER_DANGER, Util.DRONE_DANGER, Util.TANK_DANGER, Util.COMMANDER_DANGER, 0, Util.MISSILE_DANGER};
-  
   // 
   public final static int[] RANGE_TYPE_MAP = {5,5,0,0,0,0,0,0,0,0,0,2,0,2,1,2,3,4,3,5,1,};
   
@@ -206,4 +189,23 @@ public class Util {
     {{0.6, -0.8, 5.0},{0.7071067811865476, -0.7071067811865476, 4.242640687119285},{0.8320502943378437, -0.5547001962252291, 3.605551275463989},{0.9486832980505138, -0.31622776601683794, 3.1622776601683795},{1.0, 0.0, 3.0},{0.9486832980505138, 0.31622776601683794, 3.1622776601683795},{0.8320502943378437, 0.5547001962252291, 3.605551275463989},{0.7071067811865476, 0.7071067811865476, 4.242640687119285},{0.6, 0.8, 5.0},},
     {{0.7071067811865475, -0.7071067811865475, 5.656854249492381},{0.8, -0.6, 5.0},{0.8944271909999159, -0.4472135954999579, 4.47213595499958},{0.9701425001453319, -0.24253562503633297, 4.123105625617661},{1.0, 0.0, 4.0},{0.9701425001453319, 0.24253562503633297, 4.123105625617661},{0.8944271909999159, 0.4472135954999579, 4.47213595499958},{0.8, 0.6, 5.0},{0.7071067811865475, 0.7071067811865475, 5.656854249492381},},
     };
+  
+  public static int getNumAttackUnits(RobotInfo[] bots) {
+    int numAttackers = 0;
+    for (int i = bots.length; i-- > 0;) {
+      switch (bots[i].type) {
+      case DRONE:
+      case SOLDIER:
+      case TANK:
+      case COMMANDER:
+      case BASHER:
+      case LAUNCHER:
+        numAttackers ++;
+        break;
+      default:
+        break;
+      }
+    }
+    return numAttackers;
+  }
 }
