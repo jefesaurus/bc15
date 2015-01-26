@@ -36,6 +36,10 @@ public class Soldier extends MovingBot {
     
     rallyPoint = Messaging.readRallyPoint();
     mode = Messaging.getFleetMode();
+    if (id % 2 != 0) {
+      rallyPoint = Messaging.readRallyPoint2();
+      mode = Messaging.getFleetMode2();
+    } 
     rc.setIndicatorString(2, "Mode: " + mode.name() + ", Rally point: " + rallyPoint);
 
     if (HibernateSystem.manageHibernation(mode, currentEnemies, rallyPoint)) {
@@ -46,20 +50,12 @@ public class Soldier extends MovingBot {
 
     switch (mode) {
     case SPLIT_PUSH:
-      if (id % 2 != 0) {
-        rallyPoint = Messaging.readRallyPoint2();
-        mode = Messaging.getFleetMode2();
-      } 
       //System.out.println("rallyPoint: " + rallyPoint);
       rc.setIndicatorString(2, "Mode: " + mode.name() + ", Rally point: " + rallyPoint);
 
       doOffensiveMicroSplit(currentEnemies, rallyPoint);
       break;
     case SAFE_TOWER_DIVE_SPLIT:
-      if (id % 2 != 0) {
-        rallyPoint = Messaging.readRallyPoint2();
-        mode = Messaging.getFleetMode2();
-      }
 
       rc.setIndicatorString(2, "Mode: " + mode.name() + ", Rally point: " + rallyPoint);
 
@@ -85,10 +81,6 @@ public class Soldier extends MovingBot {
       }
       break;
     case UNSAFE_TOWER_DIVE_SPLIT:
-      if (id % 2 != 0) {
-        rallyPoint = Messaging.readRallyPoint2();   
-        mode = Messaging.getFleetMode2();
-      }
       if (currentEnemies.length > 0) {
         RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
         if (attackableEnemies.length > 0) {

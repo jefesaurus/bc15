@@ -30,11 +30,17 @@ public class Tank extends MovingBot {
   protected MapLocation rallyPoint = null;
   protected MovingBot.AttackMode mode = MovingBot.AttackMode.OFFENSIVE_SWARM;
 
+  
   public void execute() throws GameActionException {
+
     currentEnemies = Cache.getEngagementEnemies();
     
     rallyPoint = Messaging.readRallyPoint();
     mode = Messaging.getFleetMode();
+    if (id % 2 != 0) {
+      rallyPoint = Messaging.readRallyPoint2();
+      mode = Messaging.getFleetMode2();
+    } 
     rc.setIndicatorString(2, "Mode: " + mode.name() + ", Rally point: " + rallyPoint);
     if (HibernateSystem.manageHibernation(mode, currentEnemies, rallyPoint)) {
       //rc.setIndicatorString(2, "hibernating");
@@ -44,48 +50,56 @@ public class Tank extends MovingBot {
 
     switch (mode) {
     case SPLIT_PUSH:
-      if (id % 2 != 0) {
-        rallyPoint = Messaging.readRallyPoint2();
-        mode = Messaging.getFleetMode2();
-      } 
+      if (rallyPoint.equals(new MapLocation(8209, 12025))) {
+        System.out.println("in split push");
+      }
       //System.out.println("rallyPoint: " + rallyPoint);
       rc.setIndicatorString(2, "Mode: " + mode.name() + ", Rally point: " + rallyPoint);
 
       doOffensiveMicroSplit(currentEnemies, rallyPoint);
       break;
     case SAFE_TOWER_DIVE_SPLIT:
-      if (id % 2 != 0) {
-        rallyPoint = Messaging.readRallyPoint2();
-        mode = Messaging.getFleetMode2();
-      }
 
       rc.setIndicatorString(2, "Mode: " + mode.name() + ", Rally point: " + rallyPoint);
-
+     
       if (currentEnemies.length > 0) {
         RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
         if (attackableEnemies.length > 0) {
           if (rc.isWeaponReady()) {
             if (rc.canAttackLocation(rallyPoint)) {
               rc.attackLocation(rallyPoint);
+              if (rallyPoint.equals(new MapLocation(8209, 12025))) {
+                System.out.println("attacking tower");
+              }
+
             } else {
               attackLeastHealthEnemy(attackableEnemies);
+              if (rallyPoint.equals(new MapLocation(8209, 12025))) {
+                System.out.println("attacking units");
+              }
             }
           }
         } else {
           if (rc.isCoreReady() && rallyPoint != null) {
             Nav.goTo(rallyPoint, Engage.ONE_TOWER);
+            if (rallyPoint.equals(new MapLocation(8209, 12025))) {
+              System.out.println("no attackable enmies");
+            }
+
           }
         }
       } else if (rc.isCoreReady()) {
         if (rallyPoint != null) {
           Nav.goTo(rallyPoint, Engage.ONE_TOWER);
+          if (rallyPoint.equals(new MapLocation(8209, 12025))) {
+            System.out.println("no visible enemies");
+          }
         }
       }
       break;
     case UNSAFE_TOWER_DIVE_SPLIT:
-      if (id % 2 != 0) {
-        rallyPoint = Messaging.readRallyPoint2();   
-        mode = Messaging.getFleetMode2();
+      if (rallyPoint.equals(new MapLocation(8209, 12025))) {
+        System.out.println("in un safe tower dive split");
       }
       //System.out.println("rallyPoint: " + rallyPoint);
 
@@ -133,6 +147,7 @@ public class Tank extends MovingBot {
           Nav.goTo(rallyPoint, Engage.ONE_TOWER);
         }
       }
+      rc.setIndicatorString(1, "rally: " + rallyPoint + Clock.getRoundNum());
       break;
     case UNSAFE_TOWER_DIVE:
       if (currentEnemies.length > 0) {
