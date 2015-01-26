@@ -197,7 +197,7 @@ public class HQ extends BaseBot {
       if (doDesperateDive() || haveDecentSurround(splitPush1)) {
         // If there are no more towers, then we are engaging the HQ
         if (enemyTowers.length == 0) {
-          diveTowerUnsafeSplit(splitPush1);
+          diveTowerUnsafeSplit(enemyHQ);
         } else {
           if (isSafeTowerDive) {
             diveTowerSafeSplit(splitPush1);
@@ -209,7 +209,7 @@ public class HQ extends BaseBot {
       if (doDesperateDive() || haveDecentSurround(splitPush2)) {
         // If there are no more towers, then we are engaging the HQ
         if (enemyTowers.length == 0) {
-          diveTowerUnsafeSplit(splitPush2);
+          diveTowerUnsafeSplit(enemyHQ);
         } else {
           if (isSafeTowerDive) {
             diveTowerSafeSplit(splitPush2);
@@ -232,6 +232,8 @@ public class HQ extends BaseBot {
             splitPush(targetIsDead, target2IsDead);
           }
         }
+      } else {
+        approachTower(enemyHQ);
       }
       break;
     case TOWER_DEFENDING:
@@ -260,7 +262,7 @@ public class HQ extends BaseBot {
       if (doDesperateDive() || haveDecentSurround(splitPush1)) {
         // If there are no more towers, then we are engaging the HQ
         if (enemyTowers.length == 0) {
-          diveTowerUnsafeSplit(splitPush1);
+          diveTowerUnsafeSplit(enemyHQ);
         } else {
           if (isSafeTowerDive) {
             diveTowerSafeSplit(splitPush1);
@@ -272,7 +274,7 @@ public class HQ extends BaseBot {
       if (doDesperateDive() || haveDecentSurround(splitPush2)) {
         // If there are no more towers, then we are engaging the HQ
         if (enemyTowers.length == 0) {
-          diveTowerUnsafeSplit(splitPush2);
+          diveTowerUnsafeSplit(enemyHQ);
         } else {
           if (isSafeTowerDive) {
             diveTowerSafeSplit(splitPush2);
@@ -570,7 +572,6 @@ public class HQ extends BaseBot {
   public void updateSplitPushTargets(boolean t1, boolean t2) throws GameActionException {
     MapLocation aliveTower = splitPush1;
     if (t1 && t2) {
-      System.out.println("setting both");
       setSplitPushTargets();
       return;
     } else if (t1) {
