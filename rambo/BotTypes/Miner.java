@@ -311,19 +311,22 @@ public class Miner extends rambo.MovingBot {
   }
   
   public void broadcastHighestOreInSensorRange() throws GameActionException {
+    boolean foundANewLoc = false;
     MapLocation[] locationsInVisionRange = MapLocation.getAllMapLocationsWithinRadiusSq(this.curLoc, RobotType.MINER.sensorRadiusSquared);
     int currentX = rc.readBroadcast(Messaging.HIGH_ORE_LOCS);
     int currentY = rc.readBroadcast(Messaging.HIGH_ORE_LOCS + 1);
     for (int i = locationsInVisionRange.length; i-- > 0;) {
       MapLocation loc = locationsInVisionRange[i];
-      if (rc.senseOre(loc) > rc.senseOre(new MapLocation(currentX, currentY))) {
+      if (!rc.isLocationOccupied(loc) && rc.senseOre(loc) > rc.senseOre(new MapLocation(currentX, currentY))) {
         rc.broadcast(Messaging.HIGH_ORE_LOCS, loc.x);
         rc.broadcast(Messaging.HIGH_ORE_LOCS + 1, loc.y);
+        foundANewLoc = true;
       }
     }
     
-    rc.broadcast(Messaging.HIGH_ORE_REQUEST, 0);
-
+    if (foundANewLoc){
+      rc.broadcast(Messaging.HIGH_ORE_REQUEST, 0);
+    }
   }
   
   public MapLocation calculateNextLocationUsingGradient(int radius) {
