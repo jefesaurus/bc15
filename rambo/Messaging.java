@@ -85,8 +85,6 @@ public class Messaging {
     return type.ordinal() + BUILT_OFFSET;
   }
   
-  
-  
   public static void setDefendFront(MapLocation loc) throws GameActionException {
     for (int i=NUM_DEFEND_CHANNELS; i-- > 0;) {
       int chan = DEFEND_OFFSET + i;
@@ -371,7 +369,7 @@ public class Messaging {
   public static void writeLocation(int register, MapLocation loc, int roundNum) throws GameActionException {
     // This math shifts the location by our HQ's vector and then into the positive quadrant by 120
     // This guarantees the coordinates will be small and positive. (0 <= x,y <= 240)
-    int val = (roundNum << 20) + (loc.x - br.myHQ.x + 120) << 8 | (loc.y - br.myHQ.y + 120);
+    int val = ((roundNum << 20) | ((loc.x - br.myHQ.x + 120) << 8)) | (loc.y - br.myHQ.y + 120);
     rc.broadcast(register, val);
   }
   

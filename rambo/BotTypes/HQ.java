@@ -158,7 +158,10 @@ public class HQ extends BaseBot {
     case APPROACHING_TOWER:
       // Set rally point to just in front of nearest tower.
       // Wait until ally centroid is epsilon close, then switch to tower diving
-      if (doDesperateDive() || haveDecentSurround(currentTargetTower)) {
+      if (currentTargetTowerIsDead(enemyTowers)) {
+        setCurrentTowerTarget();
+        buildForces();
+      } else if (doDesperateDive() || haveDecentSurround(currentTargetTower)) {
         // If there are no more towers, then we are engaging the HQ
         if (enemyTowers.length == 0) {
           diveTowerUnsafe(currentTargetTower);
@@ -176,20 +179,12 @@ public class HQ extends BaseBot {
       if (!doDesperateDive() && !haveDecentSurround(currentTargetTower)) {
         buildForces();
         break;
-      }
-      
-      if (enemyTowers.length > 0) {
-        // Check if our current target is dead yet:
-        boolean targetIsDead = currentTargetTowerIsDead(enemyTowers);
-        
-        if (targetIsDead) {
-          // defendTowers();
-          setCurrentTowerTarget();
-          if (doDesperateDive()) {
-            approachTower(currentTargetTower);
-          } else {
-            buildForces();
-          }
+      } else if (currentTargetTowerIsDead(enemyTowers)) {
+        setCurrentTowerTarget();
+        if (doDesperateDive()) {
+          approachTower(currentTargetTower);
+        } else {
+          buildForces();
         }
       }
       break;
@@ -654,6 +649,9 @@ public class HQ extends BaseBot {
   }
   
   public boolean currentTargetTowerIsDead(MapLocation[] enemyTowers) {
+    if (currentTargetTower.equals(enemyHQ)) {
+      return false;
+    }
     for (int i = enemyTowers.length; i-- > 0;) {
       if (enemyTowers[i].equals(currentTargetTower)) {
         return false;

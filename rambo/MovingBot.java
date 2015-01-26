@@ -363,7 +363,7 @@ public class MovingBot extends BaseBot {
           }
         }
       } else if (numEnemyTowers >= 2) {
-        if (curDist < 49) {
+        if (Math.abs(curLoc.x - enemyHQ.x) <= 6 || Math.abs(curLoc.y - enemyHQ.y) <= 6 ) {
           if (curDist <= 35) {
             cachedAttackingHQDirs[8] = true;
           }
@@ -382,6 +382,7 @@ public class MovingBot extends BaseBot {
         }
       }
     }
+    //rc.setIndicatorString(1, Arrays.toString(cachedAttackingHQDirs) + ", " + Clock.getRoundNum());
     return cachedAttackingHQDirs;
   }
   
