@@ -45,6 +45,7 @@ public class HQ extends BaseBot {
   public static MapLocation splitPush1 = null;
   public static MapLocation splitPush2 = null;
   public static boolean lessThanOneTowerLeft = false;
+  public static int minerCutoffRound = 1000;
 
   public HQ(RobotController rc) {
     super(rc);
@@ -54,6 +55,8 @@ public class HQ extends BaseBot {
     SupplyDistribution.init(this);
     SupplyDistribution.setBatteryMode();
     END_GAME_ROUND_NUM = rc.getRoundLimit() - 500;
+    minerCutoffRound = rc.getRoundLimit() - 1000;
+
     distanceBetweenHQ = myHQ.distanceSquaredTo(enemyHQ);
     MAX_NUM_MINERS = (int) Math.min((30 * distanceBetweenHQ / 5500), 50);
     System.out.println(distanceBetweenHQ);
@@ -679,7 +682,7 @@ public class HQ extends BaseBot {
     for (int i=r.length; i-->0;) {
       allyScore += Util.getDangerScore(r[i]);
     }
-    if (allyScore > 24.0) {
+    if (allyScore > 30.0) {
       double enemyScore = Util.getDangerScore(rc.senseNearbyRobots(loc, TOWER_DIVE_RADIUS, theirTeam));
       //rc.setIndicatorString(2, "Tower score, Ally: " + allyScore + ", enemy: " + enemyScore);
       return allyScore > DEFENDERS_ADVANTAGE*enemyScore;
@@ -788,6 +791,9 @@ public class HQ extends BaseBot {
   
   // Get estimated ore production and compare it to the value required by our current unit output and/or desired future unit output.
   public boolean maintainOreProduction() throws GameActionException {
+    if (minerCutoffRound <= Clock.getRoundNum()) {
+      return true;
+    }
     int minersNeeded = MAX_NUM_MINERS - curNumMiners;
     if (minersNeeded > 0) {
       Messaging.setUnitToProduce(null);
