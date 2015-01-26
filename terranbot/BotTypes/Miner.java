@@ -67,61 +67,61 @@ public class Miner extends terranbot.MovingBot {
     }
   }
   
-  public void selfPreservation() throws GameActionException {
-    RobotInfo[] enemiesInSightRange = rc.senseNearbyRobots(this.curLoc, RobotType.MINER.sensorRadiusSquared, rc.getTeam().opponent());
-//    if (/*friendInAttackRange(enemiesInSightRange) &&*/ inAttackRange(enemiesInSightRange) && enemiesInSightRange.length == 1) {
-//      if (rc.isCoreReady()) {
-//        attackLeastHealthEnemy(enemiesInSightRange);
+//  public void selfPreservation() throws GameActionException {
+//    RobotInfo[] enemiesInSightRange = rc.senseNearbyRobots(this.curLoc, RobotType.MINER.sensorRadiusSquared, rc.getTeam().opponent());
+////    if (/*friendInAttackRange(enemiesInSightRange) &&*/ inAttackRange(enemiesInSightRange) && enemiesInSightRange.length == 1) {
+////      if (rc.isCoreReady()) {
+////        attackLeastHealthEnemy(enemiesInSightRange);
+////        return;
+////      }
+////    } else {
+////      //retreat
+////      return;
+////    }
+//    
+//    if (enemiesInSightRange.length == 0) {
+//      return;
+//    } else if (enemiesInSightRange.length <= 2) {
+//      int range = 50; // default at 50 for miner
+//      if (enemiesInSightRange[0].type == RobotType.DRONE) {
+//        range = (int) (rc.getHealth() / RobotType.DRONE.attackPower * RobotType.DRONE.attackDelay / RobotType.MINER.movementDelay)^2;
+//      }
+//      RobotInfo[] friendsInSightRange = rc.senseNearbyRobots(this.curLoc, range, rc.getTeam()); //TODO change for enemy type
+//      RobotInfo closestFriend = null; 
+//      int closestDist = range + 10;
+//      for (int i = 0; i < friendsInSightRange.length; i++) {
+//        if ((friendsInSightRange[i].type == RobotType.MINER) || (friendsInSightRange[i].type == RobotType.HQ) || 
+//            (friendsInSightRange[i].type == RobotType.TOWER)) {
+//          int dist = this.curLoc.distanceSquaredTo(friendsInSightRange[i].location);
+//          if (dist < closestDist) {
+//            closestFriend = friendsInSightRange[i];
+//          }
+//        }
+//      }
+//      if (closestFriend == null) {
+//        //TODO
 //        return;
 //      }
-//    } else {
-//      //retreat
+//      
+//      else if (closestFriend.location.distanceSquaredTo(curLoc) < 2 && 
+//          curLoc.distanceSquaredTo(enemiesInSightRange[0].location) < RobotType.MINER.attackRadiusSquared) {
+//        if (rc.isWeaponReady()) {
+//          rc.attackLocation(enemiesInSightRange[0].location);
+//        }
+//      } else {
+//        Nav.goTo(closestFriend.location, Engage.NONE);
+//        return;
+//      }
+//      
+//    } else { // TODO
+//      // you see more than two enemies, you're dead. jk, change later
+//      // TODO retreat possibly
 //      return;
 //    }
-    
-    if (enemiesInSightRange.length == 0) {
-      return;
-    } else if (enemiesInSightRange.length <= 2) {
-      int range = 50; // default at 50 for miner
-      if (enemiesInSightRange[0].type == RobotType.DRONE) {
-        range = (int) (rc.getHealth() / RobotType.DRONE.attackPower * RobotType.DRONE.attackDelay / RobotType.MINER.movementDelay)^2;
-      }
-      RobotInfo[] friendsInSightRange = rc.senseNearbyRobots(this.curLoc, range, rc.getTeam()); //TODO change for enemy type
-      RobotInfo closestFriend = null; 
-      int closestDist = range + 10;
-      for (int i = 0; i < friendsInSightRange.length; i++) {
-        if ((friendsInSightRange[i].type == RobotType.MINER) || (friendsInSightRange[i].type == RobotType.HQ) || 
-            (friendsInSightRange[i].type == RobotType.TOWER)) {
-          int dist = this.curLoc.distanceSquaredTo(friendsInSightRange[i].location);
-          if (dist < closestDist) {
-            closestFriend = friendsInSightRange[i];
-          }
-        }
-      }
-      if (closestFriend == null) {
-        //TODO
-        return;
-      }
-      
-      else if (closestFriend.location.distanceSquaredTo(curLoc) < 2 && 
-          curLoc.distanceSquaredTo(enemiesInSightRange[0].location) < RobotType.MINER.attackRadiusSquared) {
-        if (rc.isWeaponReady()) {
-          rc.attackLocation(enemiesInSightRange[0].location);
-        }
-      } else {
-        Nav.goTo(closestFriend.location, Engage.NONE);
-        return;
-      }
-      
-    } else { // TODO
-      // you see more than two enemies, you're dead. jk, change later
-      // TODO retreat possibly
-      return;
-    }
-  }
+//  }
   
   public void execute() throws GameActionException {
-    selfPreservation();
+    //selfPreservation(); //TODO put preservation in mine method?  Or remove it from disperse mode phase?
     
     if (disperseMode) {
       disperseMine();
@@ -136,6 +136,26 @@ public class Miner extends terranbot.MovingBot {
 //      safeZoneCenter = null;
 //      ventureMineMethod();
 //    }
+  }
+  
+  private void selfPreservation() {
+    // TODO first read message board to see if I should be attacking as a group
+    if (inImmediateDanger()) {
+      //TODO fight or retreat calculation (with group)
+    } else if (inPotentialDanger()) {
+      // check number of friends, if enough friends, keep mining.
+      // two full health miners can kill a drone, so if a friend nearby, move towards it
+      // if no friends, just retreat
+    }
+  }
+  
+  private boolean inImmediateDanger() {  // Immediate danger when within one square of drone attack range
+    int droneDangerRadius;
+    return false;
+  }
+  
+  private boolean inPotentialDanger() {
+    return false;
   }
   
   public void endOfTurn() {
@@ -271,7 +291,6 @@ public class Miner extends terranbot.MovingBot {
 //        
         basicMineAlgorithm();
 //        
-//      }
     }
   }
   
