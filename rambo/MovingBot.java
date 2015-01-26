@@ -24,7 +24,8 @@ public class MovingBot extends BaseBot {
       HUNT_FOR_MINERS,
       SPLIT_PUSH,
       SAFE_TOWER_DIVE_SPLIT,
-      UNSAFE_TOWER_DIVE_SPLIT
+      UNSAFE_TOWER_DIVE_SPLIT,
+      HELP_DIVE
   }
         
   protected RobotInfo[] currentEnemies;

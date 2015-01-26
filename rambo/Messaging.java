@@ -42,6 +42,8 @@ public class Messaging {
   public final static int RALLY_POINT_X2 = 54;
   public final static int RALLY_POINT_Y2 = 55;
   public final static int FLEET_MODE2 = 56;
+  
+  public final static int CAN_DIVE = 57; //channels 57-62
 
   public final static int COUNT_OFFSET = 100;
   public final static int KILLED_OFFSET = 1000;
@@ -65,6 +67,8 @@ public class Messaging {
   
   public final static int FIGHTING_LAUNCHERS = 20000;
   public final static int FIGHTING_COMMANDER = 20001;
+  
+  public final static int TOWER_DIVE_RANGE_SQUARED = 100;
 
   
   // init needs to get called once at the beginning to set up some stuff.
@@ -83,6 +87,52 @@ public class Messaging {
   
   public static int getBuiltChannel(RobotType type) {
     return type.ordinal() + BUILT_OFFSET;
+  }
+  
+  public static void setDivable(MapLocation loc) throws GameActionException {
+    for (int i=6; i-- > 0;) {
+      int chan = CAN_DIVE + i;
+      if (rc.readBroadcast(chan) == 0) {
+        writeLocation(chan, loc, Clock.getRoundNum());
+      } else {
+        MapLocation curLoc = readLocation(chan);
+        if (curLoc.equals(loc)) {
+          if (isFresh(chan)) {
+            writeLocation(chan, loc, Clock.getRoundNum());
+            return;
+          }
+        }
+        
+        if (!isFresh(chan)) {
+          writeLocation(chan, loc, Clock.getRoundNum());
+        }
+      }
+    }
+  }
+  
+  public static MapLocation getDivable(MapLocation loc) throws GameActionException {
+    MapLocation closest = null;
+    for (int i=6; i-- > 0;) {
+      int chan = CAN_DIVE + i;
+      if (isFresh(chan) && rc.readBroadcast(chan) != 0) {
+        MapLocation trialLoc = readLocation(chan);
+        if (closest == null) {
+          closest = trialLoc;
+        } else {
+          if (loc.distanceSquaredTo(trialLoc) < loc.distanceSquaredTo(closest)) {
+            closest = trialLoc;
+          }
+        }
+      }
+    }
+    if (closest == null) {
+      return null;
+    }
+    if (closest.distanceSquaredTo(loc) <= TOWER_DIVE_RANGE_SQUARED) {
+      return closest;
+    } else {
+      return null;
+    }
   }
   
   public static void setDefendFront(MapLocation loc) throws GameActionException {

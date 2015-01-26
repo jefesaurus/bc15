@@ -18,7 +18,7 @@ import battlecode.common.RobotInfo;
 
 public class Soldier extends MovingBot {  
   public static int id;
-
+  public static MapLocation divable = null;
   public Soldier(RobotController rc) {
     super(rc);
     SupplyDistribution.init(this);
@@ -40,8 +40,11 @@ public class Soldier extends MovingBot {
       rallyPoint = Messaging.readRallyPoint2();
       mode = Messaging.getFleetMode2();
     } 
+    divable = Messaging.getDivable(rc.getLocation());
+    if (divable != null && rallyPoint != divable) {
+      mode = MovingBot.AttackMode.HELP_DIVE;
+    }
     rc.setIndicatorString(2, "Mode: " + mode.name() + ", Rally point: " + rallyPoint);
-
     if (HibernateSystem.manageHibernation(mode, currentEnemies, rallyPoint)) {
       //rc.setIndicatorString(2, "hibernating");
       return;
@@ -49,6 +52,28 @@ public class Soldier extends MovingBot {
     SupplyDistribution.manageSupply();
 
     switch (mode) {
+    case HELP_DIVE:
+      if (currentEnemies.length > 0) {
+        RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
+        if (attackableEnemies.length > 0) {
+          if (rc.isWeaponReady()) {
+            if (rc.canAttackLocation(divable)) {
+              rc.attackLocation(divable);
+            } else {
+              attackLeastHealthEnemy(attackableEnemies);
+            }
+          }
+        } else {
+          if (rc.isCoreReady() && rallyPoint != null) {
+            Nav.goTo(divable, Engage.ONE_TOWER);
+          }
+        }
+      } else if (rc.isCoreReady()) {
+        if (rallyPoint != null) {
+          Nav.goTo(divable, Engage.ONE_TOWER);
+        }
+      }
+      break;
     case SPLIT_PUSH:
       //System.out.println("rallyPoint: " + rallyPoint);
       rc.setIndicatorString(2, "Mode: " + mode.name() + ", Rally point: " + rallyPoint);
