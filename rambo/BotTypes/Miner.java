@@ -1,8 +1,6 @@
 package rambo.BotTypes;
 
-import rambo.Cache;
 import rambo.Messaging;
-import rambo.MovingBot;
 import rambo.Nav;
 import rambo.SupplyDistribution;
 import rambo.Util;
@@ -16,8 +14,6 @@ import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotInfo;
 import battlecode.common.RobotType;
-import battlecode.common.TerrainTile;
-
 
 public class Miner extends rambo.MovingBot {
   public static final int MINING_HORIZON = 5;
@@ -29,9 +25,10 @@ public class Miner extends rambo.MovingBot {
   public static int disperseModeMiningTurns = 5;
 
   public static boolean mineWhileMoveMode = true;
-  public static MapLocation safeZoneCenter = null;
   
   public static boolean requestedHighOreLoc = false;
+  public static MapLocation destination = null;
+    
     
   public Miner(RobotController rc) {
     super(rc);
@@ -46,7 +43,6 @@ public class Miner extends rambo.MovingBot {
       MINER_ID = rc.readBroadcast(chan);
     }
   }
-
   
   public boolean friendInAttackRange(RobotInfo[] enemiesInSightRange) {
     if (enemiesInSightRange.length == 0) return false;
@@ -125,25 +121,27 @@ public class Miner extends rambo.MovingBot {
   
   public void execute() throws GameActionException {
     SupplyDistribution.manageSupply();
-    selfPreservation();
+//    selfPreservation();
     
-    if (disperseMode) {
+    if (destination!=null) {
+      if (this.curLoc.distanceSquaredTo(destination) < 5) {
+        destination = null;
+        if (rc.isCoreReady()) {
+          rc.mine();
+        }
+      } else {
+        minerNavSingleMove(curLoc.directionTo(destination));
+      }
+    }
+
+    else if (disperseMode) {
       disperseMine();
     } else {
-      safeZoneCenter = null;
       ventureMineMethod();
     }
-    
-//    if (Clock.getRoundNum() < 1000) {
-//      mineSafely();
-//    } else {
-//      safeZoneCenter = null;
-//      ventureMineMethod();
-//    }
   }
   
   public void endOfTurn() {
-	  
   }
 
   private void disperseMine() throws GameActionException {
@@ -158,97 +156,14 @@ public class Miner extends rambo.MovingBot {
         Direction dir = Util.REGULAR_DIRECTIONS[directionIndex];
         minerNavSingleMove(dir);
         minedOnLastTurn = false;
+        return;
       } else {
         rc.mine();
         minedOnLastTurn = true;
         disperseModeMiningTurns-=1;
+        return;
       }
     }
-  }
-  
-  private void mineSafely() throws GameActionException {
-    safeZoneCenter = pickSafeZone(); // TODO choose more intelligently
-    int dist = SAFE_RADIUS;
-    if (rc.isCoreReady()) {
-      if (inSafeArea(safeZoneCenter, dist)) {
-        mineArea(safeZoneCenter, dist);
-      } else {
-        moveToSafeArea(safeZoneCenter, dist);
-      }
-    }
-  }
-  
-  private MapLocation getAnyTower() {
-    MapLocation[] towers = this.myTowers;
-    int index = (int) Math.random()*towers.length;
-    return towers[5];
-  }
-  
-  private MapLocation pickSafeZone() throws GameActionException {
-    // distribute miners to each safe zone
-    int numActiveSafeZones = rc.readBroadcast(Messaging.NUM_ACTIVE_SAFEZONES);
-    int index = (MINER_ID % (numActiveSafeZones)); // towers + HQ
-    
-    int x = rc.readBroadcast(Messaging.SAFE_ZONES + 2*index);
-    int y = rc.readBroadcast(Messaging.SAFE_ZONES + 2*index + 1);
-
-    MapLocation mineDest = new MapLocation(x, y);
-    return mineDest;
-  }
-
-  private boolean inSafeArea(MapLocation safeLoc, int dist) {
-    return (this.curLoc.distanceSquaredTo(safeLoc) <= dist);
-  }
-
-/**
- * Move to the safe area
- * @param loc center of the safe area
- * @param dist around the center
- * @throws GameActionException 
- */
-  private void moveToSafeArea(MapLocation loc, int dist) throws GameActionException {
-    rc.setIndicatorString(0, "center of safe area: " + loc);
-    if (rc.isCoreReady()) {
-      if (mineWhileMoveMode) { // mine while move, alternately TODO: more intelligently TODO: buggy
-        if (minedOnLastTurn) {
-          rc.setIndicatorString(1, "desired dir: " + getMoveDir(loc));
-          // TODO this throws an error
-          //rc.move(getMoveDir(loc));
-          Nav.goTo(loc, Engage.NONE);
-          minedOnLastTurn = false;
-        } else {
-          rc.mine();
-          minedOnLastTurn = true;
-        }
-      } else {
-        Nav.goTo(loc, Engage.NONE);
-      }
-//      rc.move(getMoveDir(loc));
-    }
-  }
-  
-/**
- * Continue to mine if already in a safe area
- * @param center of the mining area
- * @param dist from the center
- * @throws GameActionException 
- */
-  private void mineArea(MapLocation center, int radius) throws GameActionException {
-    Direction[] directions = Direction.values();
-    for (int i=0; i<8; i++) {
-      if (rc.canMove(directions[i])) {
-        MapLocation trialLoc = this.curLoc.add(directions[i]);
-        if (trialLoc.distanceSquaredTo(center) <= radius) {
-          if (rc.isCoreReady()) {
-            // TODO mining algorithm
-            mineMethodSafe();
-//            rc.move(directions[i]);
-            continue;
-          }
-        }
-      }
-    }
-    
   }
   
   private void ventureMineMethod() throws GameActionException {
@@ -259,37 +174,7 @@ public class Miner extends rambo.MovingBot {
         Nav.retreat(attackingEnemyDirs);
       } else {
         // mine
-        mineMethod();
-      }
-    }
-  }
-  
-  public void mineMethod() throws GameActionException {
-    if (rc.isCoreReady()) {
-//      // check the number of turns left for this miner to mine on this space      
-//      if (miningTurns > 0) {
-//          miningTurns--;
-//          rc.mine();
-//      } else {
-//        // no more mining turns left for this location; determine next best course of action
-//        
         basicMineAlgorithm();
-//        
-//      }
-    }
-  }
-  
-  public void mineMethodSafe() throws GameActionException {
-    if (rc.isCoreReady()) {
-      // check the number of turns left for this miner to mine on this space      
-      if (miningTurns > 0) {
-          miningTurns--;
-          rc.mine();
-      } else {
-        // no more mining turns left for this location; determine next best course of action
-        
-        basicMineAlgorithm();
-        
       }
     }
   }
@@ -302,16 +187,21 @@ public class Miner extends rambo.MovingBot {
     return (rc.senseOre(curLoc) / (GameConstants.MINER_MINE_RATE) * unsuppliedCoeff > GameConstants.MINER_MINE_MAX);
   }
   
-  public boolean currentLocGivesMinOre() {
+  public boolean currentLocGivesMinOre(double multiplier) {
     double unsuppliedCoeff = 1;
     if (rc.getSupplyLevel() < RobotType.MINER.supplyUpkeep) {
       unsuppliedCoeff = 0.5;
     }
-    return (rc.senseOre(curLoc) / (GameConstants.MINER_MINE_RATE) * unsuppliedCoeff <= GameConstants.MINIMUM_MINE_AMOUNT);
+    return (rc.senseOre(curLoc) / (GameConstants.MINER_MINE_RATE) * unsuppliedCoeff <= GameConstants.MINIMUM_MINE_AMOUNT*multiplier);
   }
   
   public void broadcastHighestOreInSensorRange() throws GameActionException {
-    MapLocation[] locationsInVisionRange = MapLocation.getAllMapLocationsWithinRadiusSq(this.curLoc, RobotType.MINER.sensorRadiusSquared);
+    int radius = RobotType.MINER.sensorRadiusSquared;
+    if (Clock.getBytecodesLeft() < 5000) {
+      radius = radius/2;
+    }
+    
+    MapLocation[] locationsInVisionRange = MapLocation.getAllMapLocationsWithinRadiusSq(this.curLoc, radius);
     int currentX = rc.readBroadcast(Messaging.HIGH_ORE_LOCS);
     int currentY = rc.readBroadcast(Messaging.HIGH_ORE_LOCS + 1);
     int x = currentX;
@@ -353,33 +243,6 @@ public class Miner extends rambo.MovingBot {
     return desiredLoc;
   }
   
-  public void determineNewCourse() throws GameActionException {
-    if (currentLocGivesMaxOre()) {
-      if (rc.isCoreReady()) {
-        rc.mine();
-      }
-      return;
-    } else if (currentLocGivesMinOre()) {
-      if (rc.isCoreReady()) {
-        minerNavSingleMove(Util.REGULAR_DIRECTIONS[MINER_ID % 7]);
-      }
-      return;
-    } else {
-      // get all visible squares within range of 15 units squared TODO possibly do every other square
-      MapLocation desiredLoc = calculateNextLocationUsingGradient(15);   
-      
-      if (desiredLoc.equals(this.curLoc) && rc.isCoreReady()) {
-        rc.mine();
-      }      
-
-      else { // otherwise need to move to the next best square
-        Direction dir = this.curLoc.directionTo(desiredLoc);
-        minerNavSingleMove(dir);
-      }
-    }  
-  }
-  
-  // NOTE: Only used for mining in the safe zone
   public void basicMineAlgorithm() throws GameActionException {
     if (rc.readBroadcast(Messaging.HIGH_ORE_REQUEST) == 1) {
       broadcastHighestOreInSensorRange();
@@ -389,23 +252,58 @@ public class Miner extends rambo.MovingBot {
         rc.mine();
       }
       return;
-    } else if (currentLocGivesMinOre()) {
+    } else if (currentLocGivesMinOre(1)) {
       if (rc.isCoreReady()) {
         if (MINER_ID < 8) { // TODO, maybe by round number?
           minerNavSingleMove(Util.REGULAR_DIRECTIONS[MINER_ID % 7]);
-        } else if (!requestedHighOreLoc) {
+        } else if (!requestedHighOreLoc) { // request other miners
           rc.broadcast(Messaging.HIGH_ORE_REQUEST, 1);
           requestedHighOreLoc = true;
-        } else if (requestedHighOreLoc) {
-          int x = rc.readBroadcast(Messaging.HIGH_ORE_LOCS);
-          int y = rc.readBroadcast(Messaging.HIGH_ORE_LOCS + 1);
-          Nav.goTo(new MapLocation(x, y), Engage.NONE);
+//          if (towersSeeMoreOreThanMe()) { // read tower board
+//            minerNavSingleMove(this.curLoc.directionTo(destination));
+//          } else {
+//            
+//          }
+        } else if (requestedHighOreLoc) { // read what other miners said
+          if (towersSeeMoreOreThanMe()) { // read tower board
+            if (Clock.getBytecodesLeft() > 1500) {
+              minerNavSingleMove(this.curLoc.directionTo(destination));
+            }
+
+          } else {
+            int x = rc.readBroadcast(Messaging.HIGH_ORE_LOCS);
+            int y = rc.readBroadcast(Messaging.HIGH_ORE_LOCS + 1);
+            
+            MapLocation newLoc = new MapLocation(x,y);
+            
+            if (rc.senseOre(newLoc) < 1) {
+              disperseMode = true;
+            }
+            if (Clock.getBytecodesLeft() > 1500){
+              Nav.goTo(newLoc, Engage.NONE);
+
+            }
+          }
+          
+          
+          
+          
           requestedHighOreLoc = false;
           rc.broadcast(Messaging.HIGH_ORE_REQUEST, 0);
+          return;
         }
       }
       return;
     } else {
+      
+      if (towersSeeMoreOreThanMe()) { // read tower board
+        int start = Clock.getBytecodesLeft();
+
+        if (start > 1500)
+
+        minerNavSingleMove(this.curLoc.directionTo(destination));
+      } 
+      
       double[] dangerVals = this.getAllDangerVals();
       double curAmount = getOreAmount(this.curLoc, MINING_HORIZON);
       double maxAmount = curAmount;
@@ -413,10 +311,7 @@ public class Miner extends rambo.MovingBot {
       int numMaxes = 1;
       Direction[] directions = Direction.values();
       for (int i=0; i<8; i++) {
-        if (rc.canMove(directions[i]) && dangerVals[directions[i].ordinal()] < 0.01 &&
-            ((safeZoneCenter != null && inSafeArea(safeZoneCenter, SAFE_RADIUS) && // this part is for safe zone mining only
-            this.curLoc.add(directions[i]).distanceSquaredTo(safeZoneCenter) <= SAFE_RADIUS) ||
-            safeZoneCenter==null)) { // this part is for safe zone mining only
+        if (rc.canMove(directions[i]) && dangerVals[directions[i].ordinal()] < 0.01) { // this part is for safe zone mining only
           MapLocation trialLoc = this.curLoc.add(directions[i]);
           
           
@@ -451,13 +346,83 @@ public class Miner extends rambo.MovingBot {
     }
   }
   
+//  private void mineToHighOreTower() throws GameActionException {
+//    if (rc.isCoreReady()) {
+//      if (highTowerOreDestination!=null) {
+//        Nav.goTo(highTowerOreDestination, Engage.NONE);
+//      }
+//      
+//    }
+//  }
+
+  private boolean towersSeeMoreOreThanMe() throws GameActionException {
+    if (rc.readBroadcast(Messaging.UNCLAIMED_HIGH_ORE_TOWERS_COUNT) == 0) return false;
+    
+    int averageOreISee = (int) getMaxOreNearMe(); // round to int since tower ore values are rounded to ints
+    
+    double maxAmt = 0;
+    int towerIndex = 0;
+    int numHighOreTowers = rc.readBroadcast(Messaging.HIGH_ORE_TOWERS_COUNT);
+    for (int i=0; i < numHighOreTowers; i++) {
+      int ore = rc.readBroadcast(Messaging.HIGH_ORE_TOWERS_LOCS + 3*i + 2);
+      if (ore != 0 && ore > maxAmt) {
+        maxAmt = ore;
+        towerIndex = i;
+      }
+    }
+    
+    if (averageOreISee < maxAmt) {
+      int x = rc.readBroadcast(Messaging.HIGH_ORE_TOWERS_LOCS + 3*towerIndex);
+      int y = rc.readBroadcast(Messaging.HIGH_ORE_TOWERS_LOCS + 3*towerIndex + 1);
+      destination = new MapLocation(x, y);
+      
+      rc.broadcast(Messaging.HIGH_ORE_TOWERS_LOCS + 3*towerIndex + 2, 0);
+      int unclaimedTowers = rc.readBroadcast(Messaging.UNCLAIMED_HIGH_ORE_TOWERS_COUNT);
+      rc.broadcast(Messaging.UNCLAIMED_HIGH_ORE_TOWERS_COUNT, unclaimedTowers-1);
+
+      return true;
+    }
+    
+    return false;
+  }
+  
+  private double getMaxOreNearMe() throws GameActionException {
+    Direction[] dirs = Util.REGULAR_DIRECTIONS;
+    double max = rc.senseOre(this.curLoc);    
+    for (Direction dir : dirs) {
+      MapLocation testLoc = this.curLoc.add(dir);
+      if (!rc.isLocationOccupied(testLoc)) {
+        double test = rc.senseOre(testLoc);
+        if (test > max) {
+          max = test;
+        }
+      }
+    }
+    return max;
+  }
+  
+  
+  private double getAverageOreNearMe() throws GameActionException {
+    Direction[] dirs = Util.REGULAR_DIRECTIONS;
+    double cum = 0;
+    int totalLocs = 0;
+    for (Direction dir : dirs) {
+      MapLocation testLoc = this.curLoc.add(dir);
+      if (!rc.isLocationOccupied(testLoc)) {
+        cum = cum + rc.senseOre(testLoc);
+        totalLocs = totalLocs + 1;
+      }
+    }
+    return cum/totalLocs;
+  }
+
   private void minerNavSingleMove(Direction dir) throws GameActionException {
     int bestDir = dir.ordinal() + 8;
 
     boolean[] canMove = new boolean[8];
     //check that squares aren't occupied
     for (int i = 8; i-- > 0;) {
-      if (rc.canMove(Util.REGULAR_DIRECTIONS[i])) {
+      if (!rc.isLocationOccupied(curLoc.add(Util.REGULAR_DIRECTIONS[i])) && rc.canMove(Util.REGULAR_DIRECTIONS[i])) {
         canMove[i] = true;
       } else {
         canMove[i] = false;
@@ -474,63 +439,14 @@ public class Miner extends rambo.MovingBot {
       
       double[] dangerVals = this.getAllDangerVals();
       
-      // in safe zone, and want to stay in it
-      if (safeZoneCenter != null && inSafeArea(safeZoneCenter, SAFE_RADIUS)) {
-        if (canMove[tempDir] && dangerVals[tempDir] < 0.01 && 
-            this.curLoc.add(Util.REGULAR_DIRECTIONS[tempDir]).distanceSquaredTo(safeZoneCenter) <= SAFE_RADIUS) {
-          if (rc.isCoreReady())
-            rc.move(Util.REGULAR_DIRECTIONS[tempDir]);
-        }
-      } else { // not in safe zone yet, but do have a safe zone center, or no safe zone center at all
-        if (canMove[tempDir] && dangerVals[tempDir] < 0.01) {
-          if (rc.isCoreReady())
-            rc.move(Util.REGULAR_DIRECTIONS[tempDir]);
+      if (canMove[tempDir] && dangerVals[tempDir] < 0.01) {
+        if (rc.isCoreReady()) {
+          rc.move(Util.REGULAR_DIRECTIONS[tempDir]);
+          return;
         }
       }
     }
   }
-
-  /////OLD////
-    
-//      double curAmount = getOreAmount(this.curLoc, MINING_HORIZON);
-//      double maxAmount = curAmount;
-//      MapLocation bestLoc = this.curLoc;
-//      int numMaxes = 1;
-//      Direction[] directions = Direction.values();
-//      for (int i=0; i<8; i++) {
-//        if (rc.canMove(directions[i])) {
-//          MapLocation trialLoc = this.curLoc.add(directions[i]);
-//          double adjAmount = getOreAmount(trialLoc, MINING_HORIZON - 1);
-//          if (maxAmount < adjAmount) {
-//            maxAmount = adjAmount;
-//            bestLoc = trialLoc;
-//            numMaxes = 1;
-//          } else if (maxAmount == adjAmount) {
-//            numMaxes += 1;
-//            if (Math.random() > 1.0 / numMaxes) {
-//              bestLoc = trialLoc;
-//            }
-//          }
-//        }
-//      }
-//      
-//      if (maxAmount == curAmount) {
-//        bestLoc = this.curLoc;
-//      }
-//      
-//      if (bestLoc == this.curLoc && rc.isCoreReady()) {
-//        this.MINING_TURNS = MINING_HORIZON;
-//        rc.mine();
-//      }
-//      
-//      if (bestLoc != this.curLoc && rc.isCoreReady()) {
-//        this.MINING_TURNS = MINING_HORIZON;
-//        rc.move(getMoveDir(bestLoc));
-//      }
-      /////END OLD/////
-
-
-  
     
   public double getOreAmount(MapLocation loc, int horizon) {
     double startAmount = rc.senseOre(loc);

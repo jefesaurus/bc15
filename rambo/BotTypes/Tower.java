@@ -14,6 +14,10 @@ public class Tower extends BaseBot {
     super(rc);
   }
 
+  public void setup() throws GameActionException {
+    broadcastHighOreLocs(); 
+}
+  
   public void execute() throws GameActionException {
     RobotInfo[] visibleEnemies = getVisibleEnemies();
     boolean hasLaunchers = false;
@@ -46,4 +50,29 @@ public class Tower extends BaseBot {
       attackLeastHealthPrioritized(attackableEnemies);
     }
   }
+
+  private void broadcastHighOreLocs() throws GameActionException {
+    MapLocation[] locationsInVisionRange = MapLocation.getAllMapLocationsWithinRadiusSq(this.curLoc, RobotType.TOWER.sensorRadiusSquared);
+    int x = this.curLoc.x;
+    int y = this.curLoc.y;
+    double currentMax = rc.senseOre(this.curLoc);
+    for (int i = locationsInVisionRange.length; i-- > 0;) {
+      MapLocation loc = locationsInVisionRange[i];
+      double potentialMax = rc.senseOre(loc);
+      if (!rc.isLocationOccupied(loc) && potentialMax > rc.senseOre(new MapLocation(x, y))) {
+        x = loc.x;
+        y = loc.y;
+        currentMax = potentialMax;
+      }
+    }
+    int numTowersCheckedIn = rc.readBroadcast(Messaging.HIGH_ORE_TOWERS_COUNT);
+
+    rc.broadcast(Messaging.HIGH_ORE_TOWERS_LOCS + 3*numTowersCheckedIn, x);
+    rc.broadcast(Messaging.HIGH_ORE_TOWERS_LOCS + 3*numTowersCheckedIn + 1, y);
+    rc.broadcast(Messaging.HIGH_ORE_TOWERS_LOCS + 3*numTowersCheckedIn + 2, (int) currentMax);
+    rc.broadcast(Messaging.HIGH_ORE_TOWERS_COUNT, numTowersCheckedIn + 1);
+    rc.broadcast(Messaging.UNCLAIMED_HIGH_ORE_TOWERS_COUNT, numTowersCheckedIn + 1);
+
+  }
+
 }

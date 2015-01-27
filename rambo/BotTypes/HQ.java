@@ -58,7 +58,7 @@ public class HQ extends BaseBot {
     minerCutoffRound = rc.getRoundLimit() - 1000;
 
     distanceBetweenHQ = myHQ.distanceSquaredTo(enemyHQ);
-    MAX_NUM_MINERS = (int) Math.min((30 * distanceBetweenHQ / 5500), 50);
+    MAX_NUM_MINERS = 20 /*(int) Math.min((30 * distanceBetweenHQ / 5500), 50)*/;
     System.out.println(distanceBetweenHQ);
     System.out.println(MAX_NUM_MINERS);
     splitPush = setSplitPushTargets();
