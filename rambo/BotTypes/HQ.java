@@ -45,7 +45,8 @@ public class HQ extends BaseBot {
   public static MapLocation splitPush1 = null;
   public static MapLocation splitPush2 = null;
   public static boolean lessThanOneTowerLeft = false;
-
+  public static int minerCutoffRound = 1000;
+  public static boolean splitPush = false;
   public HQ(RobotController rc) {
     super(rc);
   }
@@ -54,10 +55,13 @@ public class HQ extends BaseBot {
     SupplyDistribution.init(this);
     SupplyDistribution.setBatteryMode();
     END_GAME_ROUND_NUM = rc.getRoundLimit() - 500;
+    minerCutoffRound = rc.getRoundLimit() - 1000;
+
     distanceBetweenHQ = myHQ.distanceSquaredTo(enemyHQ);
     MAX_NUM_MINERS = (int) Math.min((30 * distanceBetweenHQ / 5500), 50);
     System.out.println(distanceBetweenHQ);
     System.out.println(MAX_NUM_MINERS);
+    splitPush = setSplitPushTargets();
     buildForces();
   }
   
@@ -99,7 +103,7 @@ public class HQ extends BaseBot {
 
     SupplyDistribution.manageSupply();
     teamSupplyCost = getSupplyCost();
-    
+    updateDivables();
     // This checks which enemy towers are still alive and broadcasts it to save bytecode across the fleet
     //Messaging.setSurvivingEnemyTowers(Cache.getEnemyTowerLocationsDirect());
     
@@ -132,23 +136,20 @@ public class HQ extends BaseBot {
     boolean haveMoreTowers = weHaveMoreTowers();
     boolean towersUnderAttack = Messaging.getClosestTowerUnderAttack() != null;
     MapLocation[] enemyTowers = Cache.getEnemyTowerLocationsDirect();
-    
     switch (strat) {
     case BUILDING_FORCES:
       if (Clock.getRoundNum() >= 600 && 
       (Messaging.checkNumUnits(RobotType.TANK) + Messaging.checkNumUnits(RobotType.SOLDIER)) > FLEET_COUNT_ATTACK_THRESHOLD) {
-        if (distanceBetweenHQ <= 6000 || Cache.getEnemyTowerLocations().length < 2) {
+        if (!splitPush || Cache.getEnemyTowerLocations().length < 2) {
           System.out.println("Not split pushing");
           setCurrentTowerTarget();
           approachTower(currentTargetTower);
         } else {
           if (splitPush1 == null || splitPush2 == null) {
             setSplitPushTargets();
-            System.out.println("SHOULD ONLY BE CALLED ONCE");
             splitPush(true, true);
           } else {
-            System.out.println("SHOULD NEVER BE CALLED");
-
+            setSplitPushTargets();
             splitPush(true, true);
           }
         }
@@ -194,7 +195,7 @@ public class HQ extends BaseBot {
       if (doDesperateDive() || haveDecentSurround(splitPush1)) {
         // If there are no more towers, then we are engaging the HQ
         if (enemyTowers.length == 0) {
-          diveTowerUnsafeSplit(splitPush1);
+          diveTowerUnsafeSplit(enemyHQ);
         } else {
           if (isSafeTowerDive) {
             diveTowerSafeSplit(splitPush1);
@@ -206,7 +207,7 @@ public class HQ extends BaseBot {
       if (doDesperateDive() || haveDecentSurround(splitPush2)) {
         // If there are no more towers, then we are engaging the HQ
         if (enemyTowers.length == 0) {
-          diveTowerUnsafeSplit(splitPush2);
+          diveTowerUnsafeSplit(enemyHQ);
         } else {
           if (isSafeTowerDive) {
             diveTowerSafeSplit(splitPush2);
@@ -229,6 +230,8 @@ public class HQ extends BaseBot {
             splitPush(targetIsDead, target2IsDead);
           }
         }
+      } else {
+        approachTower(enemyHQ);
       }
       break;
     case TOWER_DEFENDING:
@@ -257,7 +260,7 @@ public class HQ extends BaseBot {
       if (doDesperateDive() || haveDecentSurround(splitPush1)) {
         // If there are no more towers, then we are engaging the HQ
         if (enemyTowers.length == 0) {
-          diveTowerUnsafeSplit(splitPush1);
+          diveTowerUnsafeSplit(enemyHQ);
         } else {
           if (isSafeTowerDive) {
             diveTowerSafeSplit(splitPush1);
@@ -269,7 +272,7 @@ public class HQ extends BaseBot {
       if (doDesperateDive() || haveDecentSurround(splitPush2)) {
         // If there are no more towers, then we are engaging the HQ
         if (enemyTowers.length == 0) {
-          diveTowerUnsafeSplit(splitPush2);
+          diveTowerUnsafeSplit(enemyHQ);
         } else {
           if (isSafeTowerDive) {
             diveTowerSafeSplit(splitPush2);
@@ -312,6 +315,15 @@ public class HQ extends BaseBot {
     Messaging.resetUnitCount(RobotType.SOLDIER);
     Messaging.resetTowersUnderAttack();
     super.endOfTurn();
+  }
+  
+  public void updateDivables() throws GameActionException {
+    MapLocation[] towerLocs = Cache.getEnemyTowerLocationsDirect();
+    for (int i=towerLocs.length; i-->0;) {
+      if (haveDecentSurround(towerLocs[i])) {
+        Messaging.setDivable(towerLocs[i]);
+      }
+    }
   }
   
   public void hqAttack(RobotInfo[] enemies, int range_squared) throws GameActionException {
@@ -542,7 +554,7 @@ public class HQ extends BaseBot {
    * It determines the target to be the tower with the Maximum minimum distance to another tower or HQ. That is, the one that is furthest away from the others
    * The safety metric is basically just to check whether this tower is directly adjacent to another tower, in which case it must ignore danger from untargeted towers.
    */
-  public void setSplitPushTargets() throws GameActionException {
+  public boolean setSplitPushTargets() throws GameActionException {
     MapLocation[] towerLocs = Cache.getEnemyTowerLocationsDirect();
     int maxDist = -1;
     MapLocation towerLoc1 = null;
@@ -562,12 +574,16 @@ public class HQ extends BaseBot {
     
     Messaging.setRallyPoint(towerLoc1);
     Messaging.setRallyPoint2(towerLoc2);
+    if (maxDist >= 1500) {
+      return true;
+    } else {
+      return false;
+    }
   }
   
   public void updateSplitPushTargets(boolean t1, boolean t2) throws GameActionException {
     MapLocation aliveTower = splitPush1;
     if (t1 && t2) {
-      System.out.println("setting both");
       setSplitPushTargets();
       return;
     } else if (t1) {
@@ -679,7 +695,7 @@ public class HQ extends BaseBot {
     for (int i=r.length; i-->0;) {
       allyScore += Util.getDangerScore(r[i]);
     }
-    if (allyScore > 24.0) {
+    if (allyScore > 30.0) {
       double enemyScore = Util.getDangerScore(rc.senseNearbyRobots(loc, TOWER_DIVE_RADIUS, theirTeam));
       //rc.setIndicatorString(2, "Tower score, Ally: " + allyScore + ", enemy: " + enemyScore);
       return allyScore > DEFENDERS_ADVANTAGE*enemyScore;
@@ -788,6 +804,9 @@ public class HQ extends BaseBot {
   
   // Get estimated ore production and compare it to the value required by our current unit output and/or desired future unit output.
   public boolean maintainOreProduction() throws GameActionException {
+    if (minerCutoffRound <= Clock.getRoundNum()) {
+      return true;
+    }
     int minersNeeded = MAX_NUM_MINERS - curNumMiners;
     if (minersNeeded > 0) {
       Messaging.setUnitToProduce(null);

@@ -18,6 +18,7 @@ import battlecode.common.RobotInfo;
 
 public class Tank extends MovingBot {  
   public static int id;
+  public static MapLocation divable = null;
   public Tank(RobotController rc) {
     super(rc);
     SupplyDistribution.init(this);
@@ -41,6 +42,11 @@ public class Tank extends MovingBot {
       rallyPoint = Messaging.readRallyPoint2();
       mode = Messaging.getFleetMode2();
     } 
+    
+    divable = Messaging.getDivable(rc.getLocation());
+    if (divable != null && rallyPoint != divable) {
+      mode = MovingBot.AttackMode.HELP_DIVE;
+    }
     rc.setIndicatorString(2, "Mode: " + mode.name() + ", Rally point: " + rallyPoint);
     if (HibernateSystem.manageHibernation(mode, currentEnemies, rallyPoint)) {
       //rc.setIndicatorString(2, "hibernating");
@@ -49,6 +55,28 @@ public class Tank extends MovingBot {
     SupplyDistribution.manageSupply();
 
     switch (mode) {
+    case HELP_DIVE:
+      if (currentEnemies.length > 0) {
+        RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
+        if (attackableEnemies.length > 0) {
+          if (rc.isWeaponReady()) {
+            if (rc.canAttackLocation(divable)) {
+              rc.attackLocation(divable);
+            } else {
+              attackLeastHealthEnemy(attackableEnemies);
+            }
+          }
+        } else {
+          if (rc.isCoreReady() && rallyPoint != null) {
+            Nav.goTo(divable, Engage.ONE_TOWER);
+          }
+        }
+      } else if (rc.isCoreReady()) {
+        if (rallyPoint != null) {
+          Nav.goTo(divable, Engage.ONE_TOWER);
+        }
+      }
+      break;
     case SPLIT_PUSH:
       if (rallyPoint.equals(new MapLocation(8209, 12025))) {
         System.out.println("in split push");
@@ -59,9 +87,7 @@ public class Tank extends MovingBot {
       doOffensiveMicroSplit(currentEnemies, rallyPoint);
       break;
     case SAFE_TOWER_DIVE_SPLIT:
-
       rc.setIndicatorString(2, "Mode: " + mode.name() + ", Rally point: " + rallyPoint);
-     
       if (currentEnemies.length > 0) {
         RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
         if (attackableEnemies.length > 0) {
