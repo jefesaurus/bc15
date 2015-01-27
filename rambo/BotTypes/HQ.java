@@ -570,6 +570,9 @@ public class HQ extends BaseBot {
    */
   public boolean setSplitPushTargets() throws GameActionException {
     MapLocation[] towerLocs = Cache.getEnemyTowerLocationsDirect();
+    if (towerLocs.length < 2) {
+      return false;
+    }
     int maxDist = -1;
     MapLocation towerLoc1 = null;
     MapLocation towerLoc2 = null;
