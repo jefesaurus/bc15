@@ -194,11 +194,6 @@ public class HQ extends BaseBot {
           buildForces();
         }
       }
-      
-      if (!currentTargetTower.equals(enemyHQ) && !haveDecentSurround(currentTargetTower) && Messaging.getFleetMode() == MovingBot.AttackMode.SAFE_TOWER_DIVE ||
-          Messaging.getFleetMode() == MovingBot.AttackMode.UNSAFE_TOWER_DIVE) {
-        buildForces();
-      }
       break;
     case TOWER_DIVING_SPLIT:
       // If we're winning in tower count, switch to TOWER_DEFENDING
@@ -320,21 +315,6 @@ public class HQ extends BaseBot {
   }
   
   public void endOfTurn() throws GameActionException {
-    /*
-    Messaging.resetUnitCount(RobotType.HELIPAD);
-    Messaging.resetUnitCount(RobotType.BARRACKS);
-    Messaging.resetUnitCount(RobotType.TANKFACTORY);
-    Messaging.resetUnitCount(RobotType.BEAVER);
-    Messaging.resetUnitCount(RobotType.MINER);
-    Messaging.resetUnitCount(RobotType.MINERFACTORY);
-    Messaging.resetUnitCount(RobotType.TANK);
-    Messaging.resetUnitCount(RobotType.DRONE);
-    Messaging.resetUnitCount(RobotType.SUPPLYDEPOT);
-    Messaging.resetUnitCount(RobotType.TECHNOLOGYINSTITUTE);
-    Messaging.resetUnitCount(RobotType.TRAININGFIELD);
-    Messaging.resetUnitCount(RobotType.COMMANDER);
-    Messaging.resetUnitCount(RobotType.SOLDIER);
-    */
     Messaging.resetTowersUnderAttack();
     super.endOfTurn();
   }
@@ -724,12 +704,12 @@ public class HQ extends BaseBot {
     for (int i=r.length; i-->0;) {
       allyScore += Util.getDangerScore(r[i]);
     }
-    if (allyScore > 24.0) {
+
+    if (strat == HighLevelStrat.TOWER_DIVING || strat == HighLevelStrat.TOWER_DIVING_SPLIT || allyScore > 24.0) {
+      // rc.setIndicatorString(2, "Tower score, Ally: " + allyScore + ", enemy: " + enemyScore);
       double enemyScore = Util.getDangerScore(rc.senseNearbyRobots(loc, TOWER_DIVE_RADIUS, theirTeam));
-      //rc.setIndicatorString(2, "Tower score, Ally: " + allyScore + ", enemy: " + enemyScore);
       return allyScore > DEFENDERS_ADVANTAGE*enemyScore;
     }
-    //rc.setIndicatorString(2, "Tower score: no allies");
     return false;
   }
    
