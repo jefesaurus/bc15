@@ -450,17 +450,31 @@ public class MovingBot extends BaseBot {
       }
     }
   }
+  /*
   public void doLauncherMicro(RobotInfo[] engageableEnemies, MapLocation rallyPoint) throws GameActionException {
     if (engageableEnemies.length > 0) {
       // returns {is winning, is lowest health and not alone}
       int[] metrics = getBattleMetrics(engageableEnemies);
       if (metrics[0] > 0) {
         //rc.setIndicatorString(1, "winning..." + Clock.getRoundNum());
-
         if (metrics[1] != -1 || metrics[2] != -1) {
           Messaging.setBattleFront(new MapLocation(metrics[1], metrics[2]));
         }
         RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
+        MapLocation closestLauncher = null;
+        int closestLauncherDist = curLoc.distanceSquaredTo(closestLauncher);
+        int tempDist;
+        
+        for (int i = engageableEnemies.length; i-- > 0;) {
+          if (engageableEnemies[i].type == RobotType.LAUNCHER) {            
+            tempDist = curLoc.distanceSquaredTo(engageableEnemies[0].location);
+            if (tempDist < closestLauncherDist) {
+              closestLauncherDist = tempDist;
+              closestLauncher = engageableEnemies[0].location;
+            }
+          }
+        }
+        
         if (attackableEnemies.length > 0) {
           if (rc.isWeaponReady()) {
             attackLeastHealthPrioritized(attackableEnemies);
@@ -507,6 +521,7 @@ public class MovingBot extends BaseBot {
       }
     }
   }
+  */
   
   public void doOffensiveMicroSplit(RobotInfo[] engageableEnemies, MapLocation rallyPoint) throws GameActionException {
     //rc.setIndicatorString(0, "Offensive micro " + ", " + Clock.getRoundNum());
