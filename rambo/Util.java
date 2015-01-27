@@ -3,6 +3,7 @@ package rambo;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
+import battlecode.common.GameConstants;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotInfo;
 import battlecode.common.RobotType;
@@ -128,7 +129,12 @@ public class Util {
   public static double getDangerScore(RobotInfo bot) {
     double danger = 0;
     if (bot.type == RobotType.LAUNCHER) {
-      danger = Util.MISSILE_DANGER/RobotType.LAUNCHER.attackDelay*Util.UNSUPPLIED_COEFF + bot.missileCount*Util.MISSILE_DANGER/4;
+      if (bot.supplyLevel <= 0) {
+        danger = Util.MISSILE_DANGER/16.0;
+      } else {
+        danger = Util.MISSILE_DANGER/8.0;
+      }
+      return bot.missileCount*Util.MISSILE_DANGER*(bot.health/bot.type.maxHealth);
     } else {
       danger = DANGER_VALUE_MAP[bot.type.ordinal()];
     }
