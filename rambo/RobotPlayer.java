@@ -213,23 +213,47 @@ public class RobotPlayer {
       MapLocation nonMissileSpot = null;
       double minMissileHealth = Double.MAX_VALUE;
       MapLocation missileSpot = null;
+      double minTankHealth = Double.MAX_VALUE;
+      MapLocation tankSpot = null;
+      double minDroneHealth = Double.MAX_VALUE;
+      MapLocation droneSpot = null;
+      double minSoldierHealth = Double.MAX_VALUE;
+      MapLocation soldierSpot = null;
       
       for (int i = enemies.length; i-- > 0;) {
         if (enemies[i].type == RobotType.LAUNCHER && enemies[i].health < minLauncherHealth) {
           launcherSpot = enemies[i].location;
-        } else if (enemies[i].type != RobotType.MISSILE && enemies[i].health < minNonMissileHealth) {
-          nonMissileSpot = enemies[i].location;
-        } else if (enemies[i].health < minMissileHealth) {
+          minLauncherHealth = enemies[i].health;
+        } else if (enemies[i].type == RobotType.MISSILE && enemies[i].health < minMissileHealth) {
           missileSpot = enemies[i].location;
+          minMissileHealth = enemies[i].health;
+        } else if (enemies[i].type == RobotType.TANK && enemies[i].health < minTankHealth) {
+          tankSpot = enemies[i].location;
+          minTankHealth = enemies[i].health;
+        } else if (enemies[i].type == RobotType.DRONE && enemies[i].health < minMissileHealth) {
+          droneSpot = enemies[i].location;
+          minDroneHealth = enemies[i].health;
+        } else if (enemies[i].type == RobotType.SOLDIER && enemies[i].health < minMissileHealth) {
+          soldierSpot = enemies[i].location;
+          minSoldierHealth = enemies[i].health;
+        } else if (enemies[i].health < minNonMissileHealth) {
+          nonMissileSpot = enemies[i].location;
+          minNonMissileHealth = enemies[i].health;
         }
       }
       
       if (launcherSpot != null) {
         rc.attackLocation(launcherSpot);
-      } else if (nonMissileSpot != null) {
-        rc.attackLocation(nonMissileSpot);
+      } else if (tankSpot != null) {
+        rc.attackLocation(tankSpot);
+      } else if (droneSpot != null) {
+        rc.attackLocation(droneSpot);
+      } else if (soldierSpot != null) {
+        rc.attackLocation(soldierSpot);
       } else if (missileSpot != null) {
         rc.attackLocation(missileSpot);
+      } else if (nonMissileSpot != null) {
+        rc.attackLocation(nonMissileSpot);
       }
     }
 

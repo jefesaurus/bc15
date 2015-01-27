@@ -75,10 +75,7 @@ public class Soldier extends MovingBot {
       }
       break;
     case SPLIT_PUSH:
-      //System.out.println("rallyPoint: " + rallyPoint);
-      rc.setIndicatorString(2, "Mode: " + mode.name() + ", Rally point: " + rallyPoint);
-
-      doOffensiveMicroSplit(currentEnemies, rallyPoint);
+      doOffensiveMicro(currentEnemies, rallyPoint);
       break;
     case SAFE_TOWER_DIVE_SPLIT:
 

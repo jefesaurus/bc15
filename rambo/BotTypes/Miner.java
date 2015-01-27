@@ -45,7 +45,7 @@ public class Miner extends rambo.MovingBot {
       int chan = Messaging.getCountChannel(RobotType.MINER);
       MINER_ID = rc.readBroadcast(chan);
     }
-    allInPushRound = rc.getRoundLimit() - 300;
+    allInPushRound = rc.getRoundLimit() - 200;
   }
   
   public boolean friendInAttackRange(RobotInfo[] enemiesInSightRange) {
@@ -128,160 +128,25 @@ public class Miner extends rambo.MovingBot {
     
     MapLocation rallyPoint = Messaging.readRallyPoint();
     MovingBot.AttackMode mode = Messaging.getFleetMode();
-    MapLocation divable = Messaging.getDivable(rc.getLocation());
-    if (divable != null && rallyPoint != divable) {
-      mode = MovingBot.AttackMode.HELP_DIVE;
-    }
-    rc.setIndicatorString(2, "Mode: " + mode.name() + ", Rally point: " + rallyPoint);
-    if (HibernateSystem.manageHibernation(mode, currentEnemies, rallyPoint)) {
-      //rc.setIndicatorString(2, "hibernating");
-      return;
-    }
-    SupplyDistribution.manageSupply();
-
-    switch (mode) {
-    case HELP_DIVE:
-      if (currentEnemies.length > 0) {
-        RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
-        if (attackableEnemies.length > 0) {
-          if (rc.isWeaponReady()) {
-            if (rc.canAttackLocation(divable)) {
-              rc.attackLocation(divable);
-            } else {
-              attackLeastHealthEnemy(attackableEnemies);
-            }
-          }
-        } else {
-          if (rc.isCoreReady() && rallyPoint != null) {
-            Nav.goTo(divable, Engage.ONE_TOWER);
+    if (currentEnemies.length > 0) {
+      RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
+      if (attackableEnemies.length > 0) {
+        if (rc.isWeaponReady()) {
+          if (rc.canAttackLocation(rallyPoint)) {
+            rc.attackLocation(rallyPoint);
+          } else {
+            attackLeastHealthEnemy(attackableEnemies);
           }
         }
-      } else if (rc.isCoreReady()) {
-        if (rallyPoint != null) {
-          Nav.goTo(divable, Engage.ONE_TOWER);
-        }
-      }
-      break;
-    case SPLIT_PUSH:
-      if (rallyPoint.equals(new MapLocation(8209, 12025))) {
-        System.out.println("in split push");
-      }
-      //System.out.println("rallyPoint: " + rallyPoint);
-      rc.setIndicatorString(2, "Mode: " + mode.name() + ", Rally point: " + rallyPoint);
-
-      doOffensiveMicroSplit(currentEnemies, rallyPoint);
-      break;
-    case SAFE_TOWER_DIVE_SPLIT:
-      rc.setIndicatorString(2, "Mode: " + mode.name() + ", Rally point: " + rallyPoint);
-      if (currentEnemies.length > 0) {
-        RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
-        if (attackableEnemies.length > 0) {
-          if (rc.isWeaponReady()) {
-            if (rc.canAttackLocation(rallyPoint)) {
-              rc.attackLocation(rallyPoint);
-            } else {
-              attackLeastHealthEnemy(attackableEnemies);
-            }
-          }
-        } else {
-          if (rc.isCoreReady() && rallyPoint != null) {
-            Nav.goTo(rallyPoint, Engage.ONE_TOWER);
-          }
-        }
-      } else if (rc.isCoreReady()) {
-        if (rallyPoint != null) {
-          Nav.goTo(rallyPoint, Engage.ONE_TOWER);
-        }
-      }
-      break;
-    case UNSAFE_TOWER_DIVE_SPLIT:
-      if (rallyPoint.equals(new MapLocation(8209, 12025))) {
-        System.out.println("in un safe tower dive split");
-      }
-      //System.out.println("rallyPoint: " + rallyPoint);
-
-      rc.setIndicatorString(2, "Mode: " + mode.name() + ", Rally point: " + rallyPoint);
-
-      if (currentEnemies.length > 0) {
-        RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
-        if (attackableEnemies.length > 0) {
-          if (rc.isWeaponReady()) {
-            if (rc.canAttackLocation(rallyPoint)) {
-              rc.attackLocation(rallyPoint);
-            } else {
-              attackLeastHealthEnemy(attackableEnemies);
-            }
-          }
-        } else {
-          if (rc.isCoreReady() && rallyPoint != null) {
-            Nav.goTo(rallyPoint, Engage.ALL_TOWERS);
-          }
-        }
-      } else if (rc.isCoreReady()) {
-        if (rallyPoint != null) {
+      } else {
+        if (rc.isCoreReady() && rallyPoint != null) {
           Nav.goTo(rallyPoint, Engage.ALL_TOWERS);
         }
       }
-      break;
-    case SAFE_TOWER_DIVE:
-      if (currentEnemies.length > 0) {
-        RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
-        if (attackableEnemies.length > 0) {
-          if (rc.isWeaponReady()) {
-            if (rc.canAttackLocation(rallyPoint)) {
-              rc.attackLocation(rallyPoint);
-            } else {
-              attackLeastHealthEnemy(attackableEnemies);
-            }
-          }
-        } else {
-          if (rc.isCoreReady() && rallyPoint != null) {
-            Nav.goTo(rallyPoint, Engage.ONE_TOWER);
-          }
-        }
-      } else if (rc.isCoreReady()) {
-        if (rallyPoint != null) {
-          Nav.goTo(rallyPoint, Engage.ONE_TOWER);
-        }
+    } else if (rc.isCoreReady()) {
+      if (rallyPoint != null) {
+        Nav.goTo(rallyPoint, Engage.ALL_TOWERS);
       }
-      rc.setIndicatorString(1, "rally: " + rallyPoint + Clock.getRoundNum());
-      break;
-    case UNSAFE_TOWER_DIVE:
-      if (currentEnemies.length > 0) {
-        RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
-        if (attackableEnemies.length > 0) {
-          if (rc.isWeaponReady()) {
-            if (rc.canAttackLocation(rallyPoint)) {
-              rc.attackLocation(rallyPoint);
-            } else {
-              attackLeastHealthEnemy(attackableEnemies);
-            }
-          }
-        } else {
-          if (rc.isCoreReady() && rallyPoint != null) {
-            Nav.goTo(rallyPoint, Engage.ALL_TOWERS);
-          }
-        }
-      } else if (rc.isCoreReady()) {
-        if (rallyPoint != null) {
-          Nav.goTo(rallyPoint, Engage.ALL_TOWERS);
-        }
-      }
-      break;
-    case RALLYING:
-    case OFFENSIVE_SWARM:
-      doOffensiveMicro(currentEnemies, rallyPoint);
-      break;
-    case DEFEND_TOWERS:
-    case DEFENSIVE_SWARM:
-      doDefensiveMicro(currentEnemies, rallyPoint);
-      break;
-    case COUNTER_ATTACK:
-      doSneakyMove(rallyPoint);
-      break;
-    default:
-      System.out.println("No default behavior");
-      break;
     }
   }
   

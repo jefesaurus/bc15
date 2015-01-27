@@ -115,9 +115,9 @@ public class Util {
         break;
       case LAUNCHER:
         if (bots[i].supplyLevel > RobotType.LAUNCHER.supplyUpkeep) {
-          dangerMetric += Util.MISSILE_DANGER/RobotType.LAUNCHER.attackDelay + bots[i].missileCount*Util.MISSILE_DANGER/4;
+          dangerMetric += Util.MISSILE_DANGER/8 + bots[i].missileCount*Util.MISSILE_DANGER/4;
         } else {
-          dangerMetric += Util.MISSILE_DANGER/RobotType.LAUNCHER.attackDelay*Util.UNSUPPLIED_COEFF + bots[i].missileCount*Util.MISSILE_DANGER/4;
+          dangerMetric += Util.MISSILE_DANGER/16*Util.UNSUPPLIED_COEFF + bots[i].missileCount*Util.MISSILE_DANGER/4;
         }
         break;
       default:
