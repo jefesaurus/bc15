@@ -84,6 +84,7 @@ public class Util {
         } else {
           dangerMetric += Util.DRONE_DANGER*Util.UNSUPPLIED_COEFF;
         }
+        break;
       case SOLDIER:
         if (bots[i].supplyLevel > RobotType.SOLDIER.supplyUpkeep) {
           dangerMetric += Util.SOLDIER_DANGER;
