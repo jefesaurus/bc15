@@ -391,6 +391,7 @@ public class MovingBot extends BaseBot {
     Nav.goTo(rallyPoint, Engage.NONE);
   }
   
+ 
   public void doOffensiveMicro(RobotInfo[] engageableEnemies, MapLocation rallyPoint) throws GameActionException {
     //rc.setIndicatorString(0, "Offensive micro " + ", " + Clock.getRoundNum());
 
@@ -403,6 +404,7 @@ public class MovingBot extends BaseBot {
         if (metrics[1] != -1 || metrics[2] != -1) {
           Messaging.setBattleFront(new MapLocation(metrics[1], metrics[2]));
         }
+        MapLocation nearestBattle = Messaging.getClosestBattleFront(rc.getLocation());
         RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
         if (attackableEnemies.length > 0) {
           if (rc.isWeaponReady()) {
@@ -410,10 +412,7 @@ public class MovingBot extends BaseBot {
           }
         } else {
           if (metrics[1] != -1 || metrics[2] != -1) {
-            Nav.goTo(new MapLocation(metrics[1], metrics[2]), Engage.UNITS);
-          } else {
-            MapLocation nearestBattle = Messaging.getClosestBattleFront(curLoc);
-            if (nearestBattle != null) {
+            if (nearestBattle != null && nearestBattle.distanceSquaredTo(rc.getLocation()) <= 50) {
               //rc.setIndicatorString(1, "Going to battlefront: " + nearestBattle + ", " + Clock.getRoundNum());
               Nav.goTo(nearestBattle, Engage.UNITS);
             } else {
