@@ -75,76 +75,34 @@ public class Util {
   public static final double HQ_DANGER = RobotType.HQ.attackPower/RobotType.HQ.attackDelay;
   
   public static double getDangerScore(RobotInfo[] bots) {
-    int dangerMetric = 0;
+    double dangerMetric = 0;
     for (int i = bots.length; i-- > 0;) {
-      switch (bots[i].type) {
-      case DRONE:
-        if (bots[i].supplyLevel > RobotType.DRONE.supplyUpkeep) {
-          dangerMetric += Util.DRONE_DANGER;
-        } else {
-          dangerMetric += Util.DRONE_DANGER*Util.UNSUPPLIED_COEFF;
-        }
-        break;
-      case SOLDIER:
-        if (bots[i].supplyLevel > RobotType.SOLDIER.supplyUpkeep) {
-          dangerMetric += Util.SOLDIER_DANGER;
-        } else {
-          dangerMetric += Util.SOLDIER_DANGER*Util.UNSUPPLIED_COEFF;
-        }
-        break;
-      case TANK:
-        if (bots[i].supplyLevel > RobotType.TANK.supplyUpkeep) {
-          dangerMetric += Util.TANK_DANGER;
-        } else {
-          dangerMetric += Util.TANK_DANGER*Util.UNSUPPLIED_COEFF;
-        }
-        break;
-      case COMMANDER:
-        if (bots[i].supplyLevel > RobotType.COMMANDER.supplyUpkeep) {
-          dangerMetric += Util.COMMANDER_DANGER;
-        } else {
-          dangerMetric += Util.COMMANDER_DANGER*Util.UNSUPPLIED_COEFF;
-        }
-        break;
-      case BASHER:
-        if (bots[i].supplyLevel > RobotType.BASHER.supplyUpkeep) {
-          dangerMetric += Util.BASHER_DANGER;
-        } else {
-          dangerMetric += Util.BASHER_DANGER*Util.UNSUPPLIED_COEFF;
-        }
-        break;
-      case LAUNCHER:
-        if (bots[i].supplyLevel > RobotType.LAUNCHER.supplyUpkeep) {
-          dangerMetric += Util.MISSILE_DANGER/8 + bots[i].missileCount*Util.MISSILE_DANGER/4;
-        } else {
-          dangerMetric += Util.MISSILE_DANGER/16*Util.UNSUPPLIED_COEFF + bots[i].missileCount*Util.MISSILE_DANGER/4;
-        }
-        break;
-      default:
-        break;
-      }
+      dangerMetric += getDangerScore(bots[i]);
     }
     return dangerMetric;
   }
   
   public static double getDangerScore(RobotInfo bot) {
     double danger = 0;
-    if (bot.type == RobotType.LAUNCHER) {
+    switch (bot.type) {
+    case LAUNCHER:
       if (bot.supplyLevel <= 0) {
         danger = Util.MISSILE_DANGER/16.0;
       } else {
         danger = Util.MISSILE_DANGER/8.0;
       }
-      return bot.missileCount*Util.MISSILE_DANGER*(bot.health/bot.type.maxHealth);
-    } else {
-      danger = DANGER_VALUE_MAP[bot.type.ordinal()];
+      return bot.missileCount*Util.MISSILE_DANGER*(bot.health/144.0);
+    case TOWER:
+      return TANK_DANGER*4;
+    case HQ:
+      return TANK_DANGER*4;
+    default:
+      danger = DANGER_VALUE_MAP[bot.type.ordinal()]*bot.health/144.0;
+      if (bot.supplyLevel <= 0) {
+        danger *= .5;
+      }
+      return danger;
     }
-    danger *= (bot.health/bot.type.maxHealth);
-    if (bot.supplyLevel <= 0) {
-      danger *= .5;
-    }
-    
-    return danger;
   }
   
   /*
