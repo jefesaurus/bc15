@@ -242,7 +242,7 @@ public class RobotPlayer {
     
     public void beginningOfTurn() throws GameActionException {
       updateRoundVariables();
-      Messaging.announceUnit(rc.getType());
+      //Messaging.announceUnit(rc.getType());
     }
 
     public void endOfTurn() throws GameActionException {

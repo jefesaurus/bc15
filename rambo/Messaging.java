@@ -164,6 +164,9 @@ public class Messaging {
   
   // Returns null if no battlefront
   public static MapLocation getClosestDefendFront(MapLocation loc) throws GameActionException {
+    if (loc == null) {
+      return null;
+    }
     MapLocation closest = null;
     for (int i=NUM_DEFEND_CHANNELS; i-- > 0;) {
       int chan = DEFEND_OFFSET + i;
@@ -315,7 +318,7 @@ public class Messaging {
   public static void resetUnitCount(RobotType type) throws GameActionException {
     int chan = getCountChannel(type);
     int x = rc.readBroadcast(chan);
-    rc.broadcast(chan, x & 0xFFFF00);
+    rc.broadcast(chan, x & 0xFFFF);
   }
   
   public static int checkNumUnits(RobotType type) throws GameActionException {
@@ -327,51 +330,54 @@ public class Messaging {
   public static void announceDoneBuilding(RobotType type) throws GameActionException {
     int chan = getCountChannel(type);
     int x = rc.readBroadcast(chan);
-    rc.broadcast(chan, x - (1 << 16));
+    rc.broadcast(chan, x - (1 << 8));
   }
   
   public static int peekBuildingUnits(RobotType type) throws GameActionException {
     int chan = getCountChannel(type);
     int x = rc.readBroadcast(chan);
-    return x >> 16;
+    return (x >> 8) & mask;
   }
   
   public static void announceBuilding(RobotType type) throws GameActionException {
     int chan = getCountChannel(type);
     int x = rc.readBroadcast(chan);
-    rc.broadcast(chan, x + (1 << 16));
+    rc.broadcast(chan, x + (1 << 8));
   }
   
+  /*
   public static void announceUnit(RobotType type) throws GameActionException {
     int chan = getCountChannel(type);
     int x = rc.readBroadcast(chan);
     rc.broadcast(chan, x + 1);
   }
+  */
   
   public static void queueUnits(RobotType type, int quantity) throws GameActionException {
     int chan = getCountChannel(type);
     int x = rc.readBroadcast(chan);
-    rc.broadcast(chan, x + (quantity << 8));
+    rc.broadcast(chan, x | (quantity & mask));
   }
   
   public static int peekQueueUnits(RobotType type) throws GameActionException {
     int chan = getCountChannel(type);
-    return (rc.readBroadcast(chan) >> 8) & mask;
+    return rc.readBroadcast(chan) & mask;
   }
   
   public static int checkTotalNumUnits(RobotType type) throws GameActionException {
     int chan = getCountChannel(type);
     int x = rc.readBroadcast(chan);
     //System.out.println("" + type + ": " + x);
-    return (x & mask) + ((x >> 8) & mask) + ((x >> 16) & mask);
+    return (x & mask) + ((x >> 8) & mask);
   }
   
   public static boolean dequeueUnit(RobotType type) throws GameActionException {
     int chan = getCountChannel(type);
     int x = rc.readBroadcast(chan);
-    int numQueuedUnits = (x >> 8) & mask;
+    int numQueuedUnits = x & mask;
     if (numQueuedUnits > 0) {
-      rc.broadcast(chan, x - (1 << 8) + (1 << 16));
+      int numUnitsInProccess = ((x >> 8) & mask) + 1;
+      rc.broadcast(chan, (numQueuedUnits - 1) | (numUnitsInProccess << 8));
       return true;
     } else {
       return false;
