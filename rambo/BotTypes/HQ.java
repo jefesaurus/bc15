@@ -222,21 +222,6 @@ public class HQ extends BaseBot {
         }
       }
       
-      if (enemyTowers.length > 0) {
-        // Check if our current target is dead yet:
-        boolean targetIsDead = currentTargetTowerIsDead(splitPush1);
-        boolean target2IsDead = currentTargetTowerIsDead(splitPush2);
-        if (targetIsDead || target2IsDead) {
-          // defendTowers();
-          updateSplitPushTargets(targetIsDead, target2IsDead);
-          splitPush(targetIsDead, target2IsDead);
-          return;
-        }
-      } else {
-        approachTower(enemyHQ);
-        return;
-      }
-      
       if (!haveDecentSurround(splitPush1) && Messaging.getFleetMode() == MovingBot.AttackMode.SAFE_TOWER_DIVE_SPLIT ||
           Messaging.getFleetMode() == MovingBot.AttackMode.UNSAFE_TOWER_DIVE_SPLIT) {
         splitPush(true, false);
@@ -247,6 +232,18 @@ public class HQ extends BaseBot {
         splitPush(false, true);
       }
       
+      if (enemyTowers.length > 0) {
+        // Check if our current target is dead yet:
+        boolean targetIsDead = currentTargetTowerIsDead(splitPush1);
+        boolean target2IsDead = currentTargetTowerIsDead(splitPush2);
+        if (targetIsDead || target2IsDead) {
+          // defendTowers();
+          updateSplitPushTargets(targetIsDead, target2IsDead);
+          splitPush(targetIsDead, target2IsDead);
+        }
+      } else {
+        approachTower(enemyHQ);
+      }
       break;
     case TOWER_DEFENDING:
       // Switch to tower diving if they have equal to or more towers
