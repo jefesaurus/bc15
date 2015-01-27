@@ -94,32 +94,18 @@ public class Tank extends MovingBot {
           if (rc.isWeaponReady()) {
             if (rc.canAttackLocation(rallyPoint)) {
               rc.attackLocation(rallyPoint);
-              if (rallyPoint.equals(new MapLocation(8209, 12025))) {
-                System.out.println("attacking tower");
-              }
-
             } else {
               attackLeastHealthEnemy(attackableEnemies);
-              if (rallyPoint.equals(new MapLocation(8209, 12025))) {
-                System.out.println("attacking units");
-              }
             }
           }
         } else {
           if (rc.isCoreReady() && rallyPoint != null) {
             Nav.goTo(rallyPoint, Engage.ONE_TOWER);
-            if (rallyPoint.equals(new MapLocation(8209, 12025))) {
-              System.out.println("no attackable enmies");
-            }
-
           }
         }
       } else if (rc.isCoreReady()) {
         if (rallyPoint != null) {
           Nav.goTo(rallyPoint, Engage.ONE_TOWER);
-          if (rallyPoint.equals(new MapLocation(8209, 12025))) {
-            System.out.println("no visible enemies");
-          }
         }
       }
       break;

@@ -58,7 +58,7 @@ public class HQ extends BaseBot {
     minerCutoffRound = rc.getRoundLimit() - 1000;
 
     distanceBetweenHQ = myHQ.distanceSquaredTo(enemyHQ);
-    MAX_NUM_MINERS = 20 /*(int) Math.min((30 * distanceBetweenHQ / 5500), 50)*/;
+    MAX_NUM_MINERS = (int) Math.max(Math.min((30 * distanceBetweenHQ / 5500), 50), 20);
     System.out.println(distanceBetweenHQ);
     System.out.println(MAX_NUM_MINERS);
     splitPush = setSplitPushTargets();
@@ -188,6 +188,11 @@ public class HQ extends BaseBot {
           buildForces();
         }
       }
+      
+      if (!currentTargetTower.equals(enemyHQ) && !haveDecentSurround(currentTargetTower) && Messaging.getFleetMode() == MovingBot.AttackMode.SAFE_TOWER_DIVE ||
+          Messaging.getFleetMode() == MovingBot.AttackMode.UNSAFE_TOWER_DIVE) {
+        buildForces();
+      }
       break;
     case TOWER_DIVING_SPLIT:
       // If we're winning in tower count, switch to TOWER_DEFENDING
@@ -224,15 +229,24 @@ public class HQ extends BaseBot {
         if (targetIsDead || target2IsDead) {
           // defendTowers();
           updateSplitPushTargets(targetIsDead, target2IsDead);
-          if (doDesperateDive()) {
-            splitPush(targetIsDead, target2IsDead);
-          } else {
-            splitPush(targetIsDead, target2IsDead);
-          }
+          splitPush(targetIsDead, target2IsDead);
+          return;
         }
       } else {
         approachTower(enemyHQ);
+        return;
       }
+      
+      if (!haveDecentSurround(splitPush1) && Messaging.getFleetMode() == MovingBot.AttackMode.SAFE_TOWER_DIVE_SPLIT ||
+          Messaging.getFleetMode() == MovingBot.AttackMode.UNSAFE_TOWER_DIVE_SPLIT) {
+        splitPush(true, false);
+      }
+      
+      if (!haveDecentSurround(splitPush2) && Messaging.getFleetMode() == MovingBot.AttackMode.SAFE_TOWER_DIVE_SPLIT ||
+          Messaging.getFleetMode() == MovingBot.AttackMode.UNSAFE_TOWER_DIVE_SPLIT) {
+        splitPush(false, true);
+      }
+      
       break;
     case TOWER_DEFENDING:
       // Switch to tower diving if they have equal to or more towers
@@ -695,7 +709,7 @@ public class HQ extends BaseBot {
     for (int i=r.length; i-->0;) {
       allyScore += Util.getDangerScore(r[i]);
     }
-    if (allyScore > 30.0) {
+    if (allyScore > 24.0) {
       double enemyScore = Util.getDangerScore(rc.senseNearbyRobots(loc, TOWER_DIVE_RADIUS, theirTeam));
       //rc.setIndicatorString(2, "Tower score, Ally: " + allyScore + ", enemy: " + enemyScore);
       return allyScore > DEFENDERS_ADVANTAGE*enemyScore;
