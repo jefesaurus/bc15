@@ -20,14 +20,6 @@ public class MinerFactory extends BaseBot {
   }
 
   public void setup() throws GameActionException {
-    initializeSafeZones();
-  }
-  
-  public void initializeSafeZones() throws GameActionException {
-    if (initializeZones) {
-      Messaging.initializeSafeZones();
-      initializeZones = false;
-    }
   }
   
   public void execute() throws GameActionException {
