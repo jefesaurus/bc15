@@ -896,6 +896,7 @@ public class HQ extends BaseBot {
     curNumTrainingFields = curUnitsTotal[RobotType.TRAININGFIELD.ordinal()];
     curNumCommanders = curUnitsTotal[RobotType.COMMANDER.ordinal()];
     curNumSoldiers = curUnitsTotal[RobotType.SOLDIER.ordinal()];
+    Messaging.setNumMiners(curUnitsExisting[RobotType.MINER.ordinal()]);
     //System.out.println(Arrays.toString(curUnitsExisting) + ", cost: " + teamSupplyCost);
     
     /*

@@ -43,8 +43,7 @@ public class Miner extends rambo.MovingBot {
   public void setup() throws GameActionException {
     super.setup();
     if (MINER_ID == -1) {
-      int chan = Messaging.getCountChannel(RobotType.MINER);
-      MINER_ID = rc.readBroadcast(chan);
+      MINER_ID = Messaging.getNumMiners();
     }
     allInPushRound = rc.getRoundLimit() - 200;
   }

@@ -46,6 +46,7 @@ public class Messaging {
   public final static int CAN_DIVE = 57; //channels 57-62
   
   public final static int HIGH_ORE_INITIALIZE_TOWERS = 63;
+    
   public final static int HIGH_ORE_TOWERS_LOCS = 5065; // channels 5065-5082
   public final static int HIGH_ORE_TOWERS_COUNT = 5083;
   public final static int UNCLAIMED_HIGH_ORE_TOWERS_COUNT = 5084;
@@ -567,5 +568,13 @@ public class Messaging {
   
   public static int getUnitToProduce() throws GameActionException {
     return rc.readBroadcast(UNIT_TO_PRODUCE);
+  }
+  
+  public static void setNumMiners(int numMiners) throws GameActionException {
+    rc.broadcast(NUM_MINERS, numMiners);
+  }
+  
+  public static int getNumMiners() throws GameActionException {
+    return rc.readBroadcast(NUM_MINERS);
   }
 }
