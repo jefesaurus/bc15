@@ -28,6 +28,9 @@ public class Miner extends rambo.MovingBot {
   
   public static boolean requestedHighOreLoc = false;
   public static MapLocation destination = null;
+  
+  protected MapLocation miningLocation = null;
+  protected boolean attackMode = false;
     
     
   public Miner(RobotController rc) {
@@ -67,61 +70,144 @@ public class Miner extends rambo.MovingBot {
   }
   
   public void selfPreservation() throws GameActionException {
-    RobotInfo[] enemiesInSightRange = rc.senseNearbyRobots(this.curLoc, RobotType.MINER.sensorRadiusSquared, rc.getTeam().opponent());
-//    if (/*friendInAttackRange(enemiesInSightRange) &&*/ inAttackRange(enemiesInSightRange) && enemiesInSightRange.length == 1) {
-//      if (rc.isCoreReady()) {
-//        attackLeastHealthEnemy(enemiesInSightRange);
-//        return;
-//      }
-//    } else {
-//      //retreat
-//      return;
-//    }
+    //if ( rc.readBroadcast(Messaging.MINER_ATTACK_MODE) == 10 ) {
+    //  int x = rc.readBroadcast(Messaging.MINER_ATTACK_X);
+    //  int y = rc.readBroadcast(Messaging.MINER_ATTACK_Y);
+    //  MapLocation attackLoc = new MapLocation(x,y);
+    //  assistAttack(attackLoc);
+    //}
     
-    if (enemiesInSightRange.length == 0) {
+    int minerDangerRadius = RobotType.MINER.attackRadiusSquared + 3;  // Radius for which they'll detect an enemy as a threat
+    RobotInfo[] enemiesinDangerRange = rc.senseNearbyRobots(this.curLoc, minerDangerRadius, rc.getTeam().opponent());   
+    if (enemiesinDangerRange.length == 0) {
       return;
-    } else if (enemiesInSightRange.length <= 2) {
-      int range = 50; // default at 50 for miner
-      if (enemiesInSightRange[0].type == RobotType.DRONE) {
-        range = (int) (rc.getHealth() / RobotType.DRONE.attackPower * RobotType.DRONE.attackDelay / RobotType.MINER.movementDelay)^2;
-      }
-      RobotInfo[] friendsInSightRange = rc.senseNearbyRobots(this.curLoc, range, rc.getTeam()); //TODO change for enemy type
-      RobotInfo closestFriend = null; 
-      int closestDist = range + 10;
-      for (int i = 0; i < friendsInSightRange.length; i++) {
-        if ((friendsInSightRange[i].type == RobotType.MINER) || (friendsInSightRange[i].type == RobotType.HQ) || 
-            (friendsInSightRange[i].type == RobotType.TOWER)) {
-          int dist = this.curLoc.distanceSquaredTo(friendsInSightRange[i].location);
-          if (dist < closestDist) {
-            closestFriend = friendsInSightRange[i];
-          }
-        }
-      }
-      if (closestFriend == null) {
-        //TODO
-        return;
-      }
-      
-      else if (closestFriend.location.distanceSquaredTo(curLoc) < 2 && 
-          curLoc.distanceSquaredTo(enemiesInSightRange[0].location) < RobotType.MINER.attackRadiusSquared) {
-        if (rc.isWeaponReady()) {
-          rc.attackLocation(enemiesInSightRange[0].location);
-        }
-      } else {
-        Nav.goTo(closestFriend.location, Engage.NONE);
-        return;
-      }
-      
-    } else { // TODO
-      // you see more than two enemies, you're dead. jk, change later
-      // TODO retreat possibly
+    } else if (enemiesinDangerRange.length > 0) {
+      //System.out.println("Miner sees danger");
+      defensiveAction(enemiesinDangerRange);
+    } else {
+      attackMode = false;
       return;
     }
   }
   
+  private void defensiveAction(RobotInfo[] enemiesInDangerRange) throws GameActionException {
+    int range = 50; // default at 50 for miner
+    switch (enemiesInDangerRange[0].type) {
+    case DRONE:
+      range = (int) (rc.getHealth() / RobotType.DRONE.attackPower * RobotType.DRONE.attackDelay / RobotType.MINER.movementDelay)^2 +1;
+      moveTowardsFriend(range, enemiesInDangerRange);
+      break;
+    case SOLDIER:
+      range = (int) (rc.getHealth() / RobotType.SOLDIER.attackPower * RobotType.SOLDIER.attackDelay / RobotType.SOLDIER.movementDelay)^2 +1;
+      moveTowardsFriend(range, enemiesInDangerRange);
+      break;
+    case BASHER:
+      range = (int) (rc.getHealth() / RobotType.SOLDIER.attackPower * RobotType.SOLDIER.attackDelay / RobotType.SOLDIER.movementDelay)^2 +1;
+      moveTowardsFriend(range, enemiesInDangerRange);
+      break;
+    case MINER:
+      range = (int) (rc.getHealth() / RobotType.MINER.attackPower * RobotType.MINER.attackDelay / RobotType.MINER.movementDelay)^2 +1;
+      moveTowardsFriend(range, enemiesInDangerRange);
+      break;
+    case BEAVER: 
+      moveTowardsFriend(range, enemiesInDangerRange);
+      break;
+    default:
+      moveTowardsFriend(range, enemiesInDangerRange);
+      break;
+    }
+  }
+    
+  private void moveTowardsFriend(int range, RobotInfo[] enemiesInDangerRange) throws GameActionException {
+    // Find closest friend
+    RobotInfo[] friendsInSightRange = rc.senseNearbyRobots(this.curLoc, range, rc.getTeam());
+    RobotInfo closestFriend = null; 
+    int closestDist = range + 10;
+    for (int i = 0; i < friendsInSightRange.length; i++) {
+      if ((friendsInSightRange[i].type == RobotType.MINER) || (friendsInSightRange[i].type == RobotType.HQ) || 
+          (friendsInSightRange[i].type == RobotType.TOWER)) {
+        int dist = this.curLoc.distanceSquaredTo(friendsInSightRange[i].location);
+        if (dist < closestDist) {
+          closestFriend = friendsInSightRange[i];
+        }
+      }
+    }
+    if (closestFriend == null) {
+      int[] attackingEnemyDirs = this.calculateNumAttackingEnemyDirs();
+      //System.out.println("no closest friend");
+      if (rc.isCoreReady()) {
+        Nav.retreat(attackingEnemyDirs);
+      }
+      return;
+    }
+    else if (closestFriend.location.distanceSquaredTo(this.curLoc) <= 8) {  // Decided he was close enough to another miner
+       //System.out.println("Close friend found, and attacking");
+        minerAttack(enemiesInDangerRange[0]);
+    } else {
+      //System.out.println("Close friend found, moving to friend");
+      //Nav.goTo(closestFriend.location, Engage.NONE);
+      minerNavSingleMove(curLoc.directionTo(closestFriend.location));
+      return;
+    }
+  }
+  
+  private void minerAttack(RobotInfo enemyRobot) throws GameActionException {
+    MapLocation attackLoc = enemyRobot.location;
+    if (rc.isWeaponReady()) {
+      //System.out.println("attack location: " + attackLoc.x + "," + attackLoc.y);
+      if (rc.isCoreReady() && rc.canAttackLocation(attackLoc) ) {
+        System.out.println("actually attacking");
+        rc.attackLocation(attackLoc);
+      } else if (rc.isCoreReady() && attackLoc != null ) {
+        //System.out.println("Moving to attack");
+        minerNavSingleMove(curLoc.directionTo(attackLoc));
+      } else {
+        //System.out.println("something isn't ready: " + rc.getCoreDelay() + " " + rc.isCoreReady());
+      }
+    }
+  }
+  
+//  public void minerAttack(RobotInfo enemyInDangerRange) throws GameActionException {
+//    // 1. store location
+//    // 2. call surrounding miners to attack
+//    // 3. attack (with good concave)
+//    // 4. return to location
+//
+//    
+//    rc.broadcast(Messaging.MINER_ATTACK_X, enemyInDangerRange.location.x);
+//    rc.broadcast(Messaging.MINER_ATTACK_Y, enemyInDangerRange.location.x);
+//    rc.broadcast(Messaging.MINER_ATTACK_MODE, 10);
+//    System.out.println("Attack Mode on");
+//    
+//    assistAttack(enemyInDangerRange.location);
+//    
+//    //rc.broadcast(Messaging.MINER_ATTACK_MODE, 0);
+//  }
+//  
+//  public void assistAttack(MapLocation attackLoc) throws GameActionException {
+//    if (!attackMode) { 
+//      miningLocation = rc.getLocation(); 
+//      attackMode = true;
+//    }
+//    if (rc.isWeaponReady()) {
+//      System.out.println("attack location: " + attackLoc.x + "," + attackLoc.y);
+//      if (rc.isCoreReady() && rc.canAttackLocation(attackLoc) ) {
+//        System.out.println("actually attacking");
+//        rc.attackLocation(attackLoc);
+//      } else if (rc.isCoreReady() && attackLoc != null ) {
+//          //&& this.curLoc.distanceSquaredTo(attackLoc) < 1000 
+//          //&& miningLocation.distanceSquaredTo(attackLoc) < 1000 ) {
+//        System.out.println("Moving to attack");
+//        Nav.goTo(attackLoc, Engage.UNITS);
+//      } else {
+//        System.out.println("something isn't ready: " + rc.getCoreDelay() + " " + rc.isCoreReady());
+//      }
+//    }
+//  }
+  
   public void execute() throws GameActionException {
     SupplyDistribution.manageSupply();
-//    selfPreservation();
+    selfPreservation();
     
     if (destination!=null) {
       if (this.curLoc.distanceSquaredTo(destination) < 5) {
