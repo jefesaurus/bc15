@@ -235,7 +235,7 @@ public class Miner extends rambo.MovingBot {
   
   public void execute() throws GameActionException {
     SupplyDistribution.manageSupply();
-//    selfPreservation();
+    selfPreservation();
     if (Clock.getRoundNum() > allInPushRound) {
       doAllInPush();
       return;
@@ -269,7 +269,7 @@ public class Miner extends rambo.MovingBot {
         return;
       }
       if (minedOnLastTurn) {
-        int directionIndex = MINER_ID % 7;
+        int directionIndex = MINER_ID % 8;
         Direction dir = Util.REGULAR_DIRECTIONS[directionIndex];
         minerNavSingleMove(dir);
         minedOnLastTurn = false;
