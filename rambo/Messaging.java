@@ -295,9 +295,7 @@ public class Messaging {
     else { 
       dir_y = -1; 
     }
-    
-    System.out.println("safe x: " + dir_x + ", safe y: " + dir_y);
-    
+        
     MapLocation corner = new MapLocation(dir_x, dir_y);
     return corner;
   }

@@ -91,7 +91,7 @@ public class Util {
       } else {
         danger = Util.MISSILE_DANGER/8.0;
       }
-      return bot.missileCount*Util.MISSILE_DANGER*(bot.health/144.0);
+      return danger + bot.missileCount*Util.MISSILE_DANGER*(bot.health/144.0)/2.0;
     case TOWER:
       return TANK_DANGER*4;
     case HQ:
@@ -129,7 +129,7 @@ public class Util {
     20: MISSILE
    */
   public final static double[] DANGER_VALUE_MAP = {Util.HQ_DANGER, Util.TOWER_DANGER, 0, 0, 0, 0, 0, 0, 0, 0, 0, Util.BEAVER_DANGER, 0, Util.SOLDIER_DANGER,
-                                                   Util.BASHER_DANGER, Util.MINER_DANGER, Util.DRONE_DANGER, Util.TANK_DANGER, Util.COMMANDER_DANGER, 0, Util.MISSILE_DANGER};
+                                                   Util.BASHER_DANGER, Util.MINER_DANGER, Util.DRONE_DANGER, Util.TANK_DANGER, Util.COMMANDER_DANGER, 0, 0};
   // 
   public final static int[] RANGE_TYPE_MAP = {5,5,0,0,0,0,0,0,0,0,0,2,0,2,1,2,3,4,3,5,1,};
   
