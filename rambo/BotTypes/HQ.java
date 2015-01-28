@@ -160,7 +160,6 @@ public class HQ extends BaseBot {
           }
         }
       }
-      
       break;
     case APPROACHING_TOWER:
       // Set rally point to just in front of nearest tower.
@@ -715,7 +714,7 @@ public class HQ extends BaseBot {
   public static final int NUM_TRAINING_FIELDS = 1;
   public static final int NUM_BEAVERS = 2;
   public static final int NUM_MINER_FACTORIES = 1;
-  public static int NUM_BARRACKS = 2;
+  public static int NUM_BARRACKS = 1;
   public static final int NUM_TANK_FACTORIES = 5;
   public static final int NUM_HELIPADS = 1;
   public static int NUM_SUPPLY_DEPOTS = Math.max(4, teamSupplyCost / 90);
@@ -726,8 +725,8 @@ public class HQ extends BaseBot {
     }**/
     
     
-    if (Messaging.peekQueueUnits(RobotType.SOLDIER) < curNumBarracks) {
-      Messaging.queueUnits(RobotType.SOLDIER, 2*curNumBarracks);
+    if (splitPush && Messaging.peekQueueUnits(RobotType.SOLDIER) < curNumBarracks) {
+      Messaging.queueUnits(RobotType.SOLDIER, 5*curNumBarracks);
     }
     
     if (Messaging.peekQueueUnits(RobotType.TANK) < curNumTankFactories) {
