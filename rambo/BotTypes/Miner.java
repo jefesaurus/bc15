@@ -372,7 +372,7 @@ public class Miner extends rambo.MovingBot {
     } else if (currentLocGivesMinOre(1)) {
       if (rc.isCoreReady()) {
         if (MINER_ID < 8) { // TODO, maybe by round number?
-          minerNavSingleMove(Util.REGULAR_DIRECTIONS[MINER_ID % 7]);
+          minerNavSingleMove(Util.REGULAR_DIRECTIONS[MINER_ID % 8]);
         } else if (!requestedHighOreLoc) { // request other miners
           rc.broadcast(Messaging.HIGH_ORE_REQUEST, 1);
           requestedHighOreLoc = true;
