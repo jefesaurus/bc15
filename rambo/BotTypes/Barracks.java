@@ -2,6 +2,7 @@ package rambo.BotTypes;
 
 import rambo.Messaging;
 import rambo.RobotPlayer.BaseBot;
+import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
@@ -9,7 +10,6 @@ import battlecode.common.RobotType;
 
 public class Barracks extends BaseBot {
   public static final RobotType[] types = {RobotType.SOLDIER, RobotType.BASHER};
-  
   public Barracks(RobotController rc) {
     super(rc);
   }

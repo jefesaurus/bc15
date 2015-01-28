@@ -67,8 +67,6 @@ public class HQ extends BaseBot {
 
     distanceBetweenHQ = myHQ.distanceSquaredTo(enemyHQ);
     MAX_NUM_MINERS = (int) Math.max(Math.min((30 * distanceBetweenHQ / 5500), 50), 20);
-    System.out.println(distanceBetweenHQ);
-    System.out.println(MAX_NUM_MINERS);
     splitPush = setSplitPushTargets();
     buildForces();
   }
@@ -369,7 +367,6 @@ public class HQ extends BaseBot {
   }
   
   public void splitPush(boolean target1, boolean target2) throws GameActionException {
-    System.out.println("split push called with: "+ target1 + " " + target2);
     strat = HighLevelStrat.SPLIT_PUSH;
     if (target1) {
       setFleetMode(MovingBot.AttackMode.SPLIT_PUSH);
@@ -592,7 +589,6 @@ public class HQ extends BaseBot {
       setSplitPushTargets();
       return;
     } else if (t1) {
-      System.out.println("splitpush 1 @ " + splitPush1 + " is dead");
       aliveTower = splitPush2;
     }
     MapLocation[] towerLocs = Cache.getEnemyTowerLocationsDirect();
