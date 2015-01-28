@@ -517,7 +517,7 @@ public class HQ extends BaseBot {
     }**/
     
     if (Messaging.peekQueueUnits(RobotType.SOLDIER) < curNumBarracks) {
-      Messaging.queueUnits(RobotType.SOLDIER, 2*curNumBarracks);
+      Messaging.queueUnits(RobotType.SOLDIER, curNumBarracks);
     }
     
     if (Messaging.peekQueueUnits(RobotType.LAUNCHER) < curNumAerospaceLabs) {
