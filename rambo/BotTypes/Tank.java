@@ -78,13 +78,7 @@ public class Tank extends MovingBot {
       }
       break;
     case SPLIT_PUSH:
-      if (rallyPoint.equals(new MapLocation(8209, 12025))) {
-        System.out.println("in split push");
-      }
-      //System.out.println("rallyPoint: " + rallyPoint);
-      rc.setIndicatorString(2, "Mode: " + mode.name() + ", Rally point: " + rallyPoint);
-
-      doOffensiveMicroSplit(currentEnemies, rallyPoint);
+      doOffensiveMicro(currentEnemies, rallyPoint);
       break;
     case SAFE_TOWER_DIVE_SPLIT:
       rc.setIndicatorString(2, "Mode: " + mode.name() + ", Rally point: " + rallyPoint);
@@ -110,13 +104,6 @@ public class Tank extends MovingBot {
       }
       break;
     case UNSAFE_TOWER_DIVE_SPLIT:
-      if (rallyPoint.equals(new MapLocation(8209, 12025))) {
-        System.out.println("in un safe tower dive split");
-      }
-      //System.out.println("rallyPoint: " + rallyPoint);
-
-      rc.setIndicatorString(2, "Mode: " + mode.name() + ", Rally point: " + rallyPoint);
-
       if (currentEnemies.length > 0) {
         RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
         if (attackableEnemies.length > 0) {

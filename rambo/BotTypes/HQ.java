@@ -1,5 +1,7 @@
 package rambo.BotTypes;
 
+import java.util.Arrays;
+
 import rambo.Cache;
 import rambo.Messaging;
 import rambo.MovingBot;
@@ -36,6 +38,12 @@ public class HQ extends BaseBot {
   public int curNumTrainingFields = 0;
   public int curNumCommanders = 0;
   public int curNumSoldiers = 0;
+  public int[] curUnitsExisting = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+  public int[] curUnitsInPipeline = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+  public int[] curUnitsTotal = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+
+  
+  
   public int lastOreDifferential = 0;
   public double curOreDifferentialShift = 0;
   public static int teamSupplyCost = 0;
@@ -87,6 +95,7 @@ public class HQ extends BaseBot {
 
   public void execute() throws GameActionException {
     Messaging.setUnitToProduce(null);
+    /*
     curNumHelipads = Messaging.checkTotalNumUnits(RobotType.HELIPAD);
     curNumBarracks = Messaging.checkTotalNumUnits(RobotType.BARRACKS);
     curNumTankFactories = Messaging.checkTotalNumUnits(RobotType.TANKFACTORY);
@@ -100,9 +109,9 @@ public class HQ extends BaseBot {
     curNumTrainingFields = Messaging.checkTotalNumUnits(RobotType.TRAININGFIELD);
     curNumCommanders = Messaging.checkTotalNumUnits(RobotType.COMMANDER);
     curNumSoldiers = Messaging.checkTotalNumUnits(RobotType.SOLDIER);
-
+    */
+    getAlliedUnitStats();
     SupplyDistribution.manageSupply();
-    teamSupplyCost = getSupplyCost();
     updateDivables();
     // This checks which enemy towers are still alive and broadcasts it to save bytecode across the fleet
     //Messaging.setSurvivingEnemyTowers(Cache.getEnemyTowerLocationsDirect());
@@ -124,8 +133,6 @@ public class HQ extends BaseBot {
       }
     }
     
-
-    
     maintainUnitComposition();
     produceUnits();
     doMacro();
@@ -139,9 +146,8 @@ public class HQ extends BaseBot {
     switch (strat) {
     case BUILDING_FORCES:
       if (Clock.getRoundNum() >= 600 && 
-      (Messaging.checkNumUnits(RobotType.TANK) + Messaging.checkNumUnits(RobotType.SOLDIER)) > FLEET_COUNT_ATTACK_THRESHOLD) {
+      (curNumTanks + curNumSoldiers) > FLEET_COUNT_ATTACK_THRESHOLD) {
         if (!splitPush || Cache.getEnemyTowerLocations().length < 2) {
-          System.out.println("Not split pushing");
           setCurrentTowerTarget();
           approachTower(currentTargetTower);
         } else {
@@ -154,7 +160,6 @@ public class HQ extends BaseBot {
           }
         }
       }
-      
       break;
     case APPROACHING_TOWER:
       // Set rally point to just in front of nearest tower.
@@ -188,11 +193,6 @@ public class HQ extends BaseBot {
           buildForces();
         }
       }
-      
-      if (!currentTargetTower.equals(enemyHQ) && !haveDecentSurround(currentTargetTower) && Messaging.getFleetMode() == MovingBot.AttackMode.SAFE_TOWER_DIVE ||
-          Messaging.getFleetMode() == MovingBot.AttackMode.UNSAFE_TOWER_DIVE) {
-        buildForces();
-      }
       break;
     case TOWER_DIVING_SPLIT:
       // If we're winning in tower count, switch to TOWER_DEFENDING
@@ -222,21 +222,6 @@ public class HQ extends BaseBot {
         }
       }
       
-      if (enemyTowers.length > 0) {
-        // Check if our current target is dead yet:
-        boolean targetIsDead = currentTargetTowerIsDead(splitPush1);
-        boolean target2IsDead = currentTargetTowerIsDead(splitPush2);
-        if (targetIsDead || target2IsDead) {
-          // defendTowers();
-          updateSplitPushTargets(targetIsDead, target2IsDead);
-          splitPush(targetIsDead, target2IsDead);
-          return;
-        }
-      } else {
-        approachTower(enemyHQ);
-        return;
-      }
-      
       if (!haveDecentSurround(splitPush1) && Messaging.getFleetMode() == MovingBot.AttackMode.SAFE_TOWER_DIVE_SPLIT ||
           Messaging.getFleetMode() == MovingBot.AttackMode.UNSAFE_TOWER_DIVE_SPLIT) {
         splitPush(true, false);
@@ -247,6 +232,18 @@ public class HQ extends BaseBot {
         splitPush(false, true);
       }
       
+      if (enemyTowers.length > 0) {
+        // Check if our current target is dead yet:
+        boolean targetIsDead = currentTargetTowerIsDead(splitPush1);
+        boolean target2IsDead = currentTargetTowerIsDead(splitPush2);
+        if (targetIsDead || target2IsDead) {
+          // defendTowers();
+          updateSplitPushTargets(targetIsDead, target2IsDead);
+          splitPush(targetIsDead, target2IsDead);
+        }
+      } else {
+        approachTower(enemyHQ);
+      }
       break;
     case TOWER_DEFENDING:
       // Switch to tower diving if they have equal to or more towers
@@ -314,19 +311,6 @@ public class HQ extends BaseBot {
   }
   
   public void endOfTurn() throws GameActionException {
-    Messaging.resetUnitCount(RobotType.HELIPAD);
-    Messaging.resetUnitCount(RobotType.BARRACKS);
-    Messaging.resetUnitCount(RobotType.TANKFACTORY);
-    Messaging.resetUnitCount(RobotType.BEAVER);
-    Messaging.resetUnitCount(RobotType.MINER);
-    Messaging.resetUnitCount(RobotType.MINERFACTORY);
-    Messaging.resetUnitCount(RobotType.TANK);
-    Messaging.resetUnitCount(RobotType.DRONE);
-    Messaging.resetUnitCount(RobotType.SUPPLYDEPOT);
-    Messaging.resetUnitCount(RobotType.TECHNOLOGYINSTITUTE);
-    Messaging.resetUnitCount(RobotType.TRAININGFIELD);
-    Messaging.resetUnitCount(RobotType.COMMANDER);
-    Messaging.resetUnitCount(RobotType.SOLDIER);
     Messaging.resetTowersUnderAttack();
     super.endOfTurn();
   }
@@ -544,6 +528,7 @@ public class HQ extends BaseBot {
   }
   
 
+  /*
   public static int getOreDifferential() throws GameActionException {
     int netDifferential = 0;
     for (int i=robotTypes.length; i-->0;) {
@@ -552,7 +537,9 @@ public class HQ extends BaseBot {
     }
     return netDifferential;
   }
+  */
   
+  /*
   public static int getSupplyCost() throws GameActionException {
     int supplyCost = 0;
     for (int i=robotTypes.length; i-->0;) {
@@ -561,6 +548,7 @@ public class HQ extends BaseBot {
     }
     return supplyCost;
   }
+  */
   
   /*
    * This sets two class scope variables: the target tower and whether or not to approach the target "safely"
@@ -712,12 +700,12 @@ public class HQ extends BaseBot {
     for (int i=r.length; i-->0;) {
       allyScore += Util.getDangerScore(r[i]);
     }
-    if (allyScore > 24.0) {
+
+    if (strat == HighLevelStrat.TOWER_DIVING || strat == HighLevelStrat.TOWER_DIVING_SPLIT || allyScore > 24.0) {
+      // rc.setIndicatorString(2, "Tower score, Ally: " + allyScore + ", enemy: " + enemyScore);
       double enemyScore = Util.getDangerScore(rc.senseNearbyRobots(loc, TOWER_DIVE_RADIUS, theirTeam));
-      //rc.setIndicatorString(2, "Tower score, Ally: " + allyScore + ", enemy: " + enemyScore);
       return allyScore > DEFENDERS_ADVANTAGE*enemyScore;
     }
-    //rc.setIndicatorString(2, "Tower score: no allies");
     return false;
   }
    
@@ -726,7 +714,7 @@ public class HQ extends BaseBot {
   public static final int NUM_TRAINING_FIELDS = 1;
   public static final int NUM_BEAVERS = 2;
   public static final int NUM_MINER_FACTORIES = 1;
-  public static int NUM_BARRACKS = 2;
+  public static int NUM_BARRACKS = 1;
   public static final int NUM_TANK_FACTORIES = 5;
   public static final int NUM_HELIPADS = 1;
   public static int NUM_SUPPLY_DEPOTS = Math.max(4, teamSupplyCost / 90);
@@ -737,8 +725,8 @@ public class HQ extends BaseBot {
     }**/
     
     
-    if (Messaging.peekQueueUnits(RobotType.SOLDIER) < curNumBarracks) {
-      Messaging.queueUnits(RobotType.SOLDIER, 2*curNumBarracks);
+    if (splitPush && Messaging.peekQueueUnits(RobotType.SOLDIER) < curNumBarracks) {
+      Messaging.queueUnits(RobotType.SOLDIER, 5*curNumBarracks);
     }
     
     if (Messaging.peekQueueUnits(RobotType.TANK) < curNumTankFactories) {
@@ -786,11 +774,11 @@ public class HQ extends BaseBot {
       Messaging.setUnitToProduce(RobotType.BARRACKS);
     }
     
-    if (curNumSupplyDepots < NUM_SUPPLY_DEPOTS /**&& Messaging.checkNumUnits(RobotType.TRAININGFIELD) >= 1*/) {
+    if (curNumSupplyDepots < NUM_SUPPLY_DEPOTS /**&& curNumTrainingFields >= 1*/) {
       Messaging.queueUnits(RobotType.SUPPLYDEPOT, NUM_SUPPLY_DEPOTS - curNumSupplyDepots);
     }
 
-    if (curNumTankFactories < NUM_TANK_FACTORIES && Messaging.checkNumUnits(RobotType.BARRACKS) >= 1) {
+    if (curNumTankFactories < NUM_TANK_FACTORIES && curUnitsExisting[RobotType.BARRACKS.ordinal()] >= 1) {
       Messaging.queueUnits(RobotType.TANKFACTORY, NUM_TANK_FACTORIES - curNumTankFactories);
     }
     
@@ -849,8 +837,6 @@ public class HQ extends BaseBot {
           Direction spawnDir = getOffensiveSpawnDirection(RobotType.BEAVER);
           if (spawnDir != null) {
             rc.spawn(spawnDir, RobotType.BEAVER);
-          } else {
-            // System.out.println("WRITE CODE HERE, NEED TO FIND PLACE TO BUILD");
           }
         }
       }
@@ -858,46 +844,112 @@ public class HQ extends BaseBot {
   }
  
   
-  /*
-   * Old code to find a vulnerable tower based on centroid. doesn't work very well.
-  private MapLocation getMostVulnerableEnemyTower(MapLocation[] enemyTowers) throws GameActionException {
-    if (enemyTowers.length <= 0) {
-      return null;
+  public void getAlliedUnitStats() throws GameActionException {
+    //RobotInfo[] bots = rc.senseNearbyRobots(myTeam);
+    RobotInfo[] bots = rc.senseNearbyRobots(Integer.MAX_VALUE, myTeam);
+    curUnitsExisting = new int[] {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+    curUnitsInPipeline = new int[] {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+    curUnitsTotal = new int[] {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+    /*
+    0: HQ
+    1: TOWER
+    2: SUPPLYDEPOT
+    3: TECHNOLOGYINSTITUTE
+    4: BARRACKS
+    5: HELIPAD
+    6: TRAININGFIELD
+    7: TANKFACTORY
+    8: MINERFACTORY
+    9: HANDWASHSTATION
+    10: AEROSPACELAB
+    11: BEAVER
+    12: COMPUTER
+    13: SOLDIER
+    14: BASHER
+    15: MINER
+    16: DRONE
+    17: TANK
+    18: COMMANDER
+    19: LAUNCHER
+    20: MISSILE
+   */
+    for (int i = bots.length; i-- > 0;) {
+      curUnitsExisting[bots[i].type.ordinal()]++;
     }
-    
-    int towerX = enemyHQ.x;
-    int towerY = enemyHQ.y;
-    
-    for (int i = enemyTowers.length; i-- > 0;) {
-      towerX += enemyTowers[i].x;
-      towerY += enemyTowers[i].y;
+    teamSupplyCost = 0;
+    for (int i = robotTypes.length; i-->0;) {
+      RobotType type = robotTypes[i];
+      curUnitsInPipeline[type.ordinal()] = (Messaging.checkTotalNumUnits(type));
+      curUnitsTotal[type.ordinal()] = curUnitsInPipeline[type.ordinal()] + curUnitsExisting[type.ordinal()];
+      teamSupplyCost += type.supplyUpkeep*curUnitsExisting[type.ordinal()];
     }
+    curNumHelipads = curUnitsTotal[RobotType.HELIPAD.ordinal()];
+    curNumBarracks = curUnitsTotal[RobotType.BARRACKS.ordinal()];
+    curNumTankFactories = curUnitsTotal[RobotType.TANKFACTORY.ordinal()];
+    curNumBeavers = curUnitsTotal[RobotType.BEAVER.ordinal()];
+    curNumMiners = curUnitsTotal[RobotType.MINER.ordinal()];
+    curNumMinerFactories = curUnitsTotal[RobotType.MINERFACTORY.ordinal()];
+    curNumDrones = curUnitsTotal[RobotType.DRONE.ordinal()];
+    curNumTanks = curUnitsTotal[RobotType.TANK.ordinal()];
+    curNumSupplyDepots = curUnitsTotal[RobotType.SUPPLYDEPOT.ordinal()];
+    curNumTechInstitutes = curUnitsTotal[RobotType.TECHNOLOGYINSTITUTE.ordinal()];
+    curNumTrainingFields = curUnitsTotal[RobotType.TRAININGFIELD.ordinal()];
+    curNumCommanders = curUnitsTotal[RobotType.COMMANDER.ordinal()];
+    curNumSoldiers = curUnitsTotal[RobotType.SOLDIER.ordinal()];
+    //System.out.println(Arrays.toString(curUnitsExisting) + ", cost: " + teamSupplyCost);
     
-    MapLocation towerCenter = new MapLocation(towerX/(1 + enemyTowers.length), towerY/(1 + enemyTowers.length));
-
-    double tempDist;
-    double tempDist2;
-    double furthestDist = enemyTowers[0].distanceSquaredTo(enemyTowers[0]);
-    int furthestIndex = 0;
-    
-    for (int i = 1; i < enemyTowers.length; i++) {
-      tempDist = towerCenter.distanceSquaredTo(enemyTowers[i]);
-      tempDist2 = furthestDist - tempDist;
-      
-      // If the difference is close, choose the one that is closer to our HQ
-      if (tempDist2 < 1.0 && tempDist2 > -1.0) {
-        if (enemyTowers[i].distanceSquaredTo(myHQ) < enemyTowers[furthestIndex].distanceSquaredTo(myHQ)) {
-          furthestDist = tempDist;
-          furthestIndex = i;
-        }
-      } else 
-        if (tempDist > furthestDist) {
-        furthestDist = tempDist;
-        furthestIndex = i;
+    /*
+    for (int i = bots.length; i-- > 0;) {
+      switch (bots[i].type) {
+      case SUPPLYDEPOT:
+        curNumSupplyDepots++;
+        break;
+      case TECHNOLOGYINSTITUTE:
+        curNumTechInstitutes++;
+        break;
+      case BARRACKS:
+        curNumBarracks++;
+        break;
+      case HELIPAD:
+        curNumHelipads++;
+        break;
+      case TRAININGFIELD:
+        curNumTrainingFields++;
+        break;
+      case TANKFACTORY:
+        curNumTankFactories++;
+        break;
+      case MINERFACTORY:
+        curNumMinerFactories++;
+        break;
+      case BEAVER:
+        curNumBeavers++;
+        break;
+      case SOLDIER:
+        curNumSoldiers++;
+        break;
+      case MINER:
+        curNumMiners++;
+        break;
+      case DRONE:
+        curNumDrones++;
+        break;
+      case TANK:
+        curNumTanks++;
+        break;
+      case COMMANDER:
+        curNumCommanders++;
+        break;
+      case BASHER:
+      case COMPUTER:
+      case LAUNCHER:        
+      case AEROSPACELAB:
+      case HANDWASHSTATION:
+      case MISSILE:
+      default:
+        break;
       }
     }
-    
-    return enemyTowers[furthestIndex];
+    */
   }
-  */
 }

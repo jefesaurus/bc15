@@ -1,6 +1,9 @@
 package rambo.BotTypes;
 
+import rambo.Cache;
+import rambo.HibernateSystem;
 import rambo.Messaging;
+import rambo.MovingBot;
 import rambo.Nav;
 import rambo.SupplyDistribution;
 import rambo.Util;
@@ -28,10 +31,8 @@ public class Miner extends rambo.MovingBot {
   
   public static boolean requestedHighOreLoc = false;
   public static MapLocation destination = null;
-  
-  protected MapLocation miningLocation = null;
-  protected boolean attackMode = false;
-    
+
+  public static int allInPushRound;
     
   public Miner(RobotController rc) {
     super(rc);
@@ -45,6 +46,7 @@ public class Miner extends rambo.MovingBot {
       int chan = Messaging.getCountChannel(RobotType.MINER);
       MINER_ID = rc.readBroadcast(chan);
     }
+    allInPushRound = rc.getRoundLimit() - 200;
   }
   
   public boolean friendInAttackRange(RobotInfo[] enemiesInSightRange) {
@@ -85,7 +87,6 @@ public class Miner extends rambo.MovingBot {
       //System.out.println("Miner sees danger");
       defensiveAction(enemiesinDangerRange);
     } else {
-      attackMode = false;
       return;
     }
   }
@@ -205,10 +206,41 @@ public class Miner extends rambo.MovingBot {
 //    }
 //  }
   
+
+  public void doAllInPush() throws GameActionException {
+    currentEnemies = Cache.getEngagementEnemies();
+    
+    MapLocation rallyPoint = Messaging.readRallyPoint();
+    MovingBot.AttackMode mode = Messaging.getFleetMode();
+    if (currentEnemies.length > 0) {
+      RobotInfo[] attackableEnemies = Cache.getAttackableEnemies();
+      if (attackableEnemies.length > 0) {
+        if (rc.isWeaponReady()) {
+          if (rc.canAttackLocation(rallyPoint)) {
+            rc.attackLocation(rallyPoint);
+          } else {
+            attackLeastHealthEnemy(attackableEnemies);
+          }
+        }
+      } else {
+        if (rc.isCoreReady() && rallyPoint != null) {
+          Nav.goTo(rallyPoint, Engage.ALL_TOWERS);
+        }
+      }
+    } else if (rc.isCoreReady()) {
+      if (rallyPoint != null) {
+        Nav.goTo(rallyPoint, Engage.ALL_TOWERS);
+      }
+    }
+  }
+  
   public void execute() throws GameActionException {
     SupplyDistribution.manageSupply();
-    selfPreservation();
-    
+//    selfPreservation();
+    if (Clock.getRoundNum() > allInPushRound) {
+      doAllInPush();
+      return;
+    }
     if (destination!=null) {
       if (this.curLoc.distanceSquaredTo(destination) < 5) {
         destination = null;
